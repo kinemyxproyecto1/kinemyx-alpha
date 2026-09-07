@@ -10,7 +10,7 @@
     content="width=device-width, initial-scale=1.0"
   />
 
-  <title>KINEMYX - Squat Alpha</title>
+  <title>KINEMYX - Movement Alpha</title>
 
   <link
     rel="stylesheet"
@@ -31,7 +31,7 @@
     src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl">
   </script>
 
-  <!-- MoveNet / Pose Detection -->
+  <!-- MoveNet -->
 
   <script
     src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection">
@@ -43,6 +43,10 @@
 <body>
 
 
+<!-- =====================================================
+     ENCABEZADO
+===================================================== -->
+
 <header>
 
   <div class="brand">
@@ -50,7 +54,6 @@
     KINEMY<span>X</span>
 
   </div>
-
 
   <div class="subtitle">
 
@@ -65,593 +68,921 @@
 <main>
 
 
-  <!-- =========================
-       CONFIGURACIÓN
-  ========================== -->
+<!-- =====================================================
+     SELECTOR DE MOVIMIENTO
+===================================================== -->
 
+<section class="panel">
 
-  <section class="panel">
+  <h2>
+    Seleccionar análisis
+  </h2>
 
+  <div class="buttons">
 
-    <h2>
-      Squat Analysis
-    </h2>
+    <button
+      id="squatModeButton"
+    >
+      Sentadilla
+    </button>
 
+    <button
+      id="cmjModeButton"
+      class="secondary"
+    >
+      CMJ
+    </button>
 
-    <div class="settings-grid">
+  </div>
 
+</section>
 
-      <!-- REPETICIONES -->
 
-      <label>
 
-        Repeticiones
+<!-- =====================================================
+     CONFIGURACIÓN SENTADILLA
+===================================================== -->
 
-        <input
-          id="targetReps"
-          type="number"
-          value="8"
-          min="1"
-          max="50"
-        />
+<section
+  id="squatSettingsSection"
+  class="panel"
+>
 
-      </label>
+  <h2>
+    Squat Analysis
+  </h2>
 
 
+  <div class="settings-grid">
 
-      <!-- FLEXIÓN RODILLA -->
 
-      <label>
+    <label>
 
-        Flexión objetivo
+      Repeticiones
 
-        <input
-          id="kneeTarget"
-          type="number"
-          value="90"
-          min="30"
-          max="150"
-        />
+      <input
+        id="targetReps"
+        type="number"
+        value="8"
+        min="1"
+        max="50"
+      />
 
-        <span>
-          °
-        </span>
+    </label>
 
-      </label>
 
+    <label>
 
+      Flexión objetivo
 
-      <!-- TOLERANCIA ROM -->
+      <input
+        id="kneeTarget"
+        type="number"
+        value="90"
+        min="30"
+        max="150"
+      />
 
-      <label>
+      <span>
+        °
+      </span>
 
-        Tolerancia ROM
+    </label>
 
-        <input
-          id="kneeTolerance"
-          type="number"
-          value="5"
-          min="1"
-          max="20"
-        />
 
-        <span>
-          °
-        </span>
+    <label>
 
-      </label>
+      Tolerancia ROM
 
+      <input
+        id="kneeTolerance"
+        type="number"
+        value="5"
+        min="1"
+        max="20"
+      />
 
+      <span>
+        °
+      </span>
 
-      <!-- EXCÉNTRICA -->
+    </label>
 
-      <label>
 
-        Excéntrica
+    <label>
 
-        <input
-          id="eccTarget"
-          type="number"
-          value="2"
-          step="0.1"
-        />
+      Excéntrica
 
-        <span>
-          s
-        </span>
+      <input
+        id="eccTarget"
+        type="number"
+        value="2"
+        min="0"
+        step="0.1"
+      />
 
-      </label>
+      <span>
+        s
+      </span>
 
+    </label>
 
 
-      <!-- TOLERANCIA EXCÉNTRICA -->
+    <label>
 
-      <label>
+      Tolerancia excéntrica
 
-        Tolerancia excéntrica
+      <input
+        id="eccTolerance"
+        type="number"
+        value="0.5"
+        min="0"
+        step="0.1"
+      />
 
-        <input
-          id="eccTolerance"
-          type="number"
-          value="0.5"
-          step="0.1"
-        />
+      <span>
+        s
+      </span>
 
-        <span>
-          s
-        </span>
+    </label>
 
-      </label>
 
+    <label>
 
+      Concéntrica
 
-      <!-- CONCÉNTRICA -->
+      <input
+        id="conTarget"
+        type="number"
+        value="1"
+        min="0"
+        step="0.1"
+      />
 
-      <label>
+      <span>
+        s
+      </span>
 
-        Concéntrica
+    </label>
 
-        <input
-          id="conTarget"
-          type="number"
-          value="1"
-          step="0.1"
-        />
 
-        <span>
-          s
-        </span>
+    <label>
 
-      </label>
+      Tolerancia concéntrica
 
+      <input
+        id="conTolerance"
+        type="number"
+        value="0.4"
+        min="0"
+        step="0.1"
+      />
 
+      <span>
+        s
+      </span>
 
-      <!-- TOLERANCIA CONCÉNTRICA -->
+    </label>
 
-      <label>
 
-        Tolerancia concéntrica
+    <label>
 
-        <input
-          id="conTolerance"
-          type="number"
-          value="0.4"
-          step="0.1"
-        />
+      Feedback
 
-        <span>
-          s
-        </span>
-
-      </label>
-
-
-
-      <!-- FEEDBACK -->
-
-      <label>
-
-        Feedback
-
-        <select id="feedbackMode">
-
-          <option value="both">
-            Visual + audio
-          </option>
-
-          <option value="visual">
-            Solo visual
-          </option>
-
-          <option value="audio">
-            Solo audio
-          </option>
-
-          <option value="off">
-            Desactivado
-          </option>
-
-        </select>
-
-      </label>
-
-
-    </div>
-
-
-
-    <!-- =========================
-         VARIABLES A EVALUAR
-    ========================== -->
-
-
-    <h3>
-      Evaluar
-    </h3>
-
-
-    <div class="checks">
-
-
-      <label>
-
-        <input
-          id="checkRom"
-          type="checkbox"
-          checked
-        >
-
-        ROM
-
-      </label>
-
-
-
-      <label>
-
-        <input
-          id="checkEcc"
-          type="checkbox"
-          checked
-        >
-
-        Tempo excéntrico
-
-      </label>
-
-
-
-      <label>
-
-        <input
-          id="checkCon"
-          type="checkbox"
-          checked
-        >
-
-        Tempo concéntrico
-
-      </label>
-
-
-    </div>
-
-
-
-    <!-- =========================
-         BOTONES
-    ========================== -->
-
-
-    <div class="buttons">
-
-
-      <!-- ACTIVAR CÁMARA -->
-
-      <button
-        id="cameraButton"
+      <select
+        id="feedbackMode"
       >
 
-        Activar cámara
+        <option value="both">
+          Visual + audio
+        </option>
 
-      </button>
+        <option value="visual">
+          Solo visual
+        </option>
+
+        <option value="audio">
+          Solo audio
+        </option>
+
+        <option value="off">
+          Desactivado
+        </option>
+
+      </select>
+
+    </label>
+
+
+  </div>
 
 
 
-      <!-- NUEVO:
-           CAMBIAR CÁMARA -->
+  <h3>
+    Evaluar
+  </h3>
 
-      <button
-        id="switchCameraButton"
-        class="secondary"
+
+  <div class="checks">
+
+
+    <label>
+
+      <input
+        id="checkRom"
+        type="checkbox"
+        checked
       >
 
-        Cambiar cámara
+      ROM
 
-      </button>
+    </label>
 
 
+    <label>
 
-      <!-- INICIAR -->
-
-      <button
-        id="startButton"
-        disabled
+      <input
+        id="checkEcc"
+        type="checkbox"
+        checked
       >
 
-        Iniciar serie
+      Tempo excéntrico
 
-      </button>
+    </label>
 
 
+    <label>
 
-      <!-- MODIFICADO:
-           YA NO ESTÁ DESHABILITADO -->
-
-      <button
-        id="stopButton"
-        class="secondary"
+      <input
+        id="checkCon"
+        type="checkbox"
+        checked
       >
 
-        Finalizar serie
+      Tempo concéntrico
 
-      </button>
+    </label>
 
 
-    </div>
+  </div>
 
+</section>
 
-  </section>
 
 
+<!-- =====================================================
+     CONFIGURACIÓN CMJ
+===================================================== -->
 
-  <!-- =========================
-       CÁMARA
-  ========================== -->
+<section
+  id="cmjSettingsSection"
+  class="panel hidden"
+>
 
+  <h2>
+    CMJ Analysis
+  </h2>
 
-  <section class="camera-section">
 
+  <div class="settings-grid">
 
-    <div class="camera-wrapper">
 
+    <!-- CANTIDAD DE SALTOS -->
 
-      <video
-        id="video"
-        autoplay
-        muted
-        playsinline
-      >
-      </video>
+    <label>
 
+      Número de saltos
 
-      <canvas
-        id="canvas"
-      >
-      </canvas>
+      <input
+        id="cmjTargetJumps"
+        type="number"
+        value="3"
+        min="1"
+        max="20"
+      />
 
+    </label>
 
-      <!-- ADVERTENCIA -->
 
-      <div
-        id="warning"
-        class="warning hidden"
-      >
-      </div>
 
+    <!-- ALTURA OBJETIVO -->
 
-    </div>
+    <label>
 
+      Altura objetivo
 
+      <input
+        id="cmjHeightTarget"
+        type="number"
+        value="30"
+        min="0"
+        max="100"
+        step="0.5"
+      />
 
-    <!-- =========================
-         PANEL EN VIVO
-    ========================== -->
+      <span>
+        cm
+      </span>
 
+    </label>
 
-    <div class="live-panel">
 
 
-      <div class="live-label">
+    <!-- TOLERANCIA ALTURA -->
 
-        KINEMYX LIVE
+    <label>
 
-      </div>
+      Tolerancia altura
 
+      <input
+        id="cmjHeightTolerance"
+        type="number"
+        value="3"
+        min="0"
+        max="20"
+        step="0.5"
+      />
 
+      <span>
+        cm
+      </span>
 
-      <!-- REP -->
+    </label>
 
-      <div class="metric">
 
-        <small>
-          REP
-        </small>
 
-        <strong id="repDisplay">
+    <!-- FLEXIÓN OBJETIVO COUNTERMOVEMENT -->
 
-          0 / 8
+    <label>
 
-        </strong>
+      Flexión rodilla objetivo
 
-      </div>
+      <input
+        id="cmjKneeTarget"
+        type="number"
+        value="90"
+        min="20"
+        max="150"
+      />
 
+      <span>
+        °
+      </span>
 
+    </label>
 
-      <!-- FLEXIÓN -->
 
-      <div class="metric">
 
-        <small>
-          KNEE FLEXION
-        </small>
+    <!-- TOLERANCIA RODILLA -->
 
-        <strong id="angleDisplay">
+    <label>
 
-          —°
+      Tolerancia flexión
 
-        </strong>
+      <input
+        id="cmjKneeTolerance"
+        type="number"
+        value="10"
+        min="1"
+        max="30"
+      />
 
-      </div>
+      <span>
+        °
+      </span>
 
+    </label>
 
 
-      <!-- ESTADO -->
 
-      <div class="metric">
+    <!-- FEEDBACK -->
 
-        <small>
-          STATE
-        </small>
+    <label>
 
-        <strong id="stateDisplay">
+      Feedback
 
-          READY
-
-        </strong>
-
-      </div>
-
-
-
-      <!-- EXCÉNTRICA -->
-
-      <div class="metric">
-
-        <small>
-          ECCENTRIC
-        </small>
-
-        <strong id="eccDisplay">
-
-          —
-
-        </strong>
-
-      </div>
-
-
-
-      <!-- CONCÉNTRICA -->
-
-      <div class="metric">
-
-        <small>
-          CONCENTRIC
-        </small>
-
-        <strong id="conDisplay">
-
-          —
-
-        </strong>
-
-      </div>
-
-
-
-      <!-- LADO ACTIVO -->
-
-      <div class="metric">
-
-        <small>
-          ACTIVE SIDE
-        </small>
-
-        <strong id="sideDisplay">
-
-          —
-
-        </strong>
-
-      </div>
-
-
-
-      <!-- ESTADO GENERAL -->
-
-      <div
-        id="status"
-        class="status"
+      <select
+        id="cmjFeedbackMode"
       >
 
-        Activa la cámara
+        <option value="both">
+          Visual + audio
+        </option>
 
-      </div>
+        <option value="visual">
+          Solo visual
+        </option>
 
+        <option value="audio">
+          Solo audio
+        </option>
 
-    </div>
+        <option value="off">
+          Desactivado
+        </option>
 
+      </select>
 
-  </section>
-
-
-
-  <!-- =========================
-       RESULTADOS
-  ========================== -->
-
-
-  <section
-    id="results"
-    class="panel results"
-  >
+    </label>
 
 
-    <h2>
+  </div>
 
-      Session Results
 
-    </h2>
 
+  <h3>
+    Evaluar
+  </h3>
+
+
+  <div class="checks">
+
+
+    <label>
+
+      <input
+        id="checkCmjHeight"
+        type="checkbox"
+        checked
+      >
+
+      Altura estimada
+
+    </label>
+
+
+    <label>
+
+      <input
+        id="checkCmjFlight"
+        type="checkbox"
+        checked
+      >
+
+      Tiempo de vuelo
+
+    </label>
+
+
+    <label>
+
+      <input
+        id="checkCmjKnee"
+        type="checkbox"
+        checked
+      >
+
+      Flexión de rodilla
+
+    </label>
+
+
+    <label>
+
+      <input
+        id="checkCmjCountermovement"
+        type="checkbox"
+        checked
+      >
+
+      Countermovement
+
+    </label>
+
+
+    <label>
+
+      <input
+        id="checkCmjLanding"
+        type="checkbox"
+        checked
+      >
+
+      Aterrizaje
+
+    </label>
+
+
+  </div>
+
+
+  <div class="status">
+
+    Altura de salto estimada mediante cámara.
+    No sustituye una plataforma de fuerza.
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CONTROLES GENERALES
+===================================================== -->
+
+<section class="panel">
+
+  <h3>
+    Control de análisis
+  </h3>
+
+
+  <div class="buttons">
+
+
+    <button
+      id="cameraButton"
+    >
+      Activar cámara
+    </button>
+
+
+    <button
+      id="switchCameraButton"
+      class="secondary"
+    >
+      Cambiar cámara
+    </button>
+
+
+    <button
+      id="startButton"
+      disabled
+    >
+      Iniciar serie
+    </button>
+
+
+    <button
+      id="stopButton"
+      class="secondary"
+    >
+      Finalizar serie
+    </button>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CÁMARA + ANÁLISIS EN VIVO
+===================================================== -->
+
+<section class="camera-section">
+
+
+  <div class="camera-wrapper">
+
+
+    <video
+      id="video"
+      autoplay
+      muted
+      playsinline
+    >
+    </video>
+
+
+    <canvas
+      id="canvas"
+    >
+    </canvas>
 
 
     <div
-      id="summary"
-      class="summary"
+      id="warning"
+      class="warning hidden"
     >
+    </div>
 
-      Aún no hay resultados.
+
+  </div>
+
+
+
+  <!-- =================================================
+       PANEL MÉTRICAS
+  ================================================== -->
+
+  <div class="live-panel">
+
+
+    <div class="live-label">
+
+      KINEMYX LIVE
+
+    </div>
+
+
+    <!-- EJERCICIO ACTIVO -->
+
+    <div class="metric">
+
+      <small>
+        ANALYSIS
+      </small>
+
+      <strong
+        id="liveExerciseLabel"
+      >
+        SQUAT
+      </strong>
 
     </div>
 
 
 
-    <table>
+    <!-- REPETICIONES / SALTOS -->
 
+    <div class="metric">
 
-      <thead>
-
-
-        <tr>
-
-          <th>
-            Rep
-          </th>
-
-          <th>
-            Rodilla
-          </th>
-
-          <th>
-            Exc.
-          </th>
-
-          <th>
-            Con.
-          </th>
-
-          <th>
-            Estado
-          </th>
-
-        </tr>
-
-
-      </thead>
-
-
-
-      <tbody
-        id="resultsBody"
+      <small
+        id="countLabel"
       >
-      </tbody>
+        REP
+      </small>
+
+      <strong
+        id="repDisplay"
+      >
+        0 / 8
+      </strong>
+
+    </div>
 
 
-    </table>
+
+    <!-- ÁNGULO PRINCIPAL -->
+
+    <div class="metric">
+
+      <small
+        id="primaryMetricLabel"
+      >
+        KNEE FLEXION
+      </small>
+
+      <strong
+        id="angleDisplay"
+      >
+        —°
+      </strong>
+
+    </div>
 
 
-  </section>
+
+    <!-- FASE -->
+
+    <div class="metric">
+
+      <small>
+        PHASE
+      </small>
+
+      <strong
+        id="stateDisplay"
+      >
+        READY
+      </strong>
+
+    </div>
+
+
+
+    <!-- MÉTRICA SECUNDARIA -->
+
+    <div class="metric">
+
+      <small
+        id="secondaryMetricLabel"
+      >
+        ECCENTRIC
+      </small>
+
+      <strong
+        id="eccDisplay"
+      >
+        —
+      </strong>
+
+    </div>
+
+
+
+    <!-- MÉTRICA TERCIARIA -->
+
+    <div class="metric">
+
+      <small
+        id="tertiaryMetricLabel"
+      >
+        CONCENTRIC
+      </small>
+
+      <strong
+        id="conDisplay"
+      >
+        —
+      </strong>
+
+    </div>
+
+
+
+    <!-- LADO ACTIVO -->
+
+    <div class="metric">
+
+      <small>
+        ACTIVE SIDE
+      </small>
+
+      <strong
+        id="sideDisplay"
+      >
+        —
+      </strong>
+
+    </div>
+
+
+
+    <!-- ESTADO -->
+
+    <div
+      id="status"
+      class="status"
+    >
+
+      Activa la cámara
+
+    </div>
+
+
+  </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     RESULTADOS SENTADILLA
+===================================================== -->
+
+<section
+  id="results"
+  class="panel results"
+>
+
+  <h2>
+    Squat Results
+  </h2>
+
+
+  <div
+    id="summary"
+    class="summary"
+  >
+
+    Aún no hay resultados.
+
+  </div>
+
+
+  <table>
+
+
+    <thead>
+
+      <tr>
+
+        <th>
+          Rep
+        </th>
+
+        <th>
+          Rodilla
+        </th>
+
+        <th>
+          Exc.
+        </th>
+
+        <th>
+          Con.
+        </th>
+
+        <th>
+          Estado
+        </th>
+
+      </tr>
+
+    </thead>
+
+
+    <tbody
+      id="resultsBody"
+    >
+    </tbody>
+
+
+  </table>
+
+</section>
+
+
+
+<!-- =====================================================
+     RESULTADOS CMJ
+===================================================== -->
+
+<section
+  id="cmjResults"
+  class="panel results hidden"
+>
+
+  <h2>
+    CMJ Results
+  </h2>
+
+
+  <div
+    id="cmjSummary"
+    class="summary"
+  >
+
+    Aún no hay resultados.
+
+  </div>
+
+
+  <table>
+
+
+    <thead>
+
+      <tr>
+
+        <th>
+          Salto
+        </th>
+
+        <th>
+          Altura estimada
+        </th>
+
+        <th>
+          Vuelo
+        </th>
+
+        <th>
+          Rodilla fondo
+        </th>
+
+        <th>
+          Descenso
+        </th>
+
+        <th>
+          Aterrizaje
+        </th>
+
+        <th>
+          Estado
+        </th>
+
+      </tr>
+
+    </thead>
+
+
+    <tbody
+      id="cmjResultsBody"
+    >
+    </tbody>
+
+
+  </table>
+
+</section>
+
 
 
 </main>
 
 
 
-<!-- =========================
+<!-- =====================================================
      JAVASCRIPT
-========================== -->
-
+===================================================== -->
 
 <script
   src="app.js">
