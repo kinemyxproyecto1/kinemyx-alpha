@@ -1,95 +1,65 @@
 /* =========================================================
    KINEMYX
-   Squat Alpha 0.1.1
+   SQUAT ALPHA 0.1.1
    ========================================================= */
 
 
 /* =========================================================
-   ELEMENTOS HTML
+   ELEMENTOS DE LA INTERFAZ
    ========================================================= */
 
 const video = document.getElementById("video");
-
 const canvas = document.getElementById("canvas");
-
 const ctx = canvas.getContext("2d");
 
+const cameraButton = document.getElementById("cameraButton");
+const switchCameraButton = document.getElementById("switchCameraButton");
+const startButton = document.getElementById("startButton");
+const stopButton = document.getElementById("stopButton");
 
-const cameraButton =
-  document.getElementById("cameraButton");
+const repDisplay = document.getElementById("repDisplay");
+const angleDisplay = document.getElementById("angleDisplay");
+const stateDisplay = document.getElementById("stateDisplay");
+const eccDisplay = document.getElementById("eccDisplay");
+const conDisplay = document.getElementById("conDisplay");
+const sideDisplay = document.getElementById("sideDisplay");
 
-const switchCameraButton =
-  document.getElementById("switchCameraButton");
+const statusBox = document.getElementById("status");
+const warningBox = document.getElementById("warning");
 
-const startButton =
-  document.getElementById("startButton");
-
-const stopButton =
-  document.getElementById("stopButton");
-
-
-const repDisplay =
-  document.getElementById("repDisplay");
-
-const angleDisplay =
-  document.getElementById("angleDisplay");
-
-const stateDisplay =
-  document.getElementById("stateDisplay");
-
-const eccDisplay =
-  document.getElementById("eccDisplay");
-
-const conDisplay =
-  document.getElementById("conDisplay");
-
-const sideDisplay =
-  document.getElementById("sideDisplay");
-
-
-const statusBox =
-  document.getElementById("status");
-
-const warningBox =
-  document.getElementById("warning");
-
-
-const resultsBody =
-  document.getElementById("resultsBody");
-
-const summary =
-  document.getElementById("summary");
-
+const resultsBody = document.getElementById("resultsBody");
+const summary = document.getElementById("summary");
 
 
 /* =========================================================
-   VARIABLES GENERALES
+   MOVENET
    ========================================================= */
 
 let detector = null;
 
 
-let cameraReady = false;
+/* =========================================================
+   ESTADO GENERAL
+   ========================================================= */
 
+let cameraReady = false;
 let analysisActive = false;
+
+let detectionLoopStarted = false;
 
 
 /* =========================================================
    CONTROL DE CÁMARA
    ========================================================= */
 
+/*
+  user = cámara frontal
+  environment = cámara trasera
+*/
+
 let currentFacingMode = "user";
 
 let currentStream = null;
-
-
-/*
-  Evita crear varios loops de MoveNet
-  cuando cambiemos entre cámara frontal y trasera.
-*/
-
-let detectionLoopStarted = false;
-
 
 
 /* =========================================================
@@ -97,9 +67,7 @@ let detectionLoopStarted = false;
    ========================================================= */
 
 let candidateSide = "left";
-
 let activeSide = "left";
-
 
 
 /* =========================================================
@@ -110,12 +78,9 @@ let repCount = 0;
 
 let successfulReps = 0;
 
-
 let movementState = "READY";
 
-
 let maxFlexion = 0;
-
 
 let repStartTime = 0;
 
@@ -123,15 +88,11 @@ let bottomTime = 0;
 
 let ascentStartTime = 0;
 
-
 let previousAngle = null;
-
 
 let angleBuffer = [];
 
-
 let results = [];
-
 
 
 /* =========================================================
@@ -140,42 +101,46 @@ let results = [];
 
 let audioContext = null;
 
+/*
+  Para evitar sonidos constantes
+  durante pérdida de tracking.
+*/
 
 let trackingLostSince = null;
 
-let lastTrackingAudio = 0;
-
+let trackingAlertPlayed = false;
 
 
 /* =========================================================
    CONSTANTES
    ========================================================= */
 
+/*
+  Confianza mínima de los puntos corporales.
+*/
+
 const MIN_CONFIDENCE = 0.60;
 
 
 /*
-  Flexión aproximada máxima
-  permitida para considerar
-  que volvió a posición inicial.
+  Flexión aproximada para considerar
+  que la persona está nuevamente de pie.
 */
 
 const READY_FLEXION = 20;
 
 
 /*
-  Flexión mínima necesaria
-  para considerar que comenzó
-  un descenso.
+  Flexión necesaria para detectar
+  que comenzó el descenso.
 */
 
 const DESCENT_TRIGGER = 25;
 
 
 /*
-  Flexión mínima para confirmar
-  que realmente hubo una
-  repetición.
+  Flexión mínima para aceptar
+  que realmente hubo una sentadilla.
 */
 
 const MIN_REP_FLEXION = 45;
@@ -183,7 +148,7 @@ const MIN_REP_FLEXION = 45;
 
 /*
   Diferencia angular necesaria
-  para detectar cambio
+  para detectar el cambio
   descenso → ascenso.
 */
 
@@ -198,15 +163,6 @@ const TURNAROUND_DELTA = 3;
 const SMOOTHING_FRAMES = 5;
 
 
-/*
-  Tiempo mínimo entre avisos
-  de tracking.
-*/
-
-const TRACKING_AUDIO_COOLDOWN = 3000;
-
-
-
 /* =========================================================
    CONFIGURACIÓN DEL USUARIO
    ========================================================= */
@@ -217,91 +173,58 @@ function getSettings() {
 
     targetReps:
       Number(
-        document
-          .getElementById("targetReps")
-          .value
+        document.getElementById("targetReps").value
       ),
-
 
     kneeTarget:
       Number(
-        document
-          .getElementById("kneeTarget")
-          .value
+        document.getElementById("kneeTarget").value
       ),
-
 
     kneeTolerance:
       Number(
-        document
-          .getElementById("kneeTolerance")
-          .value
+        document.getElementById("kneeTolerance").value
       ),
-
 
     eccTarget:
       Number(
-        document
-          .getElementById("eccTarget")
-          .value
+        document.getElementById("eccTarget").value
       ),
-
 
     eccTolerance:
       Number(
-        document
-          .getElementById("eccTolerance")
-          .value
+        document.getElementById("eccTolerance").value
       ),
-
 
     conTarget:
       Number(
-        document
-          .getElementById("conTarget")
-          .value
+        document.getElementById("conTarget").value
       ),
-
 
     conTolerance:
       Number(
-        document
-          .getElementById("conTolerance")
-          .value
+        document.getElementById("conTolerance").value
       ),
 
-
     feedbackMode:
-      document
-        .getElementById("feedbackMode")
-        .value,
-
+      document.getElementById("feedbackMode").value,
 
     checkRom:
-      document
-        .getElementById("checkRom")
-        .checked,
-
+      document.getElementById("checkRom").checked,
 
     checkEcc:
-      document
-        .getElementById("checkEcc")
-        .checked,
-
+      document.getElementById("checkEcc").checked,
 
     checkCon:
-      document
-        .getElementById("checkCon")
-        .checked
+      document.getElementById("checkCon").checked
 
   };
 
 }
 
 
-
 /* =========================================================
-   BOTÓN ACTIVAR CÁMARA
+   BOTONES
    ========================================================= */
 
 cameraButton.addEventListener(
@@ -310,102 +233,154 @@ cameraButton.addEventListener(
 );
 
 
-
-/* =========================================================
-   BOTÓN CAMBIAR CÁMARA
-   ========================================================= */
-
 switchCameraButton.addEventListener(
   "click",
   switchCamera
 );
 
 
+startButton.addEventListener(
+  "click",
+  startAnalysis
+);
+
+
+stopButton.addEventListener(
+  "click",
+  stopAnalysis
+);
+
 
 /* =========================================================
-   OBTENER STREAM DE CÁMARA
+   OBTENER CÁMARA
    ========================================================= */
 
 async function getCameraStream() {
 
   /*
-    Primero intentamos solicitar
-    específicamente frontal o trasera.
+    Primero intentamos pedir específicamente
+    la cámara seleccionada.
   */
 
   try {
 
-    return await navigator.mediaDevices
-      .getUserMedia({
+    return await navigator.mediaDevices.getUserMedia({
 
-        video: {
+      video: {
 
-          facingMode: {
-            exact: currentFacingMode
-          },
-
-          width: {
-            ideal: 1280
-          },
-
-          height: {
-            ideal: 720
-          }
-
+        facingMode: {
+          exact: currentFacingMode
         },
 
-        audio: false
+        width: {
+          ideal: 1280
+        },
 
-      });
+        height: {
+          ideal: 720
+        }
+
+      },
+
+      audio: false
+
+    });
 
   }
 
   catch (error) {
 
     /*
-      Algunos navegadores no aceptan
-      "exact".
-
-      Si falla, usamos "ideal".
+      Si el navegador no acepta "exact",
+      utilizamos "ideal".
     */
 
     console.warn(
-      "Cámara exacta no disponible. Probando modo ideal.",
+      "No se pudo seleccionar la cámara exacta. Probando modo ideal.",
       error
     );
 
 
-    return await navigator.mediaDevices
-      .getUserMedia({
+    return await navigator.mediaDevices.getUserMedia({
 
-        video: {
+      video: {
 
-          facingMode: {
-            ideal: currentFacingMode
-          },
-
-          width: {
-            ideal: 1280
-          },
-
-          height: {
-            ideal: 720
-          }
-
+        facingMode: {
+          ideal: currentFacingMode
         },
 
-        audio: false
+        width: {
+          ideal: 1280
+        },
 
-      });
+        height: {
+          ideal: 720
+        }
+
+      },
+
+      audio: false
+
+    });
 
   }
 
 }
 
 
+/* =========================================================
+   CARGAR MOVENET
+   ========================================================= */
+
+async function loadMoveNet() {
+
+  /*
+    Si ya está cargado,
+    no volvemos a cargarlo.
+  */
+
+  if (detector) {
+    return;
+  }
+
+
+  statusBox.textContent =
+    "Cargando análisis de movimiento...";
+
+
+  await tf.setBackend("webgl");
+
+  await tf.ready();
+
+
+  const model =
+    poseDetection.SupportedModels.MoveNet;
+
+
+  detector =
+    await poseDetection.createDetector(
+
+      model,
+
+      {
+
+        modelType:
+          poseDetection
+            .movenet
+            .modelType
+            .SINGLEPOSE_LIGHTNING,
+
+        enableSmoothing: true
+
+      }
+
+    );
+
+}
+
 
 /* =========================================================
-   INICIALIZAR CÁMARA + MOVENET
+   INICIALIZAR CÁMARA
    ========================================================= */
 
 async function initializeCamera() {
@@ -416,50 +391,17 @@ async function initializeCamera() {
       "Cargando KINEMYX...";
 
 
-    /* -----------------------------------------
-       CARGAR MOVENET SOLO UNA VEZ
-       ----------------------------------------- */
+    /*
+      Cargar MoveNet.
+    */
 
-    if (!detector) {
-
-      await tf.setBackend("webgl");
-
-      await tf.ready();
+    await loadMoveNet();
 
 
-      const model =
-        poseDetection
-          .SupportedModels
-          .MoveNet;
-
-
-      detector =
-        await poseDetection
-          .createDetector(
-
-            model,
-
-            {
-
-              modelType:
-                poseDetection
-                  .movenet
-                  .modelType
-                  .SINGLEPOSE_LIGHTNING,
-
-              enableSmoothing: true
-
-            }
-
-          );
-
-    }
-
-
-
-    /* -----------------------------------------
-       DETENER STREAM ANTERIOR
-       ----------------------------------------- */
+    /*
+      Si ya había una cámara funcionando,
+      detenerla.
+    */
 
     if (currentStream) {
 
@@ -474,14 +416,12 @@ async function initializeCamera() {
     }
 
 
-
     cameraReady = false;
 
 
-
-    /* -----------------------------------------
-       SOLICITAR NUEVA CÁMARA
-       ----------------------------------------- */
+    /*
+      Abrir cámara.
+    */
 
     const stream =
       await getCameraStream();
@@ -493,38 +433,35 @@ async function initializeCamera() {
     video.srcObject = stream;
 
 
+    /*
+      Esperar hasta que el navegador
+      tenga información del video.
+    */
 
-    /* -----------------------------------------
-       ESPERAR VIDEO
-       ----------------------------------------- */
+    await new Promise(resolve => {
 
-    await new Promise(
-      resolve => {
+      video.onloadedmetadata =
+        async () => {
 
-        video.onloadedmetadata =
-          async () => {
+          await video.play();
 
-            await video.play();
+          resolve();
 
-            resolve();
+        };
 
-          };
-
-      }
-    );
+    });
 
 
-
-    /* -----------------------------------------
-       AJUSTAR CANVAS
-       ----------------------------------------- */
+    /*
+      Igualar canvas al tamaño
+      real del video.
+    */
 
     canvas.width =
       video.videoWidth;
 
     canvas.height =
       video.videoHeight;
-
 
 
     cameraReady = true;
@@ -534,15 +471,11 @@ async function initializeCamera() {
       false;
 
 
+    /*
+      Mostrar qué cámara está funcionando.
+    */
 
-    /* -----------------------------------------
-       MOSTRAR CÁMARA ACTIVA
-       ----------------------------------------- */
-
-    if (
-      currentFacingMode ===
-      "user"
-    ) {
+    if (currentFacingMode === "user") {
 
       statusBox.textContent =
         "Cámara frontal activa · Ubícate de lado y muestra el cuerpo completo.";
@@ -565,10 +498,9 @@ async function initializeCamera() {
     }
 
 
-
-    /* -----------------------------------------
-       INICIAR LOOP SOLO UNA VEZ
-       ----------------------------------------- */
+    /*
+      Iniciar MoveNet solo una vez.
+    */
 
     if (!detectionLoopStarted) {
 
@@ -586,7 +518,7 @@ async function initializeCamera() {
   catch (error) {
 
     console.error(
-      "Error inicializando cámara:",
+      "Error de cámara:",
       error
     );
 
@@ -605,7 +537,6 @@ async function initializeCamera() {
 }
 
 
-
 /* =========================================================
    CAMBIAR CÁMARA
    ========================================================= */
@@ -613,8 +544,8 @@ async function initializeCamera() {
 async function switchCamera() {
 
   /*
-    No cambiamos cámara durante una serie,
-    porque alteraría la detección de fases.
+    No permitimos cambiar de cámara
+    durante una serie.
   */
 
   if (analysisActive) {
@@ -627,6 +558,9 @@ async function switchCamera() {
   }
 
 
+  /*
+    Si todavía no se ha activado cámara.
+  */
 
   if (!cameraReady) {
 
@@ -638,11 +572,13 @@ async function switchCamera() {
   }
 
 
-
   const previousFacingMode =
     currentFacingMode;
 
 
+  /*
+    Alternar frontal ↔ trasera.
+  */
 
   currentFacingMode =
 
@@ -653,20 +589,17 @@ async function switchCamera() {
       : "user";
 
 
-
   statusBox.textContent =
     "Cambiando cámara...";
-
 
 
   const success =
     await initializeCamera();
 
 
-
   /*
-    Si el cambio falla,
-    volvemos a la cámara anterior.
+    Si falla el cambio,
+    volvemos a intentar con la cámara anterior.
   */
 
   if (!success) {
@@ -676,23 +609,25 @@ async function switchCamera() {
 
 
     statusBox.textContent =
-      "No fue posible cambiar de cámara.";
+      "Volviendo a la cámara anterior...";
+
+
+    await initializeCamera();
 
   }
 
 }
 
 
-
 /* =========================================================
-   LOOP DE DETECCIÓN
+   LOOP PRINCIPAL MOVENET
    ========================================================= */
 
 async function detectLoop() {
 
   /*
-    Si cámara/modelo todavía
-    no están listos.
+    Si la cámara todavía
+    no está lista.
   */
 
   if (
@@ -710,27 +645,22 @@ async function detectLoop() {
   }
 
 
-
   try {
 
     const poses =
-      await detector
-        .estimatePoses(video);
+      await detector.estimatePoses(video);
 
 
+    /*
+      Limpiar skeleton anterior.
+    */
 
     ctx.clearRect(
-
       0,
-
       0,
-
       canvas.width,
-
       canvas.height
-
     );
-
 
 
     if (
@@ -753,13 +683,17 @@ async function detectLoop() {
 
   catch (error) {
 
+    /*
+      Si hay un error puntual
+      no detenemos toda la aplicación.
+    */
+
     console.warn(
-      "Error temporal en detección:",
+      "Error temporal de MoveNet:",
       error
     );
 
   }
-
 
 
   requestAnimationFrame(
@@ -769,9 +703,8 @@ async function detectLoop() {
 }
 
 
-
 /* =========================================================
-   OBTENER PUNTOS DEL LADO
+   PUNTOS DEL LADO CORPORAL
    ========================================================= */
 
 function sideData(
@@ -783,14 +716,11 @@ function sideData(
     pose.keypoints;
 
 
+  /*
+    Lado izquierdo.
+  */
 
-  /* -----------------------------------------
-     LADO IZQUIERDO
-     ----------------------------------------- */
-
-  if (
-    side === "left"
-  ) {
+  if (side === "left") {
 
     return {
 
@@ -811,10 +741,9 @@ function sideData(
   }
 
 
-
-  /* -----------------------------------------
-     LADO DERECHO
-     ----------------------------------------- */
+  /*
+    Lado derecho.
+  */
 
   return {
 
@@ -835,9 +764,8 @@ function sideData(
 }
 
 
-
 /* =========================================================
-   CONFIANZA MEDIA
+   CONFIANZA PROMEDIO
    ========================================================= */
 
 function averageConfidence(
@@ -859,9 +787,8 @@ function averageConfidence(
 }
 
 
-
 /* =========================================================
-   DETERMINAR MEJOR LADO
+   ELEGIR MEJOR LADO
    ========================================================= */
 
 function determineBestSide(
@@ -890,7 +817,6 @@ function determineBestSide(
     averageConfidence(right);
 
 
-
   return (
 
     leftScore >= rightScore
@@ -902,7 +828,6 @@ function determineBestSide(
   );
 
 }
-
 
 
 /* =========================================================
@@ -918,40 +843,28 @@ function calculateAngle(
   const radians =
 
     Math.atan2(
-
       c.y - b.y,
-
       c.x - b.x
-
     )
 
     -
 
     Math.atan2(
-
       a.y - b.y,
-
       a.x - b.x
-
     );
-
 
 
   let angle =
 
     Math.abs(
-
       radians *
       180 /
       Math.PI
-
     );
 
 
-
-  if (
-    angle > 180
-  ) {
+  if (angle > 180) {
 
     angle =
       360 - angle;
@@ -959,11 +872,9 @@ function calculateAngle(
   }
 
 
-
   return angle;
 
 }
-
 
 
 /* =========================================================
@@ -977,13 +888,9 @@ function smoothAngle(
   angleBuffer.push(angle);
 
 
-
   if (
-
     angleBuffer.length >
-
     SMOOTHING_FRAMES
-
   ) {
 
     angleBuffer.shift();
@@ -991,54 +898,44 @@ function smoothAngle(
   }
 
 
-
   const total =
-
     angleBuffer.reduce(
 
-      (a, b) =>
-        a + b,
+      (sum, value) =>
+        sum + value,
 
       0
 
     );
 
 
-
   return (
-
     total /
-
     angleBuffer.length
-
   );
 
 }
 
 
-
 /* =========================================================
-   PROCESAR POSE
+   PROCESAR PERSONA DETECTADA
    ========================================================= */
 
 function processPose(
   pose
 ) {
 
-  candidateSide =
-    determineBestSide(
-      pose
-    );
+  /*
+    Elegir el lado más visible.
+  */
 
+  candidateSide =
+    determineBestSide(pose);
 
 
   /*
-    Antes de comenzar:
-    elegimos automáticamente
-    el lado más visible.
-
-    Durante la serie:
-    bloqueamos el lado elegido.
+    Durante una serie,
+    mantenemos fijo el lado elegido.
   */
 
   const side =
@@ -1050,10 +947,8 @@ function processPose(
       : candidateSide;
 
 
-
   sideDisplay.textContent =
     side.toUpperCase();
-
 
 
   const points =
@@ -1063,24 +958,19 @@ function processPose(
     );
 
 
-
   const confidence =
     averageConfidence(
       points
     );
 
 
-
-  /* -----------------------------------------
-     TRACKING INSUFICIENTE
-     ----------------------------------------- */
+  /*
+    Tracking insuficiente.
+  */
 
   if (
-
     confidence <
-
     MIN_CONFIDENCE
-
   ) {
 
     angleDisplay.textContent =
@@ -1099,21 +989,20 @@ function processPose(
   }
 
 
-
-  /* -----------------------------------------
-     TRACKING RECUPERADO
-     ----------------------------------------- */
+  /*
+    Tracking recuperado.
+  */
 
   trackingLostSince =
     null;
 
+  trackingAlertPlayed =
+    false;
 
 
   if (
-
     warningBox.textContent ===
     "Ajusta posición"
-
   ) {
 
     hideWarning();
@@ -1121,10 +1010,10 @@ function processPose(
   }
 
 
-
-  /* -----------------------------------------
-     ÁNGULO GEOMÉTRICO
-     ----------------------------------------- */
+  /*
+    Ángulo geométrico:
+    cadera → rodilla → tobillo.
+  */
 
   const jointAngle =
     calculateAngle(
@@ -1138,31 +1027,25 @@ function processPose(
     );
 
 
+  /*
+    Convertir ángulo geométrico
+    a flexión de rodilla.
 
-  /* -----------------------------------------
-     FLEXIÓN DE RODILLA
-     ----------------------------------------- */
+    180° geométricos = 0° flexión.
+  */
 
   let kneeFlexion =
     180 - jointAngle;
 
 
-
   kneeFlexion =
     Math.max(
-
       0,
-
       Math.min(
-
         160,
-
         kneeFlexion
-
       )
-
     );
-
 
 
   const smoothFlexion =
@@ -1171,32 +1054,30 @@ function processPose(
     );
 
 
-
   angleDisplay.textContent =
 
-    smoothFlexion
-      .toFixed(0)
+    smoothFlexion.toFixed(0)
 
     +
 
     "°";
 
 
+  /*
+    Solo analizamos repeticiones
+    cuando la serie está activa.
+  */
 
   if (analysisActive) {
 
     updateMovement(
-
       smoothFlexion,
-
       performance.now()
-
     );
 
   }
 
 }
-
 
 
 /* =========================================================
@@ -1212,15 +1093,17 @@ function updateMovement(
     getSettings();
 
 
-
   /* =====================================================
      READY
      ===================================================== */
 
   if (
-    movementState ===
-    "READY"
+    movementState === "READY"
   ) {
+
+    /*
+      Detectar comienzo de descenso.
+    */
 
     if (
 
@@ -1229,8 +1112,7 @@ function updateMovement(
 
       &&
 
-      previousAngle !==
-      null
+      previousAngle !== null
 
       &&
 
@@ -1259,28 +1141,22 @@ function updateMovement(
   }
 
 
-
   /* =====================================================
      DESCENDING
      ===================================================== */
 
   else if (
-
     movementState ===
     "DESCENDING"
-
   ) {
 
     /*
-      Actualizar máxima
-      flexión alcanzada.
+      Actualizar máximo ROM.
     */
 
     if (
-
       flexion >
       maxFlexion
-
     ) {
 
       maxFlexion =
@@ -1293,26 +1169,27 @@ function updateMovement(
     }
 
 
-
     /*
-      Detectar cambio
-      de dirección.
+      Detectar inversión del movimiento.
     */
 
     if (
 
       maxFlexion -
       flexion >=
-
       TURNAROUND_DELTA
 
     ) {
 
-      if (
+      /*
+        Confirmar que hubo una sentadilla
+        suficientemente profunda como
+        para considerarla repetición.
+      */
 
+      if (
         maxFlexion >=
         MIN_REP_FLEXION
-
       ) {
 
         movementState =
@@ -1324,10 +1201,25 @@ function updateMovement(
 
       }
 
+      else {
+
+        /*
+          Si solo hubo un movimiento pequeño
+          volvemos a READY sin contar.
+        */
+
+        movementState =
+          "READY";
+
+
+        maxFlexion =
+          0;
+
+      }
+
     }
 
   }
-
 
 
   /* =====================================================
@@ -1335,22 +1227,17 @@ function updateMovement(
      ===================================================== */
 
   else if (
-
     movementState ===
     "ASCENDING"
-
   ) {
 
     /*
-      Regresó suficientemente
-      cerca de extensión.
+      Cuando vuelve cerca de extensión.
     */
 
     if (
-
       flexion <=
       READY_FLEXION
-
     ) {
 
       completeRep(
@@ -1358,26 +1245,48 @@ function updateMovement(
       );
 
 
-      movementState =
-        "READY";
+      /*
+        Si completeRep no finalizó
+        automáticamente la serie,
+        preparamos la siguiente repetición.
+      */
+
+      if (analysisActive) {
+
+        movementState =
+          "READY";
 
 
-      maxFlexion = 0;
+        maxFlexion =
+          0;
+
+      }
+
+      else {
+
+        /*
+          La serie terminó.
+          Evitamos sobrescribir COMPLETE.
+        */
+
+        previousAngle =
+          flexion;
+
+        return;
+
+      }
 
     }
 
   }
 
 
-
   previousAngle =
     flexion;
 
 
-
   stateDisplay.textContent =
     movementState;
-
 
 
   repDisplay.textContent =
@@ -1385,7 +1294,6 @@ function updateMovement(
     `${repCount} / ${settings.targetReps}`;
 
 }
-
 
 
 /* =========================================================
@@ -1400,14 +1308,12 @@ function completeRep(
     getSettings();
 
 
-
   repCount++;
 
 
-
-  /* -----------------------------------------
-     TIEMPO EXCÉNTRICO
-     ----------------------------------------- */
+  /*
+    Tiempo excéntrico.
+  */
 
   const eccentric =
 
@@ -1421,10 +1327,9 @@ function completeRep(
     1000;
 
 
-
-  /* -----------------------------------------
-     TIEMPO CONCÉNTRICO
-     ----------------------------------------- */
+  /*
+    Tiempo concéntrico.
+  */
 
   const concentric =
 
@@ -1438,12 +1343,11 @@ function completeRep(
     1000;
 
 
+  /* =====================================================
+     ROM
+     ===================================================== */
 
-  /* -----------------------------------------
-     OBJETIVO DE ROM
-     ----------------------------------------- */
-
-  const romMin =
+  const romMinimum =
 
     settings.kneeTarget
 
@@ -1452,24 +1356,21 @@ function completeRep(
     settings.kneeTolerance;
 
 
-
   const romPassed =
 
     maxFlexion >=
-    romMin;
+    romMinimum;
 
 
-
-  /* -----------------------------------------
-     OBJETIVO EXCÉNTRICO
-     ----------------------------------------- */
+  /* =====================================================
+     TEMPO EXCÉNTRICO
+     ===================================================== */
 
   const eccPassed =
 
     Math.abs(
 
       eccentric -
-
       settings.eccTarget
 
     )
@@ -1479,17 +1380,15 @@ function completeRep(
     settings.eccTolerance;
 
 
-
-  /* -----------------------------------------
-     OBJETIVO CONCÉNTRICO
-     ----------------------------------------- */
+  /* =====================================================
+     TEMPO CONCÉNTRICO
+     ===================================================== */
 
   const conPassed =
 
     Math.abs(
 
       concentric -
-
       settings.conTarget
 
     )
@@ -1499,62 +1398,50 @@ function completeRep(
     settings.conTolerance;
 
 
+  /*
+    Inicialmente asumimos
+    que cumplió.
+  */
 
   let passed =
     true;
 
 
-
   if (
-
-    settings.checkRom
-
-    &&
-
+    settings.checkRom &&
     !romPassed
-
   ) {
 
-    passed = false;
+    passed =
+      false;
 
   }
 
 
-
   if (
-
-    settings.checkEcc
-
-    &&
-
+    settings.checkEcc &&
     !eccPassed
-
   ) {
 
-    passed = false;
+    passed =
+      false;
 
   }
-
 
 
   if (
-
-    settings.checkCon
-
-    &&
-
+    settings.checkCon &&
     !conPassed
-
   ) {
 
-    passed = false;
+    passed =
+      false;
 
   }
-
 
 
   /* =====================================================
-     RESULTADO DE LA REP
+     FEEDBACK
      ===================================================== */
 
   if (passed) {
@@ -1586,15 +1473,13 @@ function completeRep(
       );
 
 
-
     showWarning(
       message
     );
 
 
     /*
-      Un beep puntual
-      por repetición incorrecta.
+      Solo un beep por repetición.
     */
 
     beepWarning();
@@ -1602,9 +1487,8 @@ function completeRep(
   }
 
 
-
   /* =====================================================
-     GUARDAR REP
+     GUARDAR RESULTADO
      ===================================================== */
 
   const rep = {
@@ -1612,18 +1496,14 @@ function completeRep(
     number:
       repCount,
 
-
     maxFlexion:
       maxFlexion,
-
 
     eccentric:
       eccentric,
 
-
     concentric:
       concentric,
-
 
     passed:
       passed
@@ -1631,13 +1511,10 @@ function completeRep(
   };
 
 
-
   results.push(rep);
 
 
-
   addResultRow(rep);
-
 
 
   eccDisplay.textContent =
@@ -1649,7 +1526,6 @@ function completeRep(
     " s";
 
 
-
   conDisplay.textContent =
 
     concentric.toFixed(2)
@@ -1659,38 +1535,34 @@ function completeRep(
     " s";
 
 
-
-  updateSummary();
-
-
-
   repDisplay.textContent =
 
     `${repCount} / ${settings.targetReps}`;
 
 
+  updateSummary();
+
 
   /* =====================================================
-     FIN AUTOMÁTICO
+     FINALIZACIÓN AUTOMÁTICA
      ===================================================== */
 
   if (
-
     repCount >=
     settings.targetReps
-
   ) {
 
-    stopAnalysis();
+    stopAnalysis(
+      true
+    );
 
   }
 
 }
 
 
-
 /* =========================================================
-   CONSTRUIR ADVERTENCIA
+   MENSAJE DE ADVERTENCIA
    ========================================================= */
 
 function buildWarning(
@@ -1709,18 +1581,14 @@ function buildWarning(
 
 ) {
 
-  /* -----------------------------------------
-     ROM
-     ----------------------------------------- */
+  /*
+    Prioridad 1:
+    ROM.
+  */
 
   if (
-
-    settings.checkRom
-
-    &&
-
+    settings.checkRom &&
     !romPassed
-
   ) {
 
     return "Más profundidad";
@@ -1728,26 +1596,19 @@ function buildWarning(
   }
 
 
-
-  /* -----------------------------------------
-     EXCÉNTRICA
-     ----------------------------------------- */
+  /*
+    Prioridad 2:
+    Excéntrica.
+  */
 
   if (
-
-    settings.checkEcc
-
-    &&
-
+    settings.checkEcc &&
     !eccPassed
-
   ) {
 
     if (
-
       eccentric <
       settings.eccTarget
-
     ) {
 
       return "Bajada más lenta";
@@ -1760,26 +1621,19 @@ function buildWarning(
   }
 
 
-
-  /* -----------------------------------------
-     CONCÉNTRICA
-     ----------------------------------------- */
+  /*
+    Prioridad 3:
+    Concéntrica.
+  */
 
   if (
-
-    settings.checkCon
-
-    &&
-
+    settings.checkCon &&
     !conPassed
-
   ) {
 
     if (
-
       concentric <
       settings.conTarget
-
     ) {
 
       return "Subida más lenta";
@@ -1792,15 +1646,13 @@ function buildWarning(
   }
 
 
-
   return "Revisa objetivo";
 
 }
 
 
-
 /* =========================================================
-   FEEDBACK VISUAL
+   ADVERTENCIA VISUAL
    ========================================================= */
 
 function showWarning(
@@ -1810,7 +1662,6 @@ function showWarning(
   const mode =
     getSettings()
       .feedbackMode;
-
 
 
   if (
@@ -1832,19 +1683,14 @@ function showWarning(
       .remove("hidden");
 
 
-
     setTimeout(
-
       hideWarning,
-
       1500
-
     );
 
   }
 
 }
-
 
 
 /* =========================================================
@@ -1853,11 +1699,30 @@ function showWarning(
 
 function showSuccess() {
 
+  const mode =
+    getSettings()
+      .feedbackMode;
+
+
+  /*
+    Si el usuario no quiere
+    feedback visual, no mostramos nada.
+  */
+
+  if (
+    mode === "audio" ||
+    mode === "off"
+  ) {
+
+    return;
+
+  }
+
+
   statusBox.textContent =
     "✓ Objetivo cumplido";
 
 }
-
 
 
 /* =========================================================
@@ -1873,9 +1738,8 @@ function hideWarning() {
 }
 
 
-
 /* =========================================================
-   TRACKING
+   TRACKING PERDIDO
    ========================================================= */
 
 function trackingWarning() {
@@ -1884,10 +1748,13 @@ function trackingWarning() {
     performance.now();
 
 
+  /*
+    Registrar cuándo comenzó
+    la pérdida de tracking.
+  */
 
   if (
-    trackingLostSince ===
-    null
+    trackingLostSince === null
   ) {
 
     trackingLostSince =
@@ -1896,17 +1763,21 @@ function trackingWarning() {
   }
 
 
+  /*
+    Feedback visual.
+  */
 
   showWarning(
     "Ajusta posición"
   );
 
 
-
   /*
-    Solo emitimos audio
-    si la pérdida de tracking
-    persiste más de 1 segundo.
+    Solo emitir un beep
+    durante cada episodio de
+    pérdida de tracking.
+
+    No suena continuamente.
   */
 
   if (
@@ -1917,27 +1788,23 @@ function trackingWarning() {
 
     &&
 
-    now -
-    lastTrackingAudio >
-
-    TRACKING_AUDIO_COOLDOWN
+    !trackingAlertPlayed
 
   ) {
 
     beepWarning();
 
 
-    lastTrackingAudio =
-      now;
+    trackingAlertPlayed =
+      true;
 
   }
 
 }
 
 
-
 /* =========================================================
-   AUDIO
+   BEEP SUTIL
    ========================================================= */
 
 function beepWarning() {
@@ -1947,6 +1814,11 @@ function beepWarning() {
       .feedbackMode;
 
 
+  /*
+    Si el usuario eligió
+    solo visual o apagado,
+    no reproducimos audio.
+  */
 
   if (
 
@@ -1963,6 +1835,11 @@ function beepWarning() {
   }
 
 
+  /*
+    Crear AudioContext
+    solamente si todavía
+    no existe.
+  */
 
   if (!audioContext) {
 
@@ -1981,6 +1858,10 @@ function beepWarning() {
   }
 
 
+  /*
+    Algunos teléfonos suspenden
+    AudioContext hasta una interacción.
+  */
 
   if (
     audioContext.state ===
@@ -1992,11 +1873,9 @@ function beepWarning() {
   }
 
 
-
   const oscillator =
     audioContext
       .createOscillator();
-
 
 
   const gain =
@@ -2004,18 +1883,20 @@ function beepWarning() {
       .createGain();
 
 
-
   /*
-    Tono sutil.
+    Frecuencia moderada.
   */
 
   oscillator.frequency.value =
     520;
 
 
+  /*
+    Volumen muy bajo.
+  */
+
   gain.gain.value =
     0.025;
-
 
 
   oscillator.connect(
@@ -2028,10 +1909,12 @@ function beepWarning() {
   );
 
 
-
   oscillator.start();
 
 
+  /*
+    Duración 120 ms.
+  */
 
   oscillator.stop(
 
@@ -2046,9 +1929,8 @@ function beepWarning() {
 }
 
 
-
 /* =========================================================
-   DIBUJAR SKELETON
+   DIBUJAR ESQUELETO
    ========================================================= */
 
 function drawSkeleton(
@@ -2059,6 +1941,9 @@ function drawSkeleton(
     pose.keypoints;
 
 
+  /*
+    Conexiones principales.
+  */
 
   const connections = [
 
@@ -2089,7 +1974,6 @@ function drawSkeleton(
   ];
 
 
-
   ctx.lineWidth =
     3;
 
@@ -2098,6 +1982,9 @@ function drawSkeleton(
     "#1478ff";
 
 
+  /*
+    Dibujar segmentos.
+  */
 
   connections.forEach(
 
@@ -2119,20 +2006,14 @@ function drawSkeleton(
 
 
         ctx.moveTo(
-
           kp[a].x,
-
           kp[a].y
-
         );
 
 
         ctx.lineTo(
-
           kp[b].x,
-
           kp[b].y
-
         );
 
 
@@ -2145,15 +2026,16 @@ function drawSkeleton(
   );
 
 
+  /*
+    Dibujar puntos articulares.
+  */
 
   kp.forEach(
     point => {
 
       if (
-
         point.score >
         0.35
-
       ) {
 
         ctx.beginPath();
@@ -2188,9 +2070,8 @@ function drawSkeleton(
 }
 
 
-
 /* =========================================================
-   AGREGAR RESULTADO A TABLA
+   AGREGAR RESULTADO A LA TABLA
    ========================================================= */
 
 function addResultRow(
@@ -2203,36 +2084,23 @@ function addResultRow(
     );
 
 
-
   row.innerHTML = `
 
     <td>
-
       ${rep.number}
-
     </td>
 
-
     <td>
-
       ${rep.maxFlexion.toFixed(0)}°
-
     </td>
 
-
     <td>
-
       ${rep.eccentric.toFixed(2)} s
-
     </td>
-
 
     <td>
-
       ${rep.concentric.toFixed(2)} s
-
     </td>
-
 
     <td
       class="${
@@ -2253,12 +2121,11 @@ function addResultRow(
   `;
 
 
-
-  resultsBody
-    .appendChild(row);
+  resultsBody.appendChild(
+    row
+  );
 
 }
-
 
 
 /* =========================================================
@@ -2266,6 +2133,10 @@ function addResultRow(
    ========================================================= */
 
 function updateSummary() {
+
+  /*
+    Si no hubo repeticiones.
+  */
 
   if (
     results.length === 0
@@ -2279,13 +2150,15 @@ function updateSummary() {
   }
 
 
+  /*
+    Flexión media.
+  */
 
   const avgFlexion =
 
     results.reduce(
 
       (sum, rep) =>
-
         sum +
         rep.maxFlexion,
 
@@ -2298,13 +2171,15 @@ function updateSummary() {
     results.length;
 
 
+  /*
+    Excéntrica media.
+  */
 
   const avgEcc =
 
     results.reduce(
 
       (sum, rep) =>
-
         sum +
         rep.eccentric,
 
@@ -2317,13 +2192,15 @@ function updateSummary() {
     results.length;
 
 
+  /*
+    Concéntrica media.
+  */
 
   const avgCon =
 
     results.reduce(
 
       (sum, rep) =>
-
         sum +
         rep.concentric,
 
@@ -2336,6 +2213,9 @@ function updateSummary() {
     results.length;
 
 
+  /*
+    Cumplimiento.
+  */
 
   const compliance =
 
@@ -2354,75 +2234,52 @@ function updateSummary() {
     100;
 
 
-
   summary.innerHTML = `
 
     <strong>
-
       ${results.length}
-
     </strong>
 
     repeticiones realizadas
 
-
     <br>
 
-
     <strong>
-
       ${successfulReps}
-
     </strong>
 
     cumplieron objetivos
 
-
     <br>
-
 
     Cumplimiento:
 
     <strong>
-
       ${compliance.toFixed(0)}%
-
     </strong>
 
-
     <br>
-
 
     Flexión media:
 
     <strong>
-
       ${avgFlexion.toFixed(0)}°
-
     </strong>
 
-
     <br>
-
 
     Excéntrica media:
 
     <strong>
-
       ${avgEcc.toFixed(2)} s
-
     </strong>
 
-
     <br>
-
 
     Concéntrica media:
 
     <strong>
-
       ${avgCon.toFixed(2)} s
-
     </strong>
 
   `;
@@ -2430,22 +2287,15 @@ function updateSummary() {
 }
 
 
-
 /* =========================================================
    INICIAR SERIE
    ========================================================= */
 
-startButton.addEventListener(
-
-  "click",
-
-  startAnalysis
-
-);
-
-
-
 function startAnalysis() {
+
+  /*
+    Cámara obligatoria.
+  */
 
   if (!cameraReady) {
 
@@ -2457,26 +2307,29 @@ function startAnalysis() {
   }
 
 
-
-  /* -----------------------------------------
-     BLOQUEAR LADO MÁS VISIBLE
-     ----------------------------------------- */
+  /*
+    Bloquear el lado corporal
+    que actualmente tiene mejor tracking.
+  */
 
   activeSide =
     candidateSide;
 
 
+  /*
+    Reiniciar serie.
+  */
 
-  /* -----------------------------------------
-     REINICIAR DATOS
-     ----------------------------------------- */
-
-  repCount = 0;
-
-  successfulReps = 0;
+  repCount =
+    0;
 
 
-  results = [];
+  successfulReps =
+    0;
+
+
+  results =
+    [];
 
 
   resultsBody.innerHTML =
@@ -2487,7 +2340,8 @@ function startAnalysis() {
     "Serie en curso...";
 
 
-  angleBuffer = [];
+  angleBuffer =
+    [];
 
 
   previousAngle =
@@ -2506,21 +2360,21 @@ function startAnalysis() {
     null;
 
 
+  trackingAlertPlayed =
+    false;
+
 
   analysisActive =
     true;
-
 
 
   const settings =
     getSettings();
 
 
-
   repDisplay.textContent =
 
     `0 / ${settings.targetReps}`;
-
 
 
   stateDisplay.textContent =
@@ -2543,16 +2397,10 @@ function startAnalysis() {
     true;
 
 
-
   /*
-    El botón Finalizar
-    permanece siempre disponible.
+    Preparar audio desde
+    la interacción del usuario.
   */
-
-
-  /* -----------------------------------------
-     ACTIVAR AUDIO DESDE GESTO DEL USUARIO
-     ----------------------------------------- */
 
   if (!audioContext) {
 
@@ -2571,7 +2419,6 @@ function startAnalysis() {
   }
 
 
-
   if (
     audioContext.state ===
     "suspended"
@@ -2584,27 +2431,26 @@ function startAnalysis() {
 }
 
 
-
 /* =========================================================
-   FINALIZAR SERIE MANUAL
+   FINALIZAR SERIE
    ========================================================= */
 
-stopButton.addEventListener(
+/*
+  automatic = true
+  significa que terminó porque
+  alcanzó el número objetivo.
 
-  "click",
+  automatic = false
+  significa que el usuario presionó
+  Finalizar serie.
+*/
 
-  stopAnalysis
-
-);
-
-
-
-function stopAnalysis() {
+function stopAnalysis(
+  automatic = false
+) {
 
   /*
-    Si no existe una serie activa,
-    el botón sigue funcionando,
-    pero simplemente informa.
+    Si no existe una serie activa.
   */
 
   if (!analysisActive) {
@@ -2617,32 +2463,47 @@ function stopAnalysis() {
   }
 
 
-
   analysisActive =
     false;
-
 
 
   startButton.disabled =
     false;
 
 
-
   movementState =
-    "READY";
-
+    "COMPLETE";
 
 
   stateDisplay.textContent =
     "COMPLETE";
 
 
+  /*
+    Mostrar motivo de finalización.
+  */
 
-  statusBox.textContent =
+  if (automatic) {
 
-    `Serie finalizada · ${repCount} repeticiones`;
+    statusBox.textContent =
+
+      `Serie completada · ${repCount} repeticiones`;
+
+  }
+
+  else {
+
+    statusBox.textContent =
+
+      `Serie finalizada · ${repCount} repeticiones`;
+
+  }
 
 
+  /*
+    Mostrar resumen aunque
+    se termine antes del objetivo.
+  */
 
   updateSummary();
 
