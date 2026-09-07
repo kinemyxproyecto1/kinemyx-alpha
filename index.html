@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
   <meta charset="UTF-8" />
 
   <meta
@@ -10,42 +12,81 @@
 
   <title>KINEMYX - Squat Alpha</title>
 
-  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  />
 
   <!-- TensorFlow.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
 
-  <!-- Pose Detection -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core">
+  </script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter">
+  </script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl">
+  </script>
+
+  <!-- MoveNet / Pose Detection -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection">
+  </script>
+
 </head>
+
 
 <body>
 
+
 <header>
+
   <div class="brand">
+
     KINEMY<span>X</span>
+
   </div>
 
+
   <div class="subtitle">
+
     Human Movement Intelligence
+
   </div>
+
 </header>
+
 
 
 <main>
 
-  <!-- CONFIGURACIÓN -->
+
+  <!-- =========================
+       CONFIGURACIÓN
+  ========================== -->
+
 
   <section class="panel">
 
-    <h2>Squat Analysis</h2>
+
+    <h2>
+      Squat Analysis
+    </h2>
+
 
     <div class="settings-grid">
 
+
+      <!-- REPETICIONES -->
+
       <label>
+
         Repeticiones
+
         <input
           id="targetReps"
           type="number"
@@ -53,10 +94,17 @@
           min="1"
           max="50"
         />
+
       </label>
 
+
+
+      <!-- FLEXIÓN RODILLA -->
+
       <label>
+
         Flexión objetivo
+
         <input
           id="kneeTarget"
           type="number"
@@ -64,11 +112,21 @@
           min="30"
           max="150"
         />
-        <span>°</span>
+
+        <span>
+          °
+        </span>
+
       </label>
 
+
+
+      <!-- TOLERANCIA ROM -->
+
       <label>
+
         Tolerancia ROM
+
         <input
           id="kneeTolerance"
           type="number"
@@ -76,262 +134,530 @@
           min="1"
           max="20"
         />
-        <span>°</span>
+
+        <span>
+          °
+        </span>
+
       </label>
 
+
+
+      <!-- EXCÉNTRICA -->
+
       <label>
+
         Excéntrica
+
         <input
           id="eccTarget"
           type="number"
           value="2"
           step="0.1"
         />
-        <span>s</span>
+
+        <span>
+          s
+        </span>
+
       </label>
 
+
+
+      <!-- TOLERANCIA EXCÉNTRICA -->
+
       <label>
+
         Tolerancia excéntrica
+
         <input
           id="eccTolerance"
           type="number"
           value="0.5"
           step="0.1"
         />
-        <span>s</span>
+
+        <span>
+          s
+        </span>
+
       </label>
 
+
+
+      <!-- CONCÉNTRICA -->
+
       <label>
+
         Concéntrica
+
         <input
           id="conTarget"
           type="number"
           value="1"
           step="0.1"
         />
-        <span>s</span>
+
+        <span>
+          s
+        </span>
+
       </label>
 
+
+
+      <!-- TOLERANCIA CONCÉNTRICA -->
+
       <label>
+
         Tolerancia concéntrica
+
         <input
           id="conTolerance"
           type="number"
           value="0.4"
           step="0.1"
         />
-        <span>s</span>
+
+        <span>
+          s
+        </span>
+
       </label>
 
+
+
+      <!-- FEEDBACK -->
+
       <label>
+
         Feedback
+
         <select id="feedbackMode">
-          <option value="both">Visual + audio</option>
-          <option value="visual">Solo visual</option>
-          <option value="audio">Solo audio</option>
-          <option value="off">Desactivado</option>
+
+          <option value="both">
+            Visual + audio
+          </option>
+
+          <option value="visual">
+            Solo visual
+          </option>
+
+          <option value="audio">
+            Solo audio
+          </option>
+
+          <option value="off">
+            Desactivado
+          </option>
+
         </select>
+
       </label>
+
 
     </div>
 
 
-    <h3>Evaluar</h3>
+
+    <!-- =========================
+         VARIABLES A EVALUAR
+    ========================== -->
+
+
+    <h3>
+      Evaluar
+    </h3>
+
 
     <div class="checks">
 
+
       <label>
-        <input id="checkRom" type="checkbox" checked>
+
+        <input
+          id="checkRom"
+          type="checkbox"
+          checked
+        >
+
         ROM
+
       </label>
 
+
+
       <label>
-        <input id="checkEcc" type="checkbox" checked>
+
+        <input
+          id="checkEcc"
+          type="checkbox"
+          checked
+        >
+
         Tempo excéntrico
+
       </label>
 
+
+
       <label>
-        <input id="checkCon" type="checkbox" checked>
+
+        <input
+          id="checkCon"
+          type="checkbox"
+          checked
+        >
+
         Tempo concéntrico
+
       </label>
+
 
     </div>
+
+
+
+    <!-- =========================
+         BOTONES
+    ========================== -->
 
 
     <div class="buttons">
 
-      <button id="cameraButton">
+
+      <!-- ACTIVAR CÁMARA -->
+
+      <button
+        id="cameraButton"
+      >
+
         Activar cámara
+
       </button>
+
+
+
+      <!-- NUEVO:
+           CAMBIAR CÁMARA -->
+
+      <button
+        id="switchCameraButton"
+        class="secondary"
+      >
+
+        Cambiar cámara
+
+      </button>
+
+
+
+      <!-- INICIAR -->
 
       <button
         id="startButton"
         disabled
       >
+
         Iniciar serie
+
       </button>
+
+
+
+      <!-- MODIFICADO:
+           YA NO ESTÁ DESHABILITADO -->
 
       <button
         id="stopButton"
-        disabled
         class="secondary"
       >
-        Finalizar
+
+        Finalizar serie
+
       </button>
 
+
     </div>
+
 
   </section>
 
 
-  <!-- CÁMARA -->
+
+  <!-- =========================
+       CÁMARA
+  ========================== -->
+
 
   <section class="camera-section">
 
+
     <div class="camera-wrapper">
+
 
       <video
         id="video"
         autoplay
         muted
         playsinline
-      ></video>
+      >
+      </video>
 
-      <canvas id="canvas"></canvas>
+
+      <canvas
+        id="canvas"
+      >
+      </canvas>
+
+
+      <!-- ADVERTENCIA -->
 
       <div
         id="warning"
         class="warning hidden"
-      ></div>
+      >
+      </div>
+
 
     </div>
 
 
+
+    <!-- =========================
+         PANEL EN VIVO
+    ========================== -->
+
+
     <div class="live-panel">
 
+
       <div class="live-label">
+
         KINEMYX LIVE
+
       </div>
+
+
+
+      <!-- REP -->
 
       <div class="metric">
 
-        <small>REP</small>
+        <small>
+          REP
+        </small>
 
         <strong id="repDisplay">
+
           0 / 8
+
         </strong>
 
       </div>
 
 
+
+      <!-- FLEXIÓN -->
+
       <div class="metric">
 
-        <small>KNEE FLEXION</small>
+        <small>
+          KNEE FLEXION
+        </small>
 
         <strong id="angleDisplay">
+
           —°
+
         </strong>
 
       </div>
 
 
+
+      <!-- ESTADO -->
+
       <div class="metric">
 
-        <small>STATE</small>
+        <small>
+          STATE
+        </small>
 
         <strong id="stateDisplay">
+
           READY
+
         </strong>
 
       </div>
 
 
+
+      <!-- EXCÉNTRICA -->
+
       <div class="metric">
 
-        <small>ECCENTRIC</small>
+        <small>
+          ECCENTRIC
+        </small>
 
         <strong id="eccDisplay">
+
           —
+
         </strong>
 
       </div>
 
 
+
+      <!-- CONCÉNTRICA -->
+
       <div class="metric">
 
-        <small>CONCENTRIC</small>
+        <small>
+          CONCENTRIC
+        </small>
 
         <strong id="conDisplay">
+
           —
+
         </strong>
 
       </div>
 
+
+
+      <!-- LADO ACTIVO -->
 
       <div class="metric">
 
-        <small>ACTIVE SIDE</small>
+        <small>
+          ACTIVE SIDE
+        </small>
 
         <strong id="sideDisplay">
+
           —
+
         </strong>
 
       </div>
 
+
+
+      <!-- ESTADO GENERAL -->
 
       <div
         id="status"
         class="status"
       >
+
         Activa la cámara
+
       </div>
 
+
     </div>
+
 
   </section>
 
 
-  <!-- RESULTADOS -->
+
+  <!-- =========================
+       RESULTADOS
+  ========================== -->
+
 
   <section
     id="results"
     class="panel results"
   >
 
-    <h2>Session Results</h2>
+
+    <h2>
+
+      Session Results
+
+    </h2>
+
+
 
     <div
       id="summary"
       class="summary"
     >
+
       Aún no hay resultados.
+
     </div>
+
 
 
     <table>
 
+
       <thead>
 
+
         <tr>
-          <th>Rep</th>
-          <th>Rodilla</th>
-          <th>Exc.</th>
-          <th>Con.</th>
-          <th>Estado</th>
+
+          <th>
+            Rep
+          </th>
+
+          <th>
+            Rodilla
+          </th>
+
+          <th>
+            Exc.
+          </th>
+
+          <th>
+            Con.
+          </th>
+
+          <th>
+            Estado
+          </th>
+
         </tr>
+
 
       </thead>
 
-      <tbody id="resultsBody"></tbody>
+
+
+      <tbody
+        id="resultsBody"
+      >
+      </tbody>
+
 
     </table>
 
+
   </section>
+
 
 </main>
 
 
-<script src="app.js"></script>
+
+<!-- =========================
+     JAVASCRIPT
+========================== -->
+
+
+<script
+  src="app.js">
+</script>
+
 
 </body>
+
 </html>
