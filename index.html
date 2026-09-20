@@ -10,14 +10,22 @@
     content="width=device-width, initial-scale=1.0"
   />
 
-  <title>KINEMYX - Movement Alpha</title>
+  <meta
+    name="theme-color"
+    content="#0b1118"
+  />
+
+  <title>KINEMYX - Human Movement Intelligence</title>
 
   <link
     rel="stylesheet"
     href="styles.css"
   />
 
-  <!-- TensorFlow.js -->
+
+  <!-- =====================================================
+       TENSORFLOW.JS
+  ====================================================== -->
 
   <script
     src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core">
@@ -31,7 +39,10 @@
     src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl">
   </script>
 
-  <!-- MoveNet -->
+
+  <!-- =====================================================
+       MOVENET / POSE DETECTION
+  ====================================================== -->
 
   <script
     src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection">
@@ -40,25 +51,22 @@
 </head>
 
 
+
 <body>
 
 
 <!-- =====================================================
-     ENCABEZADO
+     HEADER
 ===================================================== -->
 
 <header>
 
   <div class="brand">
-
     KINEMY<span>X</span>
-
   </div>
 
   <div class="subtitle">
-
     Human Movement Intelligence
-
   </div>
 
 </header>
@@ -69,7 +77,7 @@
 
 
 <!-- =====================================================
-     SELECTOR DE MOVIMIENTO
+     1. SELECTOR DE ANÁLISIS
 ===================================================== -->
 
 <section class="panel">
@@ -100,544 +108,17 @@
 
 
 <!-- =====================================================
-     CONFIGURACIÓN SENTADILLA
-===================================================== -->
-
-<section
-  id="squatSettingsSection"
-  class="panel"
->
-
-  <h2>
-    Squat Analysis
-  </h2>
-
-
-  <div class="settings-grid">
-
-
-    <label>
-
-      Repeticiones
-
-      <input
-        id="targetReps"
-        type="number"
-        value="8"
-        min="1"
-        max="50"
-      />
-
-    </label>
-
-
-    <label>
-
-      Flexión objetivo
-
-      <input
-        id="kneeTarget"
-        type="number"
-        value="90"
-        min="30"
-        max="150"
-      />
-
-      <span>
-        °
-      </span>
-
-    </label>
-
-
-    <label>
-
-      Tolerancia ROM
-
-      <input
-        id="kneeTolerance"
-        type="number"
-        value="5"
-        min="1"
-        max="20"
-      />
-
-      <span>
-        °
-      </span>
-
-    </label>
-
-
-    <label>
-
-      Excéntrica
-
-      <input
-        id="eccTarget"
-        type="number"
-        value="2"
-        min="0"
-        step="0.1"
-      />
-
-      <span>
-        s
-      </span>
-
-    </label>
-
-
-    <label>
-
-      Tolerancia excéntrica
-
-      <input
-        id="eccTolerance"
-        type="number"
-        value="0.5"
-        min="0"
-        step="0.1"
-      />
-
-      <span>
-        s
-      </span>
-
-    </label>
-
-
-    <label>
-
-      Concéntrica
-
-      <input
-        id="conTarget"
-        type="number"
-        value="1"
-        min="0"
-        step="0.1"
-      />
-
-      <span>
-        s
-      </span>
-
-    </label>
-
-
-    <label>
-
-      Tolerancia concéntrica
-
-      <input
-        id="conTolerance"
-        type="number"
-        value="0.4"
-        min="0"
-        step="0.1"
-      />
-
-      <span>
-        s
-      </span>
-
-    </label>
-
-
-    <label>
-
-      Feedback
-
-      <select
-        id="feedbackMode"
-      >
-
-        <option value="both">
-          Visual + audio
-        </option>
-
-        <option value="visual">
-          Solo visual
-        </option>
-
-        <option value="audio">
-          Solo audio
-        </option>
-
-        <option value="off">
-          Desactivado
-        </option>
-
-      </select>
-
-    </label>
-
-
-  </div>
-
-
-
-  <h3>
-    Evaluar
-  </h3>
-
-
-  <div class="checks">
-
-
-    <label>
-
-      <input
-        id="checkRom"
-        type="checkbox"
-        checked
-      >
-
-      ROM
-
-    </label>
-
-
-    <label>
-
-      <input
-        id="checkEcc"
-        type="checkbox"
-        checked
-      >
-
-      Tempo excéntrico
-
-    </label>
-
-
-    <label>
-
-      <input
-        id="checkCon"
-        type="checkbox"
-        checked
-      >
-
-      Tempo concéntrico
-
-    </label>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     CONFIGURACIÓN CMJ
-===================================================== -->
-
-<section
-  id="cmjSettingsSection"
-  class="panel hidden"
->
-
-  <h2>
-    CMJ Analysis
-  </h2>
-
-
-  <div class="settings-grid">
-
-
-    <!-- CANTIDAD DE SALTOS -->
-
-    <label>
-
-      Número de saltos
-
-      <input
-        id="cmjTargetJumps"
-        type="number"
-        value="3"
-        min="1"
-        max="20"
-      />
-
-    </label>
-
-
-
-    <!-- ALTURA OBJETIVO -->
-
-    <label>
-
-      Altura objetivo
-
-      <input
-        id="cmjHeightTarget"
-        type="number"
-        value="30"
-        min="0"
-        max="100"
-        step="0.5"
-      />
-
-      <span>
-        cm
-      </span>
-
-    </label>
-
-
-
-    <!-- TOLERANCIA ALTURA -->
-
-    <label>
-
-      Tolerancia altura
-
-      <input
-        id="cmjHeightTolerance"
-        type="number"
-        value="3"
-        min="0"
-        max="20"
-        step="0.5"
-      />
-
-      <span>
-        cm
-      </span>
-
-    </label>
-
-
-
-    <!-- FLEXIÓN OBJETIVO COUNTERMOVEMENT -->
-
-    <label>
-
-      Flexión rodilla objetivo
-
-      <input
-        id="cmjKneeTarget"
-        type="number"
-        value="90"
-        min="20"
-        max="150"
-      />
-
-      <span>
-        °
-      </span>
-
-    </label>
-
-
-
-    <!-- TOLERANCIA RODILLA -->
-
-    <label>
-
-      Tolerancia flexión
-
-      <input
-        id="cmjKneeTolerance"
-        type="number"
-        value="10"
-        min="1"
-        max="30"
-      />
-
-      <span>
-        °
-      </span>
-
-    </label>
-
-
-
-    <!-- FEEDBACK -->
-
-    <label>
-
-      Feedback
-
-      <select
-        id="cmjFeedbackMode"
-      >
-
-        <option value="both">
-          Visual + audio
-        </option>
-
-        <option value="visual">
-          Solo visual
-        </option>
-
-        <option value="audio">
-          Solo audio
-        </option>
-
-        <option value="off">
-          Desactivado
-        </option>
-
-      </select>
-
-    </label>
-
-
-  </div>
-
-
-
-  <h3>
-    Evaluar
-  </h3>
-
-
-  <div class="checks">
-
-
-    <label>
-
-      <input
-        id="checkCmjHeight"
-        type="checkbox"
-        checked
-      >
-
-      Altura estimada
-
-    </label>
-
-
-    <label>
-
-      <input
-        id="checkCmjFlight"
-        type="checkbox"
-        checked
-      >
-
-      Tiempo de vuelo
-
-    </label>
-
-
-    <label>
-
-      <input
-        id="checkCmjKnee"
-        type="checkbox"
-        checked
-      >
-
-      Flexión de rodilla
-
-    </label>
-
-
-    <label>
-
-      <input
-        id="checkCmjCountermovement"
-        type="checkbox"
-        checked
-      >
-
-      Countermovement
-
-    </label>
-
-
-    <label>
-
-      <input
-        id="checkCmjLanding"
-        type="checkbox"
-        checked
-      >
-
-      Aterrizaje
-
-    </label>
-
-
-  </div>
-
-
-  <div class="status">
-
-    Altura de salto estimada mediante cámara.
-    No sustituye una plataforma de fuerza.
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     CONTROLES GENERALES
-===================================================== -->
-
-<section class="panel">
-
-  <h3>
-    Control de análisis
-  </h3>
-
-
-  <div class="buttons">
-
-
-    <button
-      id="cameraButton"
-    >
-      Activar cámara
-    </button>
-
-
-    <button
-      id="switchCameraButton"
-      class="secondary"
-    >
-      Cambiar cámara
-    </button>
-
-
-    <button
-      id="startButton"
-      disabled
-    >
-      Iniciar serie
-    </button>
-
-
-    <button
-      id="stopButton"
-      class="secondary"
-    >
-      Finalizar serie
-    </button>
-
-
-  </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     CÁMARA + ANÁLISIS EN VIVO
+     2. CÁMARA + ANÁLISIS EN VIVO
 ===================================================== -->
 
 <section class="camera-section">
 
 
-  <div class="camera-wrapper">
+  <!-- ===================================================
+       CÁMARA
+  ==================================================== -->
 
+  <div class="camera-wrapper">
 
     <video
       id="video"
@@ -648,11 +129,21 @@
     </video>
 
 
+    <!--
+      El canvas se utiliza para:
+      - skeleton
+      - puntos articulares
+      - líneas
+      - futuros overlays
+    -->
+
     <canvas
       id="canvas"
     >
     </canvas>
 
+
+    <!-- ADVERTENCIA VISUAL -->
 
     <div
       id="warning"
@@ -660,23 +151,21 @@
     >
     </div>
 
-
   </div>
 
 
 
-  <!-- =================================================
-       PANEL MÉTRICAS
-  ================================================== -->
+  <!-- ===================================================
+       PANEL DE MÉTRICAS EN VIVO
+  ==================================================== -->
 
   <div class="live-panel">
 
 
     <div class="live-label">
-
       KINEMYX LIVE
-
     </div>
+
 
 
     <!-- EJERCICIO ACTIVO -->
@@ -697,7 +186,7 @@
 
 
 
-    <!-- REPETICIONES / SALTOS -->
+    <!-- REPETICIÓN / SALTO -->
 
     <div class="metric">
 
@@ -717,7 +206,7 @@
 
 
 
-    <!-- ÁNGULO PRINCIPAL -->
+    <!-- MÉTRICA PRINCIPAL -->
 
     <div class="metric">
 
@@ -737,7 +226,7 @@
 
 
 
-    <!-- FASE -->
+    <!-- FASE DEL MOVIMIENTO -->
 
     <div class="metric">
 
@@ -795,7 +284,7 @@
 
 
 
-    <!-- LADO ACTIVO -->
+    <!-- LADO DETECTADO -->
 
     <div class="metric">
 
@@ -813,27 +302,676 @@
 
 
 
-    <!-- ESTADO -->
+    <!-- MENSAJE GENERAL -->
 
     <div
       id="status"
       class="status"
     >
-
-      Activa la cámara
-
+      Activa la cámara para comenzar
     </div>
 
 
   </div>
-
 
 </section>
 
 
 
 <!-- =====================================================
-     RESULTADOS SENTADILLA
+     3. CONTROLES PRINCIPALES
+===================================================== -->
+
+<section class="panel">
+
+  <h2>
+    Control de análisis
+  </h2>
+
+  <div class="buttons">
+
+
+    <!-- ACTIVAR CÁMARA -->
+
+    <button
+      id="cameraButton"
+    >
+      Activar cámara
+    </button>
+
+
+
+    <!-- CAMBIAR CÁMARA -->
+
+    <button
+      id="switchCameraButton"
+      class="secondary"
+    >
+      Cambiar cámara
+    </button>
+
+
+
+    <!-- INICIAR -->
+
+    <button
+      id="startButton"
+      disabled
+    >
+      Iniciar serie
+    </button>
+
+
+
+    <!-- FINALIZAR -->
+
+    <button
+      id="stopButton"
+      class="secondary"
+    >
+      Finalizar serie
+    </button>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     4. CONFIGURACIÓN SENTADILLA
+===================================================== -->
+
+<section
+  id="squatSettingsSection"
+  class="panel"
+>
+
+  <h2>
+    Configuración · Sentadilla
+  </h2>
+
+
+  <!-- ===================================================
+       OBJETIVOS
+  ==================================================== -->
+
+  <h3>
+    Objetivos
+  </h3>
+
+
+  <div class="settings-grid">
+
+
+    <!-- REPETICIONES -->
+
+    <label>
+
+      Repeticiones
+
+      <input
+        id="targetReps"
+        type="number"
+        value="8"
+        min="1"
+        max="50"
+      />
+
+    </label>
+
+
+
+    <!-- FLEXIÓN OBJETIVO -->
+
+    <label>
+
+      Flexión de rodilla objetivo
+
+      <input
+        id="kneeTarget"
+        type="number"
+        value="90"
+        min="30"
+        max="150"
+      />
+
+      <span>
+        grados
+      </span>
+
+    </label>
+
+
+
+    <!-- TOLERANCIA ROM -->
+
+    <label>
+
+      Tolerancia ROM
+
+      <input
+        id="kneeTolerance"
+        type="number"
+        value="5"
+        min="1"
+        max="20"
+      />
+
+      <span>
+        ± grados
+      </span>
+
+    </label>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       TEMPO
+  ==================================================== -->
+
+  <h3>
+    Tempo
+  </h3>
+
+
+  <div class="settings-grid">
+
+
+    <!-- EXCÉNTRICA -->
+
+    <label>
+
+      Tiempo excéntrico
+
+      <input
+        id="eccTarget"
+        type="number"
+        value="2"
+        min="0"
+        step="0.1"
+      />
+
+      <span>
+        segundos
+      </span>
+
+    </label>
+
+
+
+    <!-- TOLERANCIA EXCÉNTRICA -->
+
+    <label>
+
+      Tolerancia excéntrica
+
+      <input
+        id="eccTolerance"
+        type="number"
+        value="0.5"
+        min="0"
+        step="0.1"
+      />
+
+      <span>
+        ± segundos
+      </span>
+
+    </label>
+
+
+
+    <!-- CONCÉNTRICA -->
+
+    <label>
+
+      Tiempo concéntrico
+
+      <input
+        id="conTarget"
+        type="number"
+        value="1"
+        min="0"
+        step="0.1"
+      />
+
+      <span>
+        segundos
+      </span>
+
+    </label>
+
+
+
+    <!-- TOLERANCIA CONCÉNTRICA -->
+
+    <label>
+
+      Tolerancia concéntrica
+
+      <input
+        id="conTolerance"
+        type="number"
+        value="0.4"
+        min="0"
+        step="0.1"
+      />
+
+      <span>
+        ± segundos
+      </span>
+
+    </label>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       VARIABLES
+  ==================================================== -->
+
+  <h3>
+    Variables a evaluar
+  </h3>
+
+
+  <div class="checks">
+
+
+    <label>
+
+      <input
+        id="checkRom"
+        type="checkbox"
+        checked
+      >
+
+      ROM
+
+    </label>
+
+
+
+    <label>
+
+      <input
+        id="checkEcc"
+        type="checkbox"
+        checked
+      >
+
+      Tempo excéntrico
+
+    </label>
+
+
+
+    <label>
+
+      <input
+        id="checkCon"
+        type="checkbox"
+        checked
+      >
+
+      Tempo concéntrico
+
+    </label>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       FEEDBACK
+  ==================================================== -->
+
+  <h3>
+    Feedback
+  </h3>
+
+
+  <div class="settings-grid">
+
+    <label>
+
+      Tipo de feedback
+
+      <select
+        id="feedbackMode"
+      >
+
+        <option value="both">
+          Visual + audio
+        </option>
+
+        <option value="visual">
+          Solo visual
+        </option>
+
+        <option value="audio">
+          Solo audio
+        </option>
+
+        <option value="off">
+          Desactivado
+        </option>
+
+      </select>
+
+    </label>
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     5. CONFIGURACIÓN CMJ
+===================================================== -->
+
+<section
+  id="cmjSettingsSection"
+  class="panel hidden"
+>
+
+  <h2>
+    Configuración · CMJ
+  </h2>
+
+
+
+  <!-- ===================================================
+       TEST
+  ==================================================== -->
+
+  <h3>
+    Test
+  </h3>
+
+
+  <div class="settings-grid">
+
+
+    <!-- SALTOS -->
+
+    <label>
+
+      Número de saltos
+
+      <input
+        id="cmjTargetJumps"
+        type="number"
+        value="3"
+        min="1"
+        max="20"
+      />
+
+    </label>
+
+
+
+    <!-- ALTURA -->
+
+    <label>
+
+      Altura objetivo
+
+      <input
+        id="cmjHeightTarget"
+        type="number"
+        value="30"
+        min="0"
+        max="100"
+        step="0.5"
+      />
+
+      <span>
+        cm
+      </span>
+
+    </label>
+
+
+
+    <!-- TOLERANCIA ALTURA -->
+
+    <label>
+
+      Tolerancia altura
+
+      <input
+        id="cmjHeightTolerance"
+        type="number"
+        value="3"
+        min="0"
+        max="20"
+        step="0.5"
+      />
+
+      <span>
+        ± cm
+      </span>
+
+    </label>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       COUNTERMOVEMENT
+  ==================================================== -->
+
+  <h3>
+    Countermovement
+  </h3>
+
+
+  <div class="settings-grid">
+
+
+    <!-- FLEXIÓN -->
+
+    <label>
+
+      Flexión de rodilla objetivo
+
+      <input
+        id="cmjKneeTarget"
+        type="number"
+        value="90"
+        min="20"
+        max="150"
+      />
+
+      <span>
+        grados
+      </span>
+
+    </label>
+
+
+
+    <!-- TOLERANCIA -->
+
+    <label>
+
+      Tolerancia de flexión
+
+      <input
+        id="cmjKneeTolerance"
+        type="number"
+        value="10"
+        min="1"
+        max="30"
+      />
+
+      <span>
+        ± grados
+      </span>
+
+    </label>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       VARIABLES
+  ==================================================== -->
+
+  <h3>
+    Variables a evaluar
+  </h3>
+
+
+  <div class="checks">
+
+
+    <label>
+
+      <input
+        id="checkCmjHeight"
+        type="checkbox"
+        checked
+      >
+
+      Altura estimada
+
+    </label>
+
+
+
+    <label>
+
+      <input
+        id="checkCmjFlight"
+        type="checkbox"
+        checked
+      >
+
+      Tiempo de vuelo
+
+    </label>
+
+
+
+    <label>
+
+      <input
+        id="checkCmjKnee"
+        type="checkbox"
+        checked
+      >
+
+      Flexión de rodilla
+
+    </label>
+
+
+
+    <label>
+
+      <input
+        id="checkCmjCountermovement"
+        type="checkbox"
+        checked
+      >
+
+      Countermovement
+
+    </label>
+
+
+
+    <label>
+
+      <input
+        id="checkCmjLanding"
+        type="checkbox"
+        checked
+      >
+
+      Aterrizaje
+
+    </label>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       FEEDBACK CMJ
+  ==================================================== -->
+
+  <h3>
+    Feedback
+  </h3>
+
+
+  <div class="settings-grid">
+
+    <label>
+
+      Tipo de feedback
+
+      <select
+        id="cmjFeedbackMode"
+      >
+
+        <option value="both">
+          Visual + audio
+        </option>
+
+        <option value="visual">
+          Solo visual
+        </option>
+
+        <option value="audio">
+          Solo audio
+        </option>
+
+        <option value="off">
+          Desactivado
+        </option>
+
+      </select>
+
+    </label>
+
+  </div>
+
+
+
+  <!-- NOTA CMJ -->
+
+  <div class="status">
+
+    La altura de salto se estima mediante tiempo de vuelo
+    utilizando la cámara del dispositivo.
+    No sustituye una plataforma de fuerza.
+
+  </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     6. RESULTADOS SENTADILLA
 ===================================================== -->
 
 <section
@@ -842,7 +980,7 @@
 >
 
   <h2>
-    Squat Results
+    Resultados · Sentadilla
   </h2>
 
 
@@ -850,14 +988,11 @@
     id="summary"
     class="summary"
   >
-
     Aún no hay resultados.
-
   </div>
 
 
   <table>
-
 
     <thead>
 
@@ -893,7 +1028,6 @@
     >
     </tbody>
 
-
   </table>
 
 </section>
@@ -901,7 +1035,7 @@
 
 
 <!-- =====================================================
-     RESULTADOS CMJ
+     7. RESULTADOS CMJ
 ===================================================== -->
 
 <section
@@ -910,7 +1044,7 @@
 >
 
   <h2>
-    CMJ Results
+    Resultados · CMJ
   </h2>
 
 
@@ -918,14 +1052,11 @@
     id="cmjSummary"
     class="summary"
   >
-
     Aún no hay resultados.
-
   </div>
 
 
   <table>
-
 
     <thead>
 
@@ -936,7 +1067,7 @@
         </th>
 
         <th>
-          Altura estimada
+          Altura est.
         </th>
 
         <th>
@@ -969,7 +1100,6 @@
     >
     </tbody>
 
-
   </table>
 
 </section>
@@ -981,12 +1111,12 @@
 
 
 <!-- =====================================================
-     JAVASCRIPT
+     APP
 ===================================================== -->
 
 <script
-  src="app.js">
-</script>
+  src="app.js"
+></script>
 
 
 </body>
