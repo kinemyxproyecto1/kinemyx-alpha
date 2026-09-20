@@ -1701,3 +1701,262 @@ tbody tr:hover {
   }
 
 }
+/* =========================================================
+   KINEMYX
+   RESULTADOS VERTICALES EN MÓVIL
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* -------------------------------------------------------
+     CONTENEDOR RESULTADOS
+  -------------------------------------------------------- */
+
+  #results,
+  #cmjResults {
+
+    padding: 18px;
+
+    overflow: visible;
+
+  }
+
+
+  #results h2,
+  #cmjResults h2 {
+
+    margin-bottom: 18px;
+
+    font-size: 22px;
+
+  }
+
+
+  /* -------------------------------------------------------
+     ELIMINAR SCROLL HORIZONTAL
+  -------------------------------------------------------- */
+
+  #results table,
+  #cmjResults table {
+
+    display: block;
+
+    width: 100%;
+
+    overflow: visible;
+
+    white-space: normal;
+
+  }
+
+
+  /* -------------------------------------------------------
+     OCULTAR CABECERA DE TABLA
+  -------------------------------------------------------- */
+
+  #results thead,
+  #cmjResults thead {
+
+    display: none;
+
+  }
+
+
+  /* -------------------------------------------------------
+     BODY
+  -------------------------------------------------------- */
+
+  #results tbody,
+  #cmjResults tbody {
+
+    display: grid;
+
+    width: 100%;
+
+    gap: 12px;
+
+  }
+
+
+  /* -------------------------------------------------------
+     CADA REP / SALTO SE TRANSFORMA EN TARJETA
+  -------------------------------------------------------- */
+
+  #results tbody tr,
+  #cmjResults tbody tr {
+
+    display: block;
+
+    width: 100%;
+
+    padding: 6px 16px;
+
+    background: #f8fafc;
+
+    border: 1px solid #e3eaf1;
+
+    border-radius: 14px;
+
+  }
+
+
+  /* -------------------------------------------------------
+     CADA MÉTRICA VA HACIA ABAJO
+  -------------------------------------------------------- */
+
+  #results tbody td,
+  #cmjResults tbody td {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    width: 100%;
+
+    min-height: 48px;
+
+    padding: 12px 2px;
+
+    border-bottom: 1px solid #e8edf3;
+
+    color: #15202d;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    text-align: right;
+
+  }
+
+
+  #results tbody td:last-child,
+  #cmjResults tbody td:last-child {
+
+    border-bottom: none;
+
+  }
+
+
+  /* -------------------------------------------------------
+     ETIQUETAS
+  -------------------------------------------------------- */
+
+  #results tbody td::before,
+  #cmjResults tbody td::before {
+
+    margin-right: 20px;
+
+    color: #7a899a;
+
+    font-size: 11px;
+
+    font-weight: 750;
+
+    letter-spacing: 0.7px;
+
+    text-align: left;
+
+    text-transform: uppercase;
+
+  }
+
+
+  /* =====================================================
+     SENTADILLA
+  ====================================================== */
+
+  #results tbody td:nth-child(1)::before {
+    content: "Repetición";
+  }
+
+  #results tbody td:nth-child(2)::before {
+    content: "Flexión rodilla";
+  }
+
+  #results tbody td:nth-child(3)::before {
+    content: "Excéntrica";
+  }
+
+  #results tbody td:nth-child(4)::before {
+    content: "Concéntrica";
+  }
+
+  #results tbody td:nth-child(5)::before {
+    content: "Estado";
+  }
+
+
+  /* =====================================================
+     CMJ
+  ====================================================== */
+
+  #cmjResults tbody td:nth-child(1)::before {
+    content: "Salto";
+  }
+
+  #cmjResults tbody td:nth-child(2)::before {
+    content: "Altura estimada";
+  }
+
+  #cmjResults tbody td:nth-child(3)::before {
+    content: "Tiempo de vuelo";
+  }
+
+  #cmjResults tbody td:nth-child(4)::before {
+    content: "Rodilla fondo";
+  }
+
+  #cmjResults tbody td:nth-child(5)::before {
+    content: "Descenso";
+  }
+
+  #cmjResults tbody td:nth-child(6)::before {
+    content: "Aterrizaje";
+  }
+
+  #cmjResults tbody td:nth-child(7)::before {
+    content: "Estado";
+  }
+
+
+  /* -------------------------------------------------------
+     PRIMER DATO DE CADA TARJETA
+  -------------------------------------------------------- */
+
+  #results tbody td:first-child,
+  #cmjResults tbody td:first-child {
+
+    min-height: 52px;
+
+    color: #1677ff;
+
+    font-size: 17px;
+
+    font-weight: 800;
+
+  }
+
+
+  /* -------------------------------------------------------
+     RESULTADO CORRECTO / ALERTA
+  -------------------------------------------------------- */
+
+  #results tbody td.pass,
+  #cmjResults tbody td.pass {
+
+    color: #18a66a;
+
+  }
+
+
+  #results tbody td.fail,
+  #cmjResults tbody td.fail {
+
+    color: #d99114;
+
+  }
+
+}
