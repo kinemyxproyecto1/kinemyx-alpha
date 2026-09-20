@@ -1,44 +1,93 @@
 /* =========================================================
-   KINEMYX UI 1.4
-   Movements + Jumps
+   KINEMYX UI 1.5
+   Movimientos + Saltos + Feedback
    ========================================================= */
 
 :root {
+
   --bg-main: #f3f6fa;
+
   --white: #ffffff;
+
   --dark-950: #070b10;
   --dark-900: #0b1118;
   --dark-850: #101822;
+
   --text-main: #101720;
   --text-secondary: #667589;
   --text-muted: #96a3b2;
+
   --blue: #1677ff;
   --blue-hover: #0868eb;
   --blue-soft: #eaf3ff;
   --blue-border: #cfe1ff;
+
   --green: #18a66a;
   --green-soft: #eaf8f1;
+
   --amber: #d99114;
   --amber-soft: #fff6e5;
+
+  --red: #d84c4c;
+  --red-soft: #fff0f0;
+
   --border: #dde5ed;
   --border-soft: #e9eef3;
-  --shadow-sm: 0 5px 16px rgba(21, 37, 56, 0.05);
-  --shadow-lg: 0 20px 55px rgba(9, 22, 38, 0.12);
-  --radius-lg: 22px;
+
+  --shadow-sm:
+    0 5px 16px
+    rgba(
+      21,
+      37,
+      56,
+      0.05
+    );
+
+  --shadow-lg:
+    0 20px 55px
+    rgba(
+      9,
+      22,
+      38,
+      0.12
+    );
+
+  --radius-lg:
+    22px;
+
 }
+
+
+/* =========================================================
+   RESET
+========================================================= */
 
 * {
-  box-sizing: border-box;
+
+  box-sizing:
+    border-box;
+
 }
+
 
 html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
+
+  scroll-behavior:
+    smooth;
+
+  -webkit-text-size-adjust:
+    100%;
+
 }
 
+
 body {
-  margin: 0;
-  min-height: 100vh;
+
+  margin:
+    0;
+
+  min-height:
+    100vh;
 
   font-family:
     Inter,
@@ -51,20 +100,25 @@ body {
     sans-serif;
 
   background:
+
     radial-gradient(
       circle at 8% 0%,
       rgba(22, 119, 255, 0.055),
       transparent 28%
     ),
+
     linear-gradient(
       180deg,
       #f8fafc 0%,
       var(--bg-main) 100%
     );
 
-  color: var(--text-main);
+  color:
+    var(--text-main);
 
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing:
+    antialiased;
+
 }
 
 
@@ -73,24 +127,51 @@ body {
 ========================================================= */
 
 header {
-  width: 92%;
-  max-width: 1400px;
 
-  margin: 0 auto;
+  width:
+    92%;
+
+  max-width:
+    1400px;
+
+  margin:
+    0 auto;
 
   padding:
     28px
     0
     18px;
+
+}
+
+
+.header-row {
+
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    16px;
+
 }
 
 
 .brand {
-  display: inline-flex;
 
-  align-items: center;
+  display:
+    inline-flex;
 
-  color: var(--dark-900);
+  align-items:
+    center;
+
+  color:
+    var(--dark-900);
 
   font-size:
     clamp(
@@ -99,31 +180,80 @@ header {
       39px
     );
 
-  font-weight: 850;
+  font-weight:
+    850;
 
-  letter-spacing: 2.5px;
+  letter-spacing:
+    2.5px;
 
-  line-height: 1;
+  line-height:
+    1;
+
 }
 
 
 .brand span {
-  color: var(--blue);
+
+  color:
+    var(--blue);
+
 }
 
 
 .subtitle {
-  margin-top: 8px;
 
-  color: var(--text-secondary);
+  margin-top:
+    8px;
 
-  font-size: 10px;
+  color:
+    var(--text-secondary);
 
-  font-weight: 750;
+  font-size:
+    10px;
 
-  letter-spacing: 2.7px;
+  font-weight:
+    750;
 
-  text-transform: uppercase;
+  letter-spacing:
+    2.7px;
+
+  text-transform:
+    uppercase;
+
+}
+
+
+.beta-badge {
+
+  padding:
+    7px
+    10px;
+
+  border:
+    1px solid
+    var(--blue-border);
+
+  border-radius:
+    999px;
+
+  background:
+    var(--blue-soft);
+
+  color:
+    var(--blue);
+
+  font-size:
+    9px;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    1px;
+
+  white-space:
+    nowrap;
+
 }
 
 
@@ -132,13 +262,19 @@ header {
 ========================================================= */
 
 main {
-  width: 92%;
 
-  max-width: 1400px;
+  width:
+    92%;
 
-  margin: 0 auto;
+  max-width:
+    1400px;
 
-  padding-bottom: 70px;
+  margin:
+    0 auto;
+
+  padding-bottom:
+    70px;
+
 }
 
 
@@ -147,11 +283,15 @@ main {
 ========================================================= */
 
 .panel {
-  position: relative;
 
-  padding: 24px;
+  position:
+    relative;
 
-  margin-bottom: 16px;
+  padding:
+    24px;
+
+  margin-bottom:
+    16px;
 
   background:
     rgba(
@@ -175,10 +315,12 @@ main {
 
   box-shadow:
     var(--shadow-sm);
+
 }
 
 
 .panel h2 {
+
   margin:
     0
     0
@@ -194,16 +336,20 @@ main {
       26px
     );
 
-  font-weight: 800;
+  font-weight:
+    800;
 
   letter-spacing:
     -0.7px;
 
-  line-height: 1.15;
+  line-height:
+    1.15;
+
 }
 
 
 .panel h3 {
+
   margin:
     24px
     0
@@ -223,10 +369,12 @@ main {
 
   text-transform:
     uppercase;
+
 }
 
 
 .section-eyebrow {
+
   margin-bottom:
     7px;
 
@@ -247,6 +395,7 @@ main {
 
   text-transform:
     uppercase;
+
 }
 
 
@@ -255,6 +404,7 @@ main {
 ========================================================= */
 
 button {
+
   min-height:
     43px;
 
@@ -301,22 +451,28 @@ button {
     border-color 0.15s ease,
     transform 0.15s ease,
     opacity 0.15s ease;
+
 }
 
 
 button:hover {
+
   background:
     var(--blue-hover);
+
 }
 
 
 button:active {
+
   transform:
     scale(0.99);
+
 }
 
 
 button.secondary {
+
   background:
     #f3f6f9;
 
@@ -328,16 +484,20 @@ button.secondary {
 
   box-shadow:
     none;
+
 }
 
 
 button.secondary:hover {
+
   background:
     #eaf0f5;
+
 }
 
 
 button:disabled {
+
   opacity:
     0.42;
 
@@ -349,16 +509,14 @@ button:disabled {
 
   box-shadow:
     none;
+
 }
 
-
-/* =========================================================
-   BUTTON GROUPS
-========================================================= */
 
 .buttons,
 .category-tabs,
 .exercise-selector {
+
   display:
     flex;
 
@@ -367,14 +525,16 @@ button:disabled {
 
   gap:
     9px;
+
 }
 
 
 /* =========================================================
-   CATEGORY TABS
+   CATEGORY
 ========================================================= */
 
 .category-tabs {
+
   padding:
     5px;
 
@@ -390,31 +550,34 @@ button:disabled {
 
   border-radius:
     14px;
+
 }
 
 
 .category-tabs button {
+
   flex:
     1 1 180px;
 
   box-shadow:
     none;
+
 }
 
 
-/* =========================================================
-   EXERCISE SELECTOR
-========================================================= */
-
 .exercise-selector {
+
   padding-top:
     2px;
+
 }
 
 
 .exercise-selector button {
+
   box-shadow:
     none;
+
 }
 
 
@@ -423,6 +586,7 @@ button:disabled {
 ========================================================= */
 
 .setup-header {
+
   display:
     flex;
 
@@ -437,16 +601,20 @@ button:disabled {
 
   margin-bottom:
     17px;
+
 }
 
 
 .setup-header h2 {
+
   margin:
     0;
+
 }
 
 
 .setup-helper {
+
   padding:
     7px
     10px;
@@ -468,14 +636,12 @@ button:disabled {
 
   white-space:
     nowrap;
+
 }
 
 
-/* =========================================================
-   FOUR STEPS
-========================================================= */
-
 .setup-flow {
+
   display:
     grid;
 
@@ -490,10 +656,12 @@ button:disabled {
 
   gap:
     8px;
+
 }
 
 
 .setup-step {
+
   display:
     flex;
 
@@ -531,10 +699,12 @@ button:disabled {
 
   overflow:
     hidden;
+
 }
 
 
 .step-number {
+
   display:
     flex;
 
@@ -567,19 +737,23 @@ button:disabled {
 
   font-weight:
     850;
+
 }
 
 
 .step-copy {
+
   width:
     100%;
 
   min-width:
     0;
+
 }
 
 
 .step-copy strong {
+
   display:
     block;
 
@@ -603,36 +777,33 @@ button:disabled {
 
   text-overflow:
     ellipsis;
+
 }
 
 
-.step-copy small {
-  display:
-    none;
-}
-
-
+.step-copy small,
 .step-status {
+
   display:
     none;
+
 }
 
-
-/* =========================================================
-   STEP STATES
-========================================================= */
 
 .setup-step.done {
+
   background:
     var(--green-soft);
 
   border-color:
     #bee7d2;
+
 }
 
 
 .setup-step.done
 .step-number {
+
   background:
     var(--green);
 
@@ -641,11 +812,13 @@ button:disabled {
 
   font-size:
     0;
+
 }
 
 
 .setup-step.done
 .step-number::after {
+
   content:
     "✓";
 
@@ -654,35 +827,43 @@ button:disabled {
 
   font-weight:
     900;
+
 }
 
 
 .setup-step.active {
+
   background:
     var(--blue-soft);
 
   border-color:
     var(--blue-border);
+
 }
 
 
 .setup-step.active
 .step-number {
+
   background:
     var(--blue);
 
   color:
     #ffffff;
+
 }
 
 
 .setup-step.pending {
+
   opacity:
     0.58;
+
 }
 
 
 .setup-step.warning-step {
+
   background:
     var(--amber-soft);
 
@@ -691,16 +872,19 @@ button:disabled {
 
   opacity:
     1;
+
 }
 
 
 .setup-step.warning-step
 .step-number {
+
   background:
     var(--amber);
 
   color:
     #ffffff;
+
 }
 
 
@@ -709,6 +893,7 @@ button:disabled {
 ========================================================= */
 
 .position-tip {
+
   display:
     flex;
 
@@ -742,10 +927,12 @@ button:disabled {
 
   font-weight:
     600;
+
 }
 
 
 .tip-icon {
+
   display:
     flex;
 
@@ -778,14 +965,16 @@ button:disabled {
 
   font-weight:
     850;
+
 }
 
 
 /* =========================================================
-   CAMERA + LIVE
+   CAMERA
 ========================================================= */
 
 .camera-section {
+
   position:
     relative;
 
@@ -826,10 +1015,12 @@ button:disabled {
 
   overflow:
     hidden;
+
 }
 
 
 .camera-wrapper {
+
   position:
     relative;
 
@@ -847,10 +1038,12 @@ button:disabled {
 
   background:
     #030609;
+
 }
 
 
 video {
+
   display:
     block;
 
@@ -865,10 +1058,12 @@ video {
 
   background:
     #030609;
+
 }
 
 
 canvas {
+
   position:
     absolute;
 
@@ -883,14 +1078,12 @@ canvas {
 
   pointer-events:
     none;
+
 }
 
 
-/* =========================================================
-   WARNING
-========================================================= */
-
 .warning {
+
   position:
     absolute;
 
@@ -935,6 +1128,7 @@ canvas {
 
   text-align:
     center;
+
 }
 
 
@@ -943,6 +1137,7 @@ canvas {
 ========================================================= */
 
 .live-panel {
+
   display:
     flex;
 
@@ -954,10 +1149,12 @@ canvas {
 
   color:
     #ffffff;
+
 }
 
 
 .live-label {
+
   display:
     flex;
 
@@ -984,10 +1181,12 @@ canvas {
 
   text-transform:
     uppercase;
+
 }
 
 
 .live-label::before {
+
   content:
     "";
 
@@ -1002,14 +1201,12 @@ canvas {
 
   background:
     var(--blue);
+
 }
 
 
-/* =========================================================
-   METRICS
-========================================================= */
-
 .metric {
+
   display:
     flex;
 
@@ -1045,10 +1242,12 @@ canvas {
       255,
       0.047
     );
+
 }
 
 
 .metric small {
+
   display:
     block;
 
@@ -1069,10 +1268,12 @@ canvas {
 
   text-transform:
     uppercase;
+
 }
 
 
 .metric strong {
+
   display:
     block;
 
@@ -1087,14 +1288,12 @@ canvas {
 
   font-weight:
     800;
+
 }
 
 
-/* =========================================================
-   STATUS
-========================================================= */
-
 .status {
+
   padding:
     9px
     11px;
@@ -1130,29 +1329,35 @@ canvas {
 
   font-weight:
     600;
+
 }
 
 
 /* =========================================================
-   COLLAPSIBLE CONFIG
+   CONFIG COLLAPSIBLE
 ========================================================= */
 
 .config-shell {
+
   padding:
     0;
 
   overflow:
     hidden;
+
 }
 
 
 .config-details {
+
   width:
     100%;
+
 }
 
 
 .config-details summary {
+
   display:
     flex;
 
@@ -1177,22 +1382,28 @@ canvas {
 
   user-select:
     none;
+
 }
 
 
 .config-details summary::-webkit-details-marker {
+
   display:
     none;
+
 }
 
 
 .config-summary-copy {
+
   min-width:
     0;
+
 }
 
 
 .config-summary-copy strong {
+
   display:
     block;
 
@@ -1204,10 +1415,12 @@ canvas {
 
   font-weight:
     800;
+
 }
 
 
 .config-summary-copy small {
+
   display:
     block;
 
@@ -1222,10 +1435,12 @@ canvas {
 
   line-height:
     1.4;
+
 }
 
 
 .config-toggle {
+
   display:
     flex;
 
@@ -1246,44 +1461,56 @@ canvas {
 
   font-weight:
     800;
+
 }
 
 
 .config-hide {
+
   display:
     none;
+
 }
 
 
 .config-details[open]
 .config-show {
+
   display:
     none;
+
 }
 
 
 .config-details[open]
 .config-hide {
+
   display:
     inline;
+
 }
 
 
 .config-chevron {
+
   transition:
     transform
     0.2s ease;
+
 }
 
 
 .config-details[open]
 .config-chevron {
+
   transform:
     rotate(180deg);
+
 }
 
 
 .config-content {
+
   padding:
     2px
     22px
@@ -1292,14 +1519,17 @@ canvas {
   border-top:
     1px solid
     var(--border-soft);
+
 }
 
 
 /* =========================================================
-   SETTINGS
+   FORM ELEMENTS
 ========================================================= */
 
-.settings-grid {
+.settings-grid,
+.feedback-grid {
+
   display:
     grid;
 
@@ -1314,10 +1544,12 @@ canvas {
 
   gap:
     14px;
+
 }
 
 
 label {
+
   display:
     block;
 
@@ -1332,10 +1564,12 @@ label {
 
   font-weight:
     650;
+
 }
 
 
 .label-title {
+
   color:
     inherit;
 
@@ -1347,10 +1581,12 @@ label {
 
   margin:
     0;
+
 }
 
 
 label span {
+
   display:
     block;
 
@@ -1362,11 +1598,14 @@ label span {
 
   font-size:
     10px;
+
 }
 
 
 input,
-select {
+select,
+textarea {
+
   width:
     100%;
 
@@ -1400,15 +1639,32 @@ select {
     15px;
 
   font-weight:
-    700;
+    650;
 
   outline:
     none;
+
+}
+
+
+textarea {
+
+  min-height:
+    112px;
+
+  resize:
+    vertical;
+
+  line-height:
+    1.45;
+
 }
 
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
+
   border-color:
     var(--blue);
 
@@ -1420,6 +1676,18 @@ select:focus {
       255,
       0.1
     );
+
+}
+
+
+input[readonly] {
+
+  background:
+    #f4f7fa;
+
+  color:
+    #526174;
+
 }
 
 
@@ -1428,6 +1696,7 @@ select:focus {
 ========================================================= */
 
 .checks {
+
   display:
     flex;
 
@@ -1436,10 +1705,12 @@ select:focus {
 
   gap:
     8px;
+
 }
 
 
 .checks label {
+
   display:
     inline-flex;
 
@@ -1474,10 +1745,12 @@ select:focus {
 
   font-weight:
     700;
+
 }
 
 
 .checks label span {
+
   display:
     inline;
 
@@ -1489,10 +1762,12 @@ select:focus {
 
   font-size:
     inherit;
+
 }
 
 
 .checks input {
+
   width:
     16px;
 
@@ -1510,14 +1785,16 @@ select:focus {
 
   accent-color:
     var(--blue);
+
 }
 
 
 /* =========================================================
-   CONFIG NOTES
+   NOTES
 ========================================================= */
 
 .config-note {
+
   margin-top:
     19px;
 
@@ -1539,15 +1816,18 @@ select:focus {
 
   line-height:
     1.5;
+
 }
 
 
 .muted-note {
+
   margin-top:
     8px;
 
   opacity:
     0.88;
+
 }
 
 
@@ -1556,12 +1836,15 @@ select:focus {
 ========================================================= */
 
 .results {
+
   overflow:
     hidden;
+
 }
 
 
 .summary {
+
   padding:
     14px
     16px;
@@ -1591,35 +1874,43 @@ select:focus {
 
   line-height:
     1.7;
+
 }
 
 
 .summary strong {
+
   color:
     var(--dark-900);
+
 }
 
 
 /* =========================================================
-   TABLE DESKTOP
+   TABLE
 ========================================================= */
 
 table {
+
   width:
     100%;
 
   border-collapse:
     collapse;
+
 }
 
 
 thead {
+
   background:
     #f7f9fc;
+
 }
 
 
 th {
+
   padding:
     11px
     12px;
@@ -1645,10 +1936,12 @@ th {
 
   text-transform:
     uppercase;
+
 }
 
 
 td {
+
   padding:
     12px;
 
@@ -1667,24 +1960,391 @@ td {
 
   text-align:
     center;
+
 }
 
 
 .pass {
+
   color:
     var(--green);
 
   font-weight:
     850;
+
 }
 
 
 .fail {
+
   color:
     var(--amber);
 
   font-weight:
     850;
+
+}
+
+
+/* =========================================================
+   FEEDBACK PANEL
+========================================================= */
+
+.feedback-panel {
+
+  padding:
+    0;
+
+  overflow:
+    hidden;
+
+}
+
+
+.feedback-details > summary {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    28px;
+
+  align-items:
+    center;
+
+  gap:
+    12px;
+
+  padding:
+    20px
+    22px;
+
+  list-style:
+    none;
+
+  cursor:
+    pointer;
+
+}
+
+
+.feedback-details > summary::-webkit-details-marker {
+
+  display:
+    none;
+
+}
+
+
+.feedback-summary-icon {
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  width:
+    42px;
+
+  height:
+    42px;
+
+  border-radius:
+    12px;
+
+  background:
+    var(--blue-soft);
+
+  font-size:
+    19px;
+
+}
+
+
+.feedback-summary-copy {
+
+  min-width:
+    0;
+
+}
+
+
+.feedback-summary-copy strong {
+
+  display:
+    block;
+
+  color:
+    var(--dark-900);
+
+  font-size:
+    18px;
+
+  font-weight:
+    800;
+
+}
+
+
+.feedback-summary-copy small {
+
+  display:
+    block;
+
+  margin-top:
+    4px;
+
+  color:
+    var(--text-secondary);
+
+  font-size:
+    10px;
+
+  line-height:
+    1.4;
+
+}
+
+
+.feedback-arrow {
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  width:
+    28px;
+
+  height:
+    28px;
+
+  border-radius:
+    50%;
+
+  background:
+    #f3f6f9;
+
+  color:
+    var(--blue);
+
+  font-size:
+    16px;
+
+  font-weight:
+    800;
+
+  transition:
+    transform
+    0.2s ease;
+
+}
+
+
+.feedback-details[open]
+.feedback-arrow {
+
+  transform:
+    rotate(90deg);
+
+}
+
+
+.feedback-content {
+
+  padding:
+    0
+    22px
+    22px;
+
+  border-top:
+    1px solid
+    var(--border-soft);
+
+}
+
+
+.feedback-intro {
+
+  margin:
+    16px
+    0;
+
+  padding:
+    11px
+    12px;
+
+  border-radius:
+    10px;
+
+  background:
+    #f5f8fc;
+
+  color:
+    var(--text-secondary);
+
+  font-size:
+    10px;
+
+  line-height:
+    1.5;
+
+}
+
+
+.feedback-message-label {
+
+  margin-top:
+    14px;
+
+}
+
+
+.optional {
+
+  display:
+    inline;
+
+  margin:
+    0;
+
+  color:
+    var(--text-muted);
+
+  font-size:
+    inherit;
+
+  font-weight:
+    500;
+
+}
+
+
+.feedback-actions {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    12px;
+
+  margin-top:
+    16px;
+
+}
+
+
+.feedback-actions button {
+
+  flex:
+    0 0 auto;
+
+}
+
+
+.feedback-status {
+
+  min-width:
+    0;
+
+  color:
+    var(--text-secondary);
+
+  font-size:
+    10px;
+
+  line-height:
+    1.45;
+
+}
+
+
+.feedback-status.success {
+
+  padding:
+    9px
+    10px;
+
+  border-radius:
+    9px;
+
+  background:
+    var(--green-soft);
+
+  color:
+    #117249;
+
+}
+
+
+.feedback-status.error {
+
+  padding:
+    9px
+    10px;
+
+  border-radius:
+    9px;
+
+  background:
+    var(--red-soft);
+
+  color:
+    var(--red);
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.app-footer {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    4px;
+
+  padding:
+    8px
+    4px
+    0;
+
+  color:
+    var(--text-muted);
+
+  font-size:
+    9px;
+
+  line-height:
+    1.45;
+
+  text-align:
+    center;
+
+}
+
+
+.app-footer strong {
+
+  color:
+    var(--text-secondary);
+
+  font-size:
+    10px;
+
 }
 
 
@@ -1693,8 +2353,10 @@ td {
 ========================================================= */
 
 .hidden {
+
   display:
     none !important;
+
 }
 
 
@@ -1706,12 +2368,15 @@ td {
 (max-width: 1000px) {
 
   .camera-section {
+
     grid-template-columns:
       1fr;
+
   }
 
 
   .live-panel {
+
     display:
       grid;
 
@@ -1723,13 +2388,16 @@ td {
           1fr
         )
       );
+
   }
 
 
   .live-label,
   .status {
+
     grid-column:
       1 / -1;
+
   }
 
 }
@@ -1744,6 +2412,7 @@ td {
 
 
   header {
+
     width:
       calc(
         100% - 28px
@@ -1753,19 +2422,23 @@ td {
       22px
       0
       14px;
+
   }
 
 
   .brand {
+
     font-size:
       28px;
 
     letter-spacing:
       2px;
+
   }
 
 
   .subtitle {
+
     margin-top:
       7px;
 
@@ -1774,10 +2447,24 @@ td {
 
     letter-spacing:
       2.3px;
+
+  }
+
+
+  .beta-badge {
+
+    padding:
+      6px
+      8px;
+
+    font-size:
+      8px;
+
   }
 
 
   main {
+
     width:
       calc(
         100% - 20px
@@ -1785,10 +2472,12 @@ td {
 
     padding-bottom:
       45px;
+
   }
 
 
   .panel {
+
     padding:
       17px
       16px;
@@ -1798,19 +2487,23 @@ td {
 
     border-radius:
       17px;
+
   }
 
 
   .panel h2 {
+
     margin-bottom:
       14px;
 
     font-size:
       19px;
+
   }
 
 
   .panel h3 {
+
     margin:
       19px
       0
@@ -1818,14 +2511,14 @@ td {
 
     font-size:
       10px;
+
   }
 
 
-  /* =====================================================
-     CATEGORY TABS MOBILE
-  ===================================================== */
+  /* CATEGORY */
 
   .category-tabs {
+
     display:
       grid;
 
@@ -1838,23 +2531,23 @@ td {
 
     padding:
       4px;
+
   }
 
 
   .category-tabs button {
+
     width:
       100%;
 
     min-height:
       42px;
+
   }
 
 
-  /* =====================================================
-     EXERCISES MOBILE
-  ===================================================== */
-
   .exercise-selector {
+
     display:
       grid;
 
@@ -1869,10 +2562,12 @@ td {
 
     gap:
       6px;
+
   }
 
 
   .exercise-selector button {
+
     width:
       100%;
 
@@ -1888,41 +2583,49 @@ td {
 
     line-height:
       1.15;
+
   }
 
 
-  /* =====================================================
-     GUIDED FLOW MOBILE
-  ===================================================== */
+  /* FLOW */
 
   .setup-panel {
+
     padding:
       16px !important;
+
   }
 
 
   .setup-header {
+
     display:
       block;
 
     margin-bottom:
       13px;
+
   }
 
 
   .setup-header h2 {
+
     font-size:
       18px;
+
   }
 
 
   .setup-helper {
+
     display:
       none;
+
   }
 
 
   .setup-flow {
+
     grid-template-columns:
       repeat(
         4,
@@ -1934,10 +2637,12 @@ td {
 
     gap:
       5px;
+
   }
 
 
   .setup-step {
+
     min-height:
       70px;
 
@@ -1947,10 +2652,12 @@ td {
 
     border-radius:
       10px;
+
   }
 
 
   .step-number {
+
     width:
       27px;
 
@@ -1962,26 +2669,32 @@ td {
 
     font-size:
       11px;
+
   }
 
 
   .setup-step.done
   .step-number::after {
+
     font-size:
       12px;
+
   }
 
 
   .step-copy strong {
+
     font-size:
       8px;
 
     line-height:
       1.1;
+
   }
 
 
   .position-tip {
+
     margin-top:
       9px;
 
@@ -1991,14 +2704,14 @@ td {
 
     font-size:
       9px;
+
   }
 
 
-  /* =====================================================
-     CAMERA MOBILE
-  ===================================================== */
+  /* CAMERA */
 
   .camera-section {
+
     grid-template-columns:
       1fr;
 
@@ -2013,23 +2726,25 @@ td {
 
     border-radius:
       18px;
+
   }
 
 
   .camera-wrapper {
+
     aspect-ratio:
       16 / 9;
 
     border-radius:
       13px;
+
   }
 
 
-  /* =====================================================
-     LIVE MOBILE
-  ===================================================== */
+  /* LIVE */
 
   .live-panel {
+
     display:
       grid;
 
@@ -2039,19 +2754,23 @@ td {
 
     gap:
       6px;
+
   }
 
 
   .live-label {
+
     grid-column:
       1 / -1;
 
     font-size:
       8px;
+
   }
 
 
   .metric {
+
     min-height:
       61px;
 
@@ -2061,22 +2780,28 @@ td {
 
     border-radius:
       10px;
+
   }
 
 
   .metric small {
+
     font-size:
       7px;
+
   }
 
 
   .metric strong {
+
     font-size:
       16px;
+
   }
 
 
   .status {
+
     grid-column:
       1 / -1;
 
@@ -2086,14 +2811,14 @@ td {
 
     font-size:
       9px;
+
   }
 
 
-  /* =====================================================
-     CONTROL BUTTONS MOBILE
-  ===================================================== */
+  /* BUTTONS */
 
   .buttons {
+
     display:
       grid;
 
@@ -2106,10 +2831,12 @@ td {
 
     width:
       100%;
+
   }
 
 
   button {
+
     width:
       100%;
 
@@ -2121,47 +2848,57 @@ td {
 
     font-size:
       12px;
+
   }
 
 
-  /* =====================================================
-     COLLAPSIBLE SETTINGS MOBILE
-  ===================================================== */
+  /* CONFIG */
 
   .config-shell {
+
     padding:
       0 !important;
+
   }
 
 
   .config-details summary {
+
     align-items:
       center;
 
     padding:
       16px;
+
   }
 
 
   .config-summary-copy strong {
+
     font-size:
       16px;
+
   }
 
 
   .config-summary-copy small {
+
     font-size:
       9px;
+
   }
 
 
   .config-toggle {
+
     font-size:
       0;
+
   }
 
 
   .config-chevron {
+
     display:
       grid;
 
@@ -2185,22 +2922,23 @@ td {
 
     font-size:
       14px;
+
   }
 
 
   .config-content {
+
     padding:
       1px
       16px
       17px;
+
   }
 
 
-  /* =====================================================
-     SETTINGS MOBILE
-  ===================================================== */
+  .settings-grid,
+  .feedback-grid {
 
-  .settings-grid {
     grid-template-columns:
       1fr
       1fr;
@@ -2208,26 +2946,33 @@ td {
     gap:
       10px
       9px;
+
   }
 
 
   label {
+
     font-size:
       10px;
+
   }
 
 
   label span {
+
     margin-top:
       4px;
 
     font-size:
       9px;
+
   }
 
 
   input,
-  select {
+  select,
+  textarea {
+
     min-height:
       42px;
 
@@ -2239,11 +2984,21 @@ td {
       10px;
 
     font-size:
-      15px;
+      16px;
+
+  }
+
+
+  textarea {
+
+    min-height:
+      105px;
+
   }
 
 
   .checks {
+
     display:
       grid;
 
@@ -2253,10 +3008,12 @@ td {
 
     gap:
       7px;
+
   }
 
 
   .checks label {
+
     width:
       100%;
 
@@ -2269,22 +3026,24 @@ td {
 
     font-size:
       10px;
+
   }
 
 
-  /* =====================================================
-     VERTICAL RESULTS MOBILE
-  ===================================================== */
+  /* RESULTS */
 
   #movementResults,
   #jumpResults {
+
     overflow:
       visible;
+
   }
 
 
   #movementResults table,
   #jumpResults table {
+
     display:
       block;
 
@@ -2296,18 +3055,22 @@ td {
 
     white-space:
       normal;
+
   }
 
 
   #movementResults thead,
   #jumpResults thead {
+
     display:
       none;
+
   }
 
 
   #movementResults tbody,
   #jumpResults tbody {
+
     display:
       grid;
 
@@ -2316,11 +3079,13 @@ td {
 
     gap:
       9px;
+
   }
 
 
   #movementResults tbody tr,
   #jumpResults tbody tr {
+
     display:
       block;
 
@@ -2340,11 +3105,13 @@ td {
 
     background:
       #f8fafc;
+
   }
 
 
   #movementResults tbody td,
   #jumpResults tbody td {
+
     display:
       flex;
 
@@ -2373,18 +3140,22 @@ td {
 
     text-align:
       right;
+
   }
 
 
   #movementResults tbody td:last-child,
   #jumpResults tbody td:last-child {
+
     border-bottom:
       none;
+
   }
 
 
   #movementResults tbody td::before,
   #jumpResults tbody td::before {
+
     margin-right:
       14px;
 
@@ -2402,142 +3173,299 @@ td {
 
     text-transform:
       uppercase;
+
   }
 
 
-  /* =====================================================
-     MOVEMENT RESULT LABELS
-  ===================================================== */
+  #movementResults
+  tbody
+  td:nth-child(1)::before {
 
-  #movementResults tbody td:nth-child(1)::before {
     content:
       "Repetición";
+
   }
 
 
-  #movementResults tbody td:nth-child(2)::before {
+  #movementResults
+  tbody
+  td:nth-child(2)::before {
+
     content:
       "Ángulo";
+
   }
 
 
-  #movementResults tbody td:nth-child(3)::before {
+  #movementResults
+  tbody
+  td:nth-child(3)::before {
+
     content:
       "Excéntrica";
+
   }
 
 
-  #movementResults tbody td:nth-child(4)::before {
+  #movementResults
+  tbody
+  td:nth-child(4)::before {
+
     content:
       "Concéntrica";
+
   }
 
 
-  #movementResults tbody td:nth-child(5)::before {
+  #movementResults
+  tbody
+  td:nth-child(5)::before {
+
     content:
       "Estado";
+
   }
 
 
-  /* =====================================================
-     JUMP RESULT LABELS
-  ===================================================== */
+  #jumpResults
+  tbody
+  td:nth-child(1)::before {
 
-  #jumpResults tbody td:nth-child(1)::before {
     content:
       "Intento";
+
   }
 
 
-  #jumpResults tbody td:nth-child(2)::before {
+  #jumpResults
+  tbody
+  td:nth-child(2)::before {
+
     content:
       "Altura estimada";
+
   }
 
 
-  #jumpResults tbody td:nth-child(3)::before {
+  #jumpResults
+  tbody
+  td:nth-child(3)::before {
+
     content:
       "Tiempo de vuelo";
+
   }
 
 
-  #jumpResults tbody td:nth-child(4)::before {
+  #jumpResults
+  tbody
+  td:nth-child(4)::before {
+
     content:
       "Flexión rodilla";
+
   }
 
 
-  #jumpResults tbody td:nth-child(5)::before {
+  #jumpResults
+  tbody
+  td:nth-child(5)::before {
+
     content:
       "Protocolo";
+
   }
 
 
-  #jumpResults tbody td:nth-child(6)::before {
+  #jumpResults
+  tbody
+  td:nth-child(6)::before {
+
     content:
       "Aterrizaje";
+
   }
 
 
-  #jumpResults tbody td:nth-child(7)::before {
+  #jumpResults
+  tbody
+  td:nth-child(7)::before {
+
     content:
       "Estado";
+
+  }
+
+
+  /* FEEDBACK */
+
+  .feedback-panel {
+
+    padding:
+      0 !important;
+
+  }
+
+
+  .feedback-details > summary {
+
+    grid-template-columns:
+      38px
+      minmax(
+        0,
+        1fr
+      )
+      26px;
+
+    gap:
+      10px;
+
+    padding:
+      16px;
+
+  }
+
+
+  .feedback-summary-icon {
+
+    width:
+      38px;
+
+    height:
+      38px;
+
+    border-radius:
+      10px;
+
+    font-size:
+      17px;
+
+  }
+
+
+  .feedback-summary-copy strong {
+
+    font-size:
+      16px;
+
+  }
+
+
+  .feedback-summary-copy small {
+
+    font-size:
+      9px;
+
+  }
+
+
+  .feedback-content {
+
+    padding:
+      0
+      16px
+      17px;
+
+  }
+
+
+  .feedback-actions {
+
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr;
+
+    gap:
+      9px;
+
+  }
+
+
+  .feedback-actions button {
+
+    width:
+      100%;
+
   }
 
 }
 
 
 /* =========================================================
-   VERY SMALL MOBILE
+   SMALL MOBILE
 ========================================================= */
 
 @media
 (max-width: 370px) {
 
   .brand {
+
     font-size:
       25px;
+
+  }
+
+
+  .beta-badge {
+
+    font-size:
+      7px;
+
   }
 
 
   .exercise-selector button {
+
     font-size:
       9px;
+
   }
 
 
   .setup-flow {
+
     gap:
       4px;
+
   }
 
 
   .setup-step {
+
     min-height:
       66px;
 
     padding:
       7px
       2px;
+
   }
 
 
   .step-copy strong {
+
     font-size:
       7px;
+
   }
 
 
-  .settings-grid {
+  .settings-grid,
+  .feedback-grid {
+
     grid-template-columns:
-      1fr
       1fr;
+
   }
 
 
   .checks {
+
     grid-template-columns:
       1fr;
+
   }
 
 }
@@ -2551,11 +3479,13 @@ td {
 (prefers-reduced-motion: reduce) {
 
   * {
+
     transition:
       none !important;
 
     scroll-behavior:
       auto !important;
+
   }
 
 }
