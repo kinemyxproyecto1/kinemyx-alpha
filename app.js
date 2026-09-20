@@ -1,191 +1,536 @@
-/* KINEMYX Alpha 0.4 - Movements + Jumps */
+/* =========================================================
+   KINEMYX Beta 0.5
+   Movimientos + Saltos + Feedback
+   ========================================================= */
 
-const $ = (id) => document.getElementById(id);
+const $ = (id) =>
+  document.getElementById(id);
 
-const video = $("video");
-const canvas = $("canvas");
-const ctx = canvas.getContext("2d");
 
-const movementCategoryButton = $("movementCategoryButton");
-const jumpCategoryButton = $("jumpCategoryButton");
-const movementExerciseSelector = $("movementExerciseSelector");
-const jumpExerciseSelector = $("jumpExerciseSelector");
+const APP_VERSION =
+  "KINEMYX Beta 0.5";
 
-const movementSettingsSection = $("movementSettingsSection");
-const jumpSettingsSection = $("jumpSettingsSection");
-const movementConfigDetails = $("movementConfigDetails");
-const jumpConfigDetails = $("jumpConfigDetails");
 
-const cameraButton = $("cameraButton");
-const switchCameraButton = $("switchCameraButton");
-const startButton = $("startButton");
-const stopButton = $("stopButton");
+const FORMSPREE_ENDPOINT =
+  "https://formspree.io/f/xljdjgbg";
 
-const liveExerciseLabel = $("liveExerciseLabel");
-const countLabel = $("countLabel");
-const primaryMetricLabel = $("primaryMetricLabel");
-const secondaryMetricLabel = $("secondaryMetricLabel");
-const tertiaryMetricLabel = $("tertiaryMetricLabel");
-const repDisplay = $("repDisplay");
-const angleDisplay = $("angleDisplay");
-const stateDisplay = $("stateDisplay");
-const eccDisplay = $("eccDisplay");
-const conDisplay = $("conDisplay");
-const sideDisplay = $("sideDisplay");
-const statusBox = $("status");
-const warningBox = $("warning");
 
-const movementResultsSection = $("movementResults");
-const movementResultsTitle = $("movementResultsTitle");
-const movementSummary = $("movementSummary");
-const movementResultsBody = $("movementResultsBody");
-const movementAngleHeader = $("movementAngleHeader");
+/* =========================================================
+   DOM
+========================================================= */
 
-const jumpResultsSection = $("jumpResults");
-const jumpResultsTitle = $("jumpResultsTitle");
-const jumpSummary = $("jumpSummary");
-const jumpResultsBody = $("jumpResultsBody");
-const jumpProtocolHeader = $("jumpProtocolHeader");
+const video =
+  $("video");
 
-const stepAnalysis = $("stepAnalysis");
-const stepCamera = $("stepCamera");
-const stepPosition = $("stepPosition");
-const stepStart = $("stepStart");
-const stepAnalysisText = $("stepAnalysisText");
-const stepCameraText = $("stepCameraText");
-const stepPositionText = $("stepPositionText");
-const stepStartText = $("stepStartText");
-const stepAnalysisStatus = $("stepAnalysisStatus");
-const stepCameraStatus = $("stepCameraStatus");
-const stepPositionStatus = $("stepPositionStatus");
-const stepStartStatus = $("stepStartStatus");
+const canvas =
+  $("canvas");
 
-const movementAngleName = $("movementAngleName");
-const movementAngleUnit = $("movementAngleUnit");
-const movementTargetReps = $("movementTargetReps");
-const movementAngleTarget = $("movementAngleTarget");
-const movementAngleTolerance = $("movementAngleTolerance");
-const movementEccTarget = $("movementEccTarget");
-const movementEccTolerance = $("movementEccTolerance");
-const movementConTarget = $("movementConTarget");
-const movementConTolerance = $("movementConTolerance");
-const movementFeedbackMode = $("movementFeedbackMode");
-const movementCheckAngle = $("movementCheckAngle");
-const movementCheckEcc = $("movementCheckEcc");
-const movementCheckCon = $("movementCheckCon");
-const movementCheckAngleText = $("movementCheckAngleText");
+const ctx =
+  canvas.getContext("2d");
 
-const jumpTargetJumps = $("jumpTargetJumps");
-const jumpKneeTarget = $("jumpKneeTarget");
-const jumpKneeTolerance = $("jumpKneeTolerance");
-const sjHoldWrap = $("sjHoldWrap");
-const sjHoldTarget = $("sjHoldTarget");
-const jumpFeedbackMode = $("jumpFeedbackMode");
-const jumpCheckFlight = $("jumpCheckFlight");
-const jumpCheckKnee = $("jumpCheckKnee");
-const jumpCheckLanding = $("jumpCheckLanding");
-const jumpProtocolNote = $("jumpProtocolNote");
 
-let detector = null;
-let cameraReady = false;
-let trackingReady = false;
-let analysisActive = false;
-let detectionLoopStarted = false;
-let lastGoodTrackingAt = 0;
+const movementCategoryButton =
+  $("movementCategoryButton");
 
-let activeCategory = "movement";
-let activeExercise = "squat";
-let currentFacingMode = "user";
-let currentStream = null;
-let candidateSide = "left";
-let activeSide = "left";
-let audioContext = null;
-let trackingLostSince = null;
-let trackingAlertPlayed = false;
-let warningHideTimer = null;
-let angleBuffer = [];
+const jumpCategoryButton =
+  $("jumpCategoryButton");
 
-const MIN_CONFIDENCE = 0.58;
-const MIN_POINT_CONFIDENCE = 0.42;
-const TRACKING_HOLD_MS = 450;
-const SMOOTHING_FRAMES = 5;
-const TURNAROUND_DELTA = 4;
-const GRAVITY = 9.81;
+const movementExerciseSelector =
+  $("movementExerciseSelector");
+
+const jumpExerciseSelector =
+  $("jumpExerciseSelector");
+
+
+const movementSettingsSection =
+  $("movementSettingsSection");
+
+const jumpSettingsSection =
+  $("jumpSettingsSection");
+
+const movementConfigDetails =
+  $("movementConfigDetails");
+
+const jumpConfigDetails =
+  $("jumpConfigDetails");
+
+
+const cameraButton =
+  $("cameraButton");
+
+const switchCameraButton =
+  $("switchCameraButton");
+
+const startButton =
+  $("startButton");
+
+const stopButton =
+  $("stopButton");
+
+
+const liveExerciseLabel =
+  $("liveExerciseLabel");
+
+const countLabel =
+  $("countLabel");
+
+const primaryMetricLabel =
+  $("primaryMetricLabel");
+
+const secondaryMetricLabel =
+  $("secondaryMetricLabel");
+
+const tertiaryMetricLabel =
+  $("tertiaryMetricLabel");
+
+
+const repDisplay =
+  $("repDisplay");
+
+const angleDisplay =
+  $("angleDisplay");
+
+const stateDisplay =
+  $("stateDisplay");
+
+const eccDisplay =
+  $("eccDisplay");
+
+const conDisplay =
+  $("conDisplay");
+
+const sideDisplay =
+  $("sideDisplay");
+
+
+const statusBox =
+  $("status");
+
+const warningBox =
+  $("warning");
+
+
+const movementResultsSection =
+  $("movementResults");
+
+const movementResultsTitle =
+  $("movementResultsTitle");
+
+const movementSummary =
+  $("movementSummary");
+
+const movementResultsBody =
+  $("movementResultsBody");
+
+const movementAngleHeader =
+  $("movementAngleHeader");
+
+
+const jumpResultsSection =
+  $("jumpResults");
+
+const jumpResultsTitle =
+  $("jumpResultsTitle");
+
+const jumpSummary =
+  $("jumpSummary");
+
+const jumpResultsBody =
+  $("jumpResultsBody");
+
+const jumpProtocolHeader =
+  $("jumpProtocolHeader");
+
+
+const stepAnalysis =
+  $("stepAnalysis");
+
+const stepCamera =
+  $("stepCamera");
+
+const stepPosition =
+  $("stepPosition");
+
+const stepStart =
+  $("stepStart");
+
+
+const stepAnalysisText =
+  $("stepAnalysisText");
+
+const stepCameraText =
+  $("stepCameraText");
+
+const stepPositionText =
+  $("stepPositionText");
+
+const stepStartText =
+  $("stepStartText");
+
+
+const stepAnalysisStatus =
+  $("stepAnalysisStatus");
+
+const stepCameraStatus =
+  $("stepCameraStatus");
+
+const stepPositionStatus =
+  $("stepPositionStatus");
+
+const stepStartStatus =
+  $("stepStartStatus");
+
+
+const movementAngleName =
+  $("movementAngleName");
+
+const movementTargetReps =
+  $("movementTargetReps");
+
+const movementAngleTarget =
+  $("movementAngleTarget");
+
+const movementAngleTolerance =
+  $("movementAngleTolerance");
+
+const movementEccTarget =
+  $("movementEccTarget");
+
+const movementEccTolerance =
+  $("movementEccTolerance");
+
+const movementConTarget =
+  $("movementConTarget");
+
+const movementConTolerance =
+  $("movementConTolerance");
+
+const movementFeedbackMode =
+  $("movementFeedbackMode");
+
+const movementCheckAngle =
+  $("movementCheckAngle");
+
+const movementCheckEcc =
+  $("movementCheckEcc");
+
+const movementCheckCon =
+  $("movementCheckCon");
+
+const movementCheckAngleText =
+  $("movementCheckAngleText");
+
+
+const jumpTargetJumps =
+  $("jumpTargetJumps");
+
+const jumpKneeTarget =
+  $("jumpKneeTarget");
+
+const jumpKneeTolerance =
+  $("jumpKneeTolerance");
+
+const sjHoldWrap =
+  $("sjHoldWrap");
+
+const sjHoldTarget =
+  $("sjHoldTarget");
+
+const jumpFeedbackMode =
+  $("jumpFeedbackMode");
+
+const jumpCheckFlight =
+  $("jumpCheckFlight");
+
+const jumpCheckKnee =
+  $("jumpCheckKnee");
+
+const jumpCheckLanding =
+  $("jumpCheckLanding");
+
+const jumpProtocolNote =
+  $("jumpProtocolNote");
+
+
+const feedbackForm =
+  $("feedbackForm");
+
+const feedbackExercise =
+  $("feedbackExercise");
+
+const feedbackProfile =
+  $("feedbackProfile");
+
+const feedbackType =
+  $("feedbackType");
+
+const feedbackExperience =
+  $("feedbackExperience");
+
+const feedbackMessage =
+  $("feedbackMessage");
+
+const feedbackContact =
+  $("feedbackContact");
+
+const feedbackSubmit =
+  $("feedbackSubmit");
+
+const feedbackStatus =
+  $("feedbackStatus");
+
+
+/* =========================================================
+   GENERAL STATE
+========================================================= */
+
+let detector =
+  null;
+
+
+let cameraReady =
+  false;
+
+let trackingReady =
+  false;
+
+let analysisActive =
+  false;
+
+let detectionLoopStarted =
+  false;
+
+let lastGoodTrackingAt =
+  0;
+
+
+let activeCategory =
+  "movement";
+
+let activeExercise =
+  "squat";
+
+
+let currentFacingMode =
+  "user";
+
+let currentStream =
+  null;
+
+
+let candidateSide =
+  "left";
+
+let activeSide =
+  "left";
+
+
+let audioContext =
+  null;
+
+
+let trackingLostSince =
+  null;
+
+let trackingAlertPlayed =
+  false;
+
+
+let warningHideTimer =
+  null;
+
+
+let angleBuffer =
+  [];
+
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const MIN_CONFIDENCE =
+  0.58;
+
+
+const MIN_POINT_CONFIDENCE =
+  0.42;
+
+
+const TRACKING_HOLD_MS =
+  450;
+
+
+const SMOOTHING_FRAMES =
+  5;
+
+
+const TURNAROUND_DELTA =
+  4;
+
+
+const GRAVITY =
+  9.81;
+
+
+/* =========================================================
+   EXERCISE METADATA
+========================================================= */
 
 const exerciseMeta = {
 
+
   squat: {
 
-    category: "movement",
-    name: "Sentadilla",
-    live: "SQUAT",
-    angleName: "Flexión rodilla",
-    angleShort: "KNEE FLEXION",
-    angleType: "knee",
-    defaultAngle: 90,
-    defaultTolerance: 5,
-    defaultReps: 8,
-    defaultEcc: 2.0,
-    defaultCon: 1.0,
-    minDepth: 45
+    category:
+      "movement",
+
+    name:
+      "Sentadilla",
+
+    live:
+      "SQUAT",
+
+    angleName:
+      "Flexión de rodilla",
+
+    angleShort:
+      "KNEE FLEXION",
+
+    defaultAngle:
+      90,
+
+    defaultTolerance:
+      5,
+
+    defaultReps:
+      8,
+
+    defaultEcc:
+      2,
+
+    defaultCon:
+      1,
+
+    minDepth:
+      45
 
   },
+
 
   deadlift: {
 
-    category: "movement",
-    name: "Peso muerto",
-    live: "DEADLIFT",
-    angleName: "Flexión cadera",
-    angleShort: "HIP FLEXION",
-    angleType: "hip",
-    defaultAngle: 65,
-    defaultTolerance: 10,
-    defaultReps: 6,
-    defaultEcc: 2.0,
-    defaultCon: 1.0,
-    floorFlexion: 45
+    category:
+      "movement",
+
+    name:
+      "Peso muerto",
+
+    live:
+      "DEADLIFT",
+
+    angleName:
+      "Flexión de cadera",
+
+    angleShort:
+      "HIP FLEXION",
+
+    defaultAngle:
+      65,
+
+    defaultTolerance:
+      10,
+
+    defaultReps:
+      6,
+
+    defaultEcc:
+      2,
+
+    defaultCon:
+      1,
+
+    floorFlexion:
+      45
 
   },
+
 
   bench: {
 
-    category: "movement",
-    name: "Press banca",
-    live: "BENCH PRESS",
-    angleName: "Flexión codo",
-    angleShort: "ELBOW FLEXION",
-    angleType: "elbow",
-    defaultAngle: 90,
-    defaultTolerance: 10,
-    defaultReps: 8,
-    defaultEcc: 2.0,
-    defaultCon: 1.0,
-    minDepth: 55
+    category:
+      "movement",
+
+    name:
+      "Press banca",
+
+    live:
+      "BENCH PRESS",
+
+    angleName:
+      "Flexión de codo",
+
+    angleShort:
+      "ELBOW FLEXION",
+
+    defaultAngle:
+      90,
+
+    defaultTolerance:
+      10,
+
+    defaultReps:
+      8,
+
+    defaultEcc:
+      2,
+
+    defaultCon:
+      1,
+
+    minDepth:
+      55
 
   },
+
 
   sj: {
 
-    category: "jump",
-    name: "Squat Jump",
-    live: "SQUAT JUMP"
+    category:
+      "jump",
+
+    name:
+      "Squat Jump",
+
+    live:
+      "SQUAT JUMP"
 
   },
+
 
   cmj: {
 
-    category: "jump",
-    name: "CMJ",
-    live: "CMJ"
+    category:
+      "jump",
+
+    name:
+      "CMJ",
+
+    live:
+      "CMJ"
 
   },
 
+
   abalakov: {
 
-    category: "jump",
-    name: "Abalakov",
-    live: "ABALAKOV"
+    category:
+      "jump",
+
+    name:
+      "Abalakov",
+
+    live:
+      "ABALAKOV"
 
   }
 
@@ -196,69 +541,164 @@ const exerciseMeta = {
    MOVEMENT STATE
 ========================================================= */
 
-let movementRepCount = 0;
-let movementSuccessfulReps = 0;
-let movementState = "READY";
-let movementMaxAngle = 0;
-let movementRepStartTime = 0;
-let movementBottomTime = 0;
-let movementAscentStartTime = 0;
-let movementPreviousAngle = null;
-let movementResults = [];
+let movementRepCount =
+  0;
 
-let deadliftEccentricForNextRep = null;
-let deadliftDescentStartTime = 0;
+
+let movementSuccessfulReps =
+  0;
+
+
+let movementState =
+  "READY";
+
+
+let movementMaxAngle =
+  0;
+
+
+let movementRepStartTime =
+  0;
+
+
+let movementBottomTime =
+  0;
+
+
+let movementAscentStartTime =
+  0;
+
+
+let movementPreviousAngle =
+  null;
+
+
+let movementResults =
+  [];
+
+
+let deadliftEccentricForNextRep =
+  null;
+
+
+let deadliftDescentStartTime =
+  0;
 
 
 /* =========================================================
    JUMP STATE
 ========================================================= */
 
-let jumpCount = 0;
-let jumpValidCount = 0;
-let jumpState = "CALIBRATING";
+let jumpCount =
+  0;
 
-let jumpPreviousFlexion = null;
-let jumpPreviousAnkleY = null;
 
-let jumpMaxFlexion = 0;
+let jumpValidCount =
+  0;
 
-let jumpStartTime = 0;
-let jumpBottomTime = 0;
 
-let jumpPropulsionStartTime = 0;
+let jumpState =
+  "CALIBRATING";
 
-let jumpTakeoffTime = 0;
-let jumpLandingTime = 0;
-let jumpLandingStartTime = 0;
 
-let jumpMaxLandingFlexion = 0;
+let jumpPreviousFlexion =
+  null;
 
-let jumpResults = [];
 
-let jumpBaselineAnkleY = null;
-let jumpBaselineSamples = [];
+let jumpPreviousAnkleY =
+  null;
 
-let sjHoldStartTime = 0;
-let sjHeldFlexion = null;
-let sjProtocolInvalid = false;
+
+let jumpMaxFlexion =
+  0;
+
+
+let jumpStartTime =
+  0;
+
+
+let jumpBottomTime =
+  0;
+
+
+let jumpPropulsionStartTime =
+  0;
+
+
+let jumpTakeoffTime =
+  0;
+
+
+let jumpLandingTime =
+  0;
+
+
+let jumpLandingStartTime =
+  0;
+
+
+let jumpMaxLandingFlexion =
+  0;
+
+
+let jumpResults =
+  [];
+
+
+let jumpBaselineAnkleY =
+  null;
+
+
+let jumpBaselineSamples =
+  [];
+
+
+let sjHoldStartTime =
+  0;
+
+
+let sjHeldFlexion =
+  null;
+
+
+let sjProtocolInvalid =
+  false;
 
 
 /* =========================================================
    JUMP CONSTANTS
 ========================================================= */
 
-const JUMP_READY_FLEXION = 20;
-const JUMP_DESCENT_TRIGGER = 25;
-const CMJ_MIN_COUNTERMOVEMENT = 35;
+const JUMP_READY_FLEXION =
+  20;
 
-const JUMP_TAKEOFF_MIN_MS = 70;
-const JUMP_MIN_FLIGHT_MS = 120;
-const JUMP_MAX_FLIGHT_MS = 1300;
 
-const JUMP_LANDING_CAPTURE_MS = 420;
+const JUMP_DESCENT_TRIGGER =
+  25;
 
-const SJ_COUNTERMOVEMENT_ALLOWANCE = 6;
+
+const CMJ_MIN_COUNTERMOVEMENT =
+  35;
+
+
+const JUMP_TAKEOFF_MIN_MS =
+  70;
+
+
+const JUMP_MIN_FLIGHT_MS =
+  120;
+
+
+const JUMP_MAX_FLIGHT_MS =
+  1300;
+
+
+const JUMP_LANDING_CAPTURE_MS =
+  420;
+
+
+const SJ_COUNTERMOVEMENT_ALLOWANCE =
+  6;
 
 
 /* =========================================================
@@ -272,50 +712,74 @@ function getMovementSettings() {
     targetReps:
       Math.max(
         1,
-        Number(movementTargetReps.value) || 1
+        Number(
+          movementTargetReps.value
+        ) || 1
       ),
 
+
     angleTarget:
-      Number(movementAngleTarget.value) || 0,
+      Number(
+        movementAngleTarget.value
+      ) || 0,
+
 
     angleTolerance:
       Math.max(
         0,
-        Number(movementAngleTolerance.value) || 0
+        Number(
+          movementAngleTolerance.value
+        ) || 0
       ),
+
 
     eccTarget:
       Math.max(
         0,
-        Number(movementEccTarget.value) || 0
+        Number(
+          movementEccTarget.value
+        ) || 0
       ),
+
 
     eccTolerance:
       Math.max(
         0,
-        Number(movementEccTolerance.value) || 0
+        Number(
+          movementEccTolerance.value
+        ) || 0
       ),
+
 
     conTarget:
       Math.max(
         0,
-        Number(movementConTarget.value) || 0
+        Number(
+          movementConTarget.value
+        ) || 0
       ),
+
 
     conTolerance:
       Math.max(
         0,
-        Number(movementConTolerance.value) || 0
+        Number(
+          movementConTolerance.value
+        ) || 0
       ),
+
 
     feedbackMode:
       movementFeedbackMode.value,
 
+
     checkAngle:
       movementCheckAngle.checked,
 
+
     checkEcc:
       movementCheckEcc.checked,
+
 
     checkCon:
       movementCheckCon.checked
@@ -332,32 +796,47 @@ function getJumpSettings() {
     targetJumps:
       Math.max(
         1,
-        Number(jumpTargetJumps.value) || 1
+        Number(
+          jumpTargetJumps.value
+        ) || 1
       ),
 
+
     kneeTarget:
-      Number(jumpKneeTarget.value) || 90,
+      Number(
+        jumpKneeTarget.value
+      ) || 90,
+
 
     kneeTolerance:
       Math.max(
         0,
-        Number(jumpKneeTolerance.value) || 0
+        Number(
+          jumpKneeTolerance.value
+        ) || 0
       ),
+
 
     holdTarget:
       Math.max(
         0.3,
-        Number(sjHoldTarget.value) || 1
+        Number(
+          sjHoldTarget.value
+        ) || 1
       ),
+
 
     feedbackMode:
       jumpFeedbackMode.value,
 
+
     checkFlight:
       jumpCheckFlight.checked,
 
+
     checkKnee:
       jumpCheckKnee.checked,
+
 
     checkLanding:
       jumpCheckLanding.checked
@@ -370,7 +849,9 @@ function getJumpSettings() {
 function getActiveFeedbackMode() {
 
   return activeCategory === "movement"
+
     ? getMovementSettings().feedbackMode
+
     : getJumpSettings().feedbackMode;
 
 }
@@ -396,11 +877,18 @@ function setStep(
     "warning-step"
   );
 
-  element.classList.add(state);
 
-  textElement.textContent = text;
+  element.classList.add(
+    state
+  );
 
-  statusElement.textContent = status;
+
+  textElement.textContent =
+    text;
+
+
+  statusElement.textContent =
+    status;
 
 }
 
@@ -408,16 +896,25 @@ function setStep(
 function updateSetupFlow() {
 
   const name =
-    exerciseMeta[activeExercise].name;
+    exerciseMeta[
+      activeExercise
+    ].name;
 
 
   setStep(
+
     stepAnalysis,
+
     stepAnalysisText,
+
     stepAnalysisStatus,
+
     "done",
+
     `${name} seleccionado`,
+
     "✓"
+
   );
 
 
@@ -432,6 +929,7 @@ function updateSetupFlow() {
       "2"
     );
 
+
     setStep(
       stepPosition,
       stepPositionText,
@@ -440,6 +938,7 @@ function updateSetupFlow() {
       "Esperando cámara",
       "3"
     );
+
 
     setStep(
       stepStart,
@@ -450,7 +949,10 @@ function updateSetupFlow() {
       "4"
     );
 
-    startButton.disabled = true;
+
+    startButton.disabled =
+      true;
+
 
     return;
 
@@ -458,50 +960,72 @@ function updateSetupFlow() {
 
 
   setStep(
+
     stepCamera,
+
     stepCameraText,
+
     stepCameraStatus,
+
     "done",
+
     currentFacingMode === "user"
       ? "Cámara frontal activa"
       : "Cámara trasera activa",
+
     "✓"
+
   );
 
 
   if (!trackingReady) {
 
     setStep(
+
       stepPosition,
+
       stepPositionText,
+
       stepPositionStatus,
+
       analysisActive
         ? "warning-step"
         : "active",
+
       "Ajusta posición",
+
       "!"
+
     );
 
 
     setStep(
+
       stepStart,
+
       stepStartText,
+
       stepStartStatus,
+
       analysisActive
         ? "done"
         : "pending",
+
       analysisActive
         ? "Serie en curso"
         : "Esperando tracking",
+
       analysisActive
         ? "●"
         : "4"
+
     );
 
 
     if (!analysisActive) {
 
-      startButton.disabled = true;
+      startButton.disabled =
+        true;
 
     }
 
@@ -512,12 +1036,19 @@ function updateSetupFlow() {
 
 
   setStep(
+
     stepPosition,
+
     stepPositionText,
+
     stepPositionStatus,
+
     "done",
+
     "Tracking listo",
+
     "✓"
+
   );
 
 
@@ -532,7 +1063,9 @@ function updateSetupFlow() {
       "●"
     );
 
-    startButton.disabled = true;
+
+    startButton.disabled =
+      true;
 
   }
 
@@ -547,7 +1080,9 @@ function updateSetupFlow() {
       "4"
     );
 
-    startButton.disabled = false;
+
+    startButton.disabled =
+      false;
 
   }
 
@@ -558,77 +1093,97 @@ function updateSetupFlow() {
    EVENT LISTENERS
 ========================================================= */
 
-movementCategoryButton.addEventListener(
-  "click",
-  () =>
-    selectCategory("movement")
-);
+movementCategoryButton
+  .addEventListener(
+    "click",
+    () =>
+      selectCategory(
+        "movement"
+      )
+  );
 
 
-jumpCategoryButton.addEventListener(
-  "click",
-  () =>
-    selectCategory("jump")
-);
+jumpCategoryButton
+  .addEventListener(
+    "click",
+    () =>
+      selectCategory(
+        "jump"
+      )
+  );
 
 
 document
-  .querySelectorAll("[data-exercise]")
-  .forEach((button) => {
+  .querySelectorAll(
+    "[data-exercise]"
+  )
+  .forEach(
+    (button) => {
 
-    button.addEventListener(
-      "click",
-      () =>
-        selectExercise(
-          button.dataset.exercise
-        )
-    );
+      button.addEventListener(
+        "click",
+        () =>
+          selectExercise(
+            button.dataset.exercise
+          )
+      );
 
-  });
-
-
-cameraButton.addEventListener(
-  "click",
-  initializeCamera
-);
+    }
+  );
 
 
-switchCameraButton.addEventListener(
-  "click",
-  switchCamera
-);
+cameraButton
+  .addEventListener(
+    "click",
+    initializeCamera
+  );
 
 
-startButton.addEventListener(
-  "click",
-  startAnalysis
-);
+switchCameraButton
+  .addEventListener(
+    "click",
+    switchCamera
+  );
 
 
-stopButton.addEventListener(
-  "click",
-  () =>
-    stopAnalysis(false)
-);
+startButton
+  .addEventListener(
+    "click",
+    startAnalysis
+  );
+
+
+stopButton
+  .addEventListener(
+    "click",
+    () =>
+      stopAnalysis(
+        false
+      )
+  );
 
 
 /* =========================================================
    CATEGORY
 ========================================================= */
 
-function selectCategory(category) {
+function selectCategory(
+  category
+) {
 
   if (analysisActive) {
 
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de categoría.";
 
+
     return;
 
   }
 
 
-  activeCategory = category;
+  activeCategory =
+    category;
 
 
   const isMovement =
@@ -668,24 +1223,29 @@ function selectCategory(category) {
 
 
   selectExercise(
+
     isMovement
       ? "squat"
       : "cmj"
+
   );
 
 }
 
 
 /* =========================================================
-   EXERCISE SELECT
+   SELECT EXERCISE
 ========================================================= */
 
-function selectExercise(exercise) {
+function selectExercise(
+  exercise
+) {
 
   if (analysisActive) {
 
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de análisis.";
+
 
     return;
 
@@ -697,37 +1257,58 @@ function selectExercise(exercise) {
 
 
   activeCategory =
-    exerciseMeta[exercise].category;
+    exerciseMeta[
+      exercise
+    ].category;
 
 
-  angleBuffer = [];
+  angleBuffer =
+    [];
 
-  trackingReady = false;
 
-  lastGoodTrackingAt = 0;
+  trackingReady =
+    false;
+
+
+  lastGoodTrackingAt =
+    0;
+
 
   hideWarning();
 
 
-  movementConfigDetails.open = false;
+  movementConfigDetails.open =
+    false;
 
-  jumpConfigDetails.open = false;
+
+  jumpConfigDetails.open =
+    false;
 
 
   document
-    .querySelectorAll("[data-exercise]")
-    .forEach((button) => {
+    .querySelectorAll(
+      "[data-exercise]"
+    )
+    .forEach(
+      (button) => {
 
-      button.classList.toggle(
-        "secondary",
-        button.dataset.exercise !== exercise
-      );
+        button.classList.toggle(
 
-    });
+          "secondary",
+
+          button.dataset.exercise
+          !==
+          exercise
+
+        );
+
+      }
+    );
 
 
   const isMovement =
-    activeCategory === "movement";
+    activeCategory ===
+    "movement";
 
 
   movementSettingsSection
@@ -764,20 +1345,29 @@ function selectExercise(exercise) {
 
   if (isMovement) {
 
-    configureMovementUI(exercise);
+    configureMovementUI(
+      exercise
+    );
 
   }
 
   else {
 
-    configureJumpUI(exercise);
+    configureJumpUI(
+      exercise
+    );
 
   }
 
 
+  updateFeedbackContext();
+
+
   statusBox.textContent =
     cameraReady
+
       ? "Ubícate según el protocolo hasta completar el tracking."
+
       : "Activa la cámara";
 
 
@@ -790,10 +1380,14 @@ function selectExercise(exercise) {
    MOVEMENT UI
 ========================================================= */
 
-function configureMovementUI(exercise) {
+function configureMovementUI(
+  exercise
+) {
 
   const meta =
-    exerciseMeta[exercise];
+    exerciseMeta[
+      exercise
+    ];
 
 
   liveExerciseLabel.textContent =
@@ -861,7 +1455,11 @@ function configureMovementUI(exercise) {
 
 
   stateDisplay.textContent =
-    "READY";
+    activeExercise === "deadlift"
+
+      ? "WAIT_FLOOR"
+
+      : "READY";
 
 
   eccDisplay.textContent =
@@ -886,10 +1484,14 @@ function configureMovementUI(exercise) {
    JUMP UI
 ========================================================= */
 
-function configureJumpUI(exercise) {
+function configureJumpUI(
+  exercise
+) {
 
   const meta =
-    exerciseMeta[exercise];
+    exerciseMeta[
+      exercise
+    ];
 
 
   liveExerciseLabel.textContent =
@@ -917,10 +1519,14 @@ function configureJumpUI(exercise) {
 
 
   repDisplay.textContent =
-    `0 / ${Math.max(
-      1,
-      Number(jumpTargetJumps.value) || 3
-    )}`;
+    `0 / ${
+      Math.max(
+        1,
+        Number(
+          jumpTargetJumps.value
+        ) || 3
+      )
+    }`;
 
 
   angleDisplay.textContent =
@@ -929,7 +1535,9 @@ function configureJumpUI(exercise) {
 
   stateDisplay.textContent =
     exercise === "sj"
+
       ? "START POSITION"
+
       : "READY";
 
 
@@ -953,7 +1561,10 @@ function configureJumpUI(exercise) {
     exercise === "sj";
 
 
-  if (exercise === "sj") {
+  if (
+    exercise ===
+    "sj"
+  ) {
 
     jumpProtocolHeader.textContent =
       "Protocolo";
@@ -964,7 +1575,10 @@ function configureJumpUI(exercise) {
 
   }
 
-  else if (exercise === "cmj") {
+  else if (
+    exercise ===
+    "cmj"
+  ) {
 
     jumpProtocolHeader.textContent =
       "Descenso";
@@ -998,7 +1612,7 @@ function configureJumpUI(exercise) {
 
 
 /* =========================================================
-   CAMERA STREAM
+   CAMERA
 ========================================================= */
 
 async function getCameraStream() {
@@ -1017,16 +1631,19 @@ async function getCameraStream() {
           },
 
           width: {
-            ideal: 1280
+            ideal:
+              1280
           },
 
           height: {
-            ideal: 720
+            ideal:
+              720
           }
 
         },
 
-        audio: false
+        audio:
+          false
 
       });
 
@@ -1052,16 +1669,19 @@ async function getCameraStream() {
           },
 
           width: {
-            ideal: 1280
+            ideal:
+              1280
           },
 
           height: {
-            ideal: 720
+            ideal:
+              720
           }
 
         },
 
-        audio: false
+        audio:
+          false
 
       });
 
@@ -1077,7 +1697,9 @@ async function getCameraStream() {
 async function loadMoveNet() {
 
   if (detector) {
+
     return;
+
   }
 
 
@@ -1094,26 +1716,27 @@ async function loadMoveNet() {
 
 
   detector =
-    await poseDetection.createDetector(
+    await poseDetection
+      .createDetector(
 
-      poseDetection
-        .SupportedModels
-        .MoveNet,
+        poseDetection
+          .SupportedModels
+          .MoveNet,
 
-      {
+        {
 
-        modelType:
-          poseDetection
-            .movenet
-            .modelType
-            .SINGLEPOSE_LIGHTNING,
+          modelType:
+            poseDetection
+              .movenet
+              .modelType
+              .SINGLEPOSE_LIGHTNING,
 
-        enableSmoothing:
-          true
+          enableSmoothing:
+            true
 
-      }
+        }
 
-    );
+      );
 
 }
 
@@ -1225,7 +1848,9 @@ async function initializeCamera() {
     updateSetupFlow();
 
 
-    if (!detectionLoopStarted) {
+    if (
+      !detectionLoopStarted
+    ) {
 
       detectionLoopStarted =
         true;
@@ -1281,6 +1906,7 @@ async function switchCamera() {
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de cámara.";
 
+
     return;
 
   }
@@ -1290,6 +1916,7 @@ async function switchCamera() {
 
     statusBox.textContent =
       "Primero activa la cámara.";
+
 
     return;
 
@@ -1302,7 +1929,9 @@ async function switchCamera() {
 
   currentFacingMode =
     currentFacingMode === "user"
+
       ? "environment"
+
       : "user";
 
 
@@ -1335,14 +1964,17 @@ async function switchCamera() {
 async function detectLoop() {
 
   if (
-    !cameraReady ||
-    !detector ||
+    !cameraReady
+    ||
+    !detector
+    ||
     video.readyState < 2
   ) {
 
     requestAnimationFrame(
       detectLoop
     );
+
 
     return;
 
@@ -1353,7 +1985,9 @@ async function detectLoop() {
 
     const poses =
       await detector
-        .estimatePoses(video);
+        .estimatePoses(
+          video
+        );
 
 
     ctx.clearRect(
@@ -1365,7 +1999,8 @@ async function detectLoop() {
 
 
     if (
-      poses &&
+      poses
+      &&
       poses.length > 0
     ) {
 
@@ -1476,10 +2111,13 @@ function sideData(
    REQUIRED POINTS
 ========================================================= */
 
-function requiredPoints(points) {
+function requiredPoints(
+  points
+) {
 
   if (
-    activeExercise === "bench"
+    activeExercise ===
+    "bench"
   ) {
 
     return [
@@ -1494,7 +2132,8 @@ function requiredPoints(points) {
 
 
   if (
-    activeExercise === "deadlift"
+    activeExercise ===
+    "deadlift"
   ) {
 
     return [
@@ -1524,29 +2163,39 @@ function requiredPoints(points) {
    CONFIDENCE
 ========================================================= */
 
-function averageConfidence(points) {
+function averageConfidence(
+  points
+) {
 
   const required =
-    requiredPoints(points);
+    requiredPoints(
+      points
+    );
 
 
   return required.reduce(
 
-    (sum, point) =>
-      sum + point.score,
+    (
+      sum,
+      point
+    ) =>
+      sum +
+      point.score,
 
     0
 
-  ) / required.length;
+  )
+
+  /
+
+  required.length;
 
 }
 
 
-/* =========================================================
-   SIDE SELECTION
-========================================================= */
-
-function determineBestSide(pose) {
+function determineBestSide(
+  pose
+) {
 
   const left =
     sideData(
@@ -1562,11 +2211,53 @@ function determineBestSide(pose) {
     );
 
 
-  return averageConfidence(left)
+  return averageConfidence(
+    left
+  )
+
+  >=
+
+  averageConfidence(
+    right
+  )
+
+    ? "left"
+
+    : "right";
+
+}
+
+
+function hasEnoughTracking(
+  points
+) {
+
+  const required =
+    requiredPoints(
+      points
+    );
+
+
+  return (
+
+    required.every(
+
+      (point) =>
+        point.score
+        >=
+        MIN_POINT_CONFIDENCE
+
+    )
+
+    &&
+
+    averageConfidence(
+      points
+    )
     >=
-    averageConfidence(right)
-      ? "left"
-      : "right";
+    MIN_CONFIDENCE
+
+  );
 
 }
 
@@ -1574,27 +2265,6 @@ function determineBestSide(pose) {
 /* =========================================================
    TRACKING
 ========================================================= */
-
-function hasEnoughTracking(points) {
-
-  const required =
-    requiredPoints(points);
-
-
-  return required.every(
-
-    (point) =>
-      point.score >=
-      MIN_POINT_CONFIDENCE
-
-  )
-  &&
-  averageConfidence(points)
-  >=
-  MIN_CONFIDENCE;
-
-}
-
 
 function updateTrackingState(
   goodTracking
@@ -1627,12 +2297,16 @@ function updateTrackingState(
 
 
   if (
+
     now -
     lastGoodTrackingAt
     >
     TRACKING_HOLD_MS
+
     &&
+
     trackingReady
+
   ) {
 
     trackingReady =
@@ -1690,9 +2364,11 @@ function calculateAngle(
   let angle =
 
     Math.abs(
+
       radians *
       180 /
       Math.PI
+
     );
 
 
@@ -1740,7 +2416,9 @@ function flexionFromAngle(
 }
 
 
-function smoothAngle(angle) {
+function smoothAngle(
+  angle
+) {
 
   angleBuffer.push(
     angle
@@ -1748,7 +2426,8 @@ function smoothAngle(angle) {
 
 
   if (
-    angleBuffer.length >
+    angleBuffer.length
+    >
     SMOOTHING_FRAMES
   ) {
 
@@ -1759,24 +2438,31 @@ function smoothAngle(angle) {
 
   return angleBuffer.reduce(
 
-    (sum, value) =>
-      sum + value,
+    (
+      sum,
+      value
+    ) =>
+      sum +
+      value,
 
     0
 
-  ) / angleBuffer.length;
+  )
+
+  /
+
+  angleBuffer.length;
 
 }
 
 
-/* =========================================================
-   PRIMARY ANGLE
-========================================================= */
-
-function getPrimaryAngle(points) {
+function getPrimaryAngle(
+  points
+) {
 
   if (
-    activeExercise === "bench"
+    activeExercise ===
+    "bench"
   ) {
 
     return flexionFromAngle(
@@ -1791,7 +2477,8 @@ function getPrimaryAngle(points) {
 
 
   if (
-    activeExercise === "deadlift"
+    activeExercise ===
+    "deadlift"
   ) {
 
     return flexionFromAngle(
@@ -1820,15 +2507,21 @@ function getPrimaryAngle(points) {
    PROCESS POSE
 ========================================================= */
 
-function processPose(pose) {
+function processPose(
+  pose
+) {
 
   candidateSide =
-    determineBestSide(pose);
+    determineBestSide(
+      pose
+    );
 
 
   const side =
     analysisActive
+
       ? activeSide
+
       : candidateSide;
 
 
@@ -1844,7 +2537,9 @@ function processPose(pose) {
 
 
   const goodTracking =
-    hasEnoughTracking(points);
+    hasEnoughTracking(
+      points
+    );
 
 
   updateTrackingState(
@@ -1890,7 +2585,11 @@ function processPose(pose) {
 
   const primaryAngle =
     smoothAngle(
-      getPrimaryAngle(points)
+
+      getPrimaryAngle(
+        points
+      )
+
     );
 
 
@@ -1918,6 +2617,7 @@ function processPose(pose) {
       updateDeadlift(
 
         primaryAngle,
+
         performance.now()
 
       );
@@ -1929,6 +2629,7 @@ function processPose(pose) {
       updateStandardMovement(
 
         primaryAngle,
+
         performance.now()
 
       );
@@ -1942,7 +2643,9 @@ function processPose(pose) {
     updateJump(
 
       primaryAngle,
+
       points,
+
       performance.now()
 
     );
@@ -1995,14 +2698,20 @@ function updateStandardMovement(
   ) {
 
     if (
+
       angle >
       triggerAngle
+
       &&
+
       movementPreviousAngle !==
       null
+
       &&
+
       angle >
       movementPreviousAngle
+
     ) {
 
       movementState =
@@ -2046,14 +2755,18 @@ function updateStandardMovement(
 
 
     if (
+
       movementMaxAngle -
       angle
+
       >=
       TURNAROUND_DELTA
+
     ) {
 
       if (
-        movementMaxAngle >=
+        movementMaxAngle
+        >=
         minDepth
       ) {
 
@@ -2094,17 +2807,19 @@ function updateStandardMovement(
 
       completeMovementRep(
 
-        timestamp,
-
         (
           movementBottomTime -
           movementRepStartTime
-        ) / 1000,
+        )
+        /
+        1000,
 
         (
           timestamp -
           movementAscentStartTime
-        ) / 1000
+        )
+        /
+        1000
 
       );
 
@@ -2201,13 +2916,18 @@ function updateDeadlift(
 
 
     if (
+
       movementPreviousAngle !==
       null
+
       &&
+
       movementPreviousAngle -
       angle
+
       >=
       2.5
+
     ) {
 
       movementState =
@@ -2245,8 +2965,6 @@ function updateDeadlift(
 
 
       completeMovementRep(
-
-        timestamp,
 
         deadliftEccentricForNextRep,
 
@@ -2346,7 +3064,6 @@ function updateDeadlift(
 ========================================================= */
 
 function completeMovementRep(
-  timestamp,
   eccentric,
   concentric
 ) {
@@ -2364,13 +3081,18 @@ function completeMovementRep(
 
   const anglePassed =
 
-    angleValue >=
+    angleValue
+
+    >=
+
     settings.angleTarget -
     settings.angleTolerance;
 
 
   const eccAvailable =
-    Number.isFinite(eccentric);
+    Number.isFinite(
+      eccentric
+    );
 
 
   const eccPassed =
@@ -2383,6 +3105,7 @@ function completeMovementRep(
       eccentric -
       settings.eccTarget
     )
+
     <=
     settings.eccTolerance;
 
@@ -2393,6 +3116,7 @@ function completeMovementRep(
       concentric -
       settings.conTarget
     )
+
     <=
     settings.conTolerance;
 
@@ -2506,7 +3230,9 @@ function completeMovementRep(
 
   eccDisplay.textContent =
     eccAvailable
+
       ? `${eccentric.toFixed(2)} s`
+
       : "—";
 
 
@@ -2561,7 +3287,9 @@ function buildMovementWarning(
     &&
     !eccPassed
     &&
-    Number.isFinite(eccentric)
+    Number.isFinite(
+      eccentric
+    )
   ) {
 
     return eccentric <
@@ -2692,7 +3420,8 @@ function updateJump(
 
 
     if (
-      jumpBaselineSamples.length >
+      jumpBaselineSamples.length
+      >
       12
     ) {
 
@@ -2702,7 +3431,8 @@ function updateJump(
 
 
     if (
-      jumpBaselineSamples.length >=
+      jumpBaselineSamples.length
+      >=
       8
     ) {
 
@@ -2710,8 +3440,12 @@ function updateJump(
 
         jumpBaselineSamples.reduce(
 
-          (sum, value) =>
-            sum + value,
+          (
+            sum,
+            value
+          ) =>
+            sum +
+            value,
 
           0
 
@@ -2724,7 +3458,9 @@ function updateJump(
 
       jumpState =
         activeExercise === "sj"
+
           ? "START POSITION"
+
           : "READY";
 
     }
@@ -2762,8 +3498,11 @@ function updateJump(
     updateSquatJump(
 
       flexion,
+
       points,
+
       timestamp,
+
       settings
 
     );
@@ -2775,8 +3514,11 @@ function updateJump(
     updateCountermovementJump(
 
       flexion,
+
       points,
+
       timestamp,
+
       settings
 
     );
@@ -2847,7 +3589,9 @@ function updateSquatJump(
     "START POSITION"
   ) {
 
-    if (inStartPosition) {
+    if (
+      inStartPosition
+    ) {
 
       jumpState =
         "HOLD";
@@ -2874,7 +3618,9 @@ function updateSquatJump(
     "HOLD"
   ) {
 
-    if (!inStartPosition) {
+    if (
+      !inStartPosition
+    ) {
 
       jumpState =
         "START POSITION";
@@ -2905,14 +3651,19 @@ function updateSquatJump(
 
 
     if (
+
       (
         timestamp -
         sjHoldStartTime
       )
+
       /
+
       1000
+
       >=
       settings.holdTarget
+
     ) {
 
       jumpState =
@@ -2941,9 +3692,14 @@ function updateSquatJump(
   ) {
 
     if (
-      flexion >
+
+      flexion
+
+      >
+
       sjHeldFlexion +
       SJ_COUNTERMOVEMENT_ALLOWANCE
+
     ) {
 
       sjProtocolInvalid =
@@ -2968,10 +3724,13 @@ function updateSquatJump(
 
 
     if (
+
       sjHeldFlexion -
       flexion
+
       >=
       3
+
     ) {
 
       jumpState =
@@ -3016,7 +3775,9 @@ function updateSquatJump(
     detectJumpTakeoff(
 
       flexion,
+
       points,
+
       timestamp
 
     );
@@ -3032,7 +3793,9 @@ function updateSquatJump(
     detectJumpLanding(
 
       flexion,
+
       points,
+
       timestamp
 
     );
@@ -3048,8 +3811,11 @@ function updateSquatJump(
     captureLanding(
 
       flexion,
+
       timestamp,
+
       settings,
+
       settings.holdTarget
 
     );
@@ -3076,14 +3842,20 @@ function updateCountermovementJump(
   ) {
 
     if (
+
       flexion >
       JUMP_DESCENT_TRIGGER
+
       &&
+
       jumpPreviousFlexion !==
       null
+
       &&
+
       flexion >
       jumpPreviousFlexion
+
     ) {
 
       jumpState =
@@ -3127,15 +3899,23 @@ function updateCountermovementJump(
 
 
     if (
+
       jumpMaxFlexion -
       flexion
+
       >=
       TURNAROUND_DELTA
+
     ) {
 
       if (
-        jumpMaxFlexion >=
+
+        jumpMaxFlexion
+
+        >=
+
         CMJ_MIN_COUNTERMOVEMENT
+
       ) {
 
         jumpState =
@@ -3171,7 +3951,9 @@ function updateCountermovementJump(
     detectJumpTakeoff(
 
       flexion,
+
       points,
+
       timestamp
 
     );
@@ -3187,7 +3969,9 @@ function updateCountermovementJump(
     detectJumpLanding(
 
       flexion,
+
       points,
+
       timestamp
 
     );
@@ -3203,8 +3987,11 @@ function updateCountermovementJump(
     captureLanding(
 
       flexion,
+
       timestamp,
+
       settings,
+
       null
 
     );
@@ -3215,7 +4002,7 @@ function updateCountermovementJump(
 
 
 /* =========================================================
-   TAKEOFF THRESHOLD
+   TAKEOFF / LANDING
 ========================================================= */
 
 function getTakeoffThreshold() {
@@ -3232,10 +4019,6 @@ function getTakeoffThreshold() {
 }
 
 
-/* =========================================================
-   LANDING TOLERANCE
-========================================================= */
-
 function getLandingTolerance() {
 
   return Math.max(
@@ -3249,10 +4032,6 @@ function getLandingTolerance() {
 
 }
 
-
-/* =========================================================
-   DETECT TAKEOFF
-========================================================= */
 
 function detectJumpTakeoff(
   flexion,
@@ -3276,14 +4055,20 @@ function detectJumpTakeoff(
 
 
   if (
+
     propulsionMs >=
     JUMP_TAKEOFF_MIN_MS
+
     &&
+
     ankleLift >
     getTakeoffThreshold()
+
     &&
+
     flexion <
     50
+
   ) {
 
     jumpTakeoffTime =
@@ -3297,10 +4082,6 @@ function detectJumpTakeoff(
 
 }
 
-
-/* =========================================================
-   DETECT LANDING
-========================================================= */
 
 function detectJumpLanding(
   flexion,
@@ -3343,12 +4124,18 @@ function detectJumpLanding(
 
 
   if (
+
     flightMs >=
     JUMP_MIN_FLIGHT_MS
+
     &&
+
     nearBaseline
+
     &&
+
     ankleReturning
+
   ) {
 
     jumpLandingTime =
@@ -3392,10 +4179,6 @@ function detectJumpLanding(
 }
 
 
-/* =========================================================
-   CAPTURE LANDING
-========================================================= */
-
 function captureLanding(
   flexion,
   timestamp,
@@ -3415,15 +4198,20 @@ function captureLanding(
 
 
   if (
+
     timestamp -
     jumpLandingStartTime
+
     >=
+
     JUMP_LANDING_CAPTURE_MS
+
   ) {
 
     completeJump(
 
       settings,
+
       sjHold
 
     );
@@ -3496,43 +4284,56 @@ function completeJump(
       : (
           jumpBottomTime -
           jumpStartTime
-        ) / 1000;
+        )
+        /
+        1000;
 
 
   const kneePassed =
 
-    jumpMaxFlexion >=
+    jumpMaxFlexion
+
+    >=
+
     settings.kneeTarget -
     settings.kneeTolerance
 
     &&
 
-    jumpMaxFlexion <=
+    jumpMaxFlexion
+
+    <=
+
     settings.kneeTarget +
     settings.kneeTolerance;
 
 
   const flightValid =
 
-    flightTime >=
+    flightTime
+
+    >=
+
     JUMP_MIN_FLIGHT_MS /
     1000
 
     &&
 
-    flightTime <=
+    flightTime
+
+    <=
+
     JUMP_MAX_FLIGHT_MS /
     1000;
 
 
   const landingValid =
-
-    jumpMaxLandingFlexion >=
-    0;
+    Number.isFinite(
+      jumpMaxLandingFlexion
+    );
 
 
   let valid =
-
     !sjProtocolInvalid;
 
 
@@ -3604,30 +4405,38 @@ function completeJump(
   const result = {
 
     number:
-      jumpCount,
+      jumpResults.length + 1,
+
 
     estimatedHeightCm:
       estimatedHeightCm,
 
+
     flightTime:
       flightTime,
+
 
     maxFlexion:
       jumpMaxFlexion,
 
+
     descentTime:
       descentTime,
+
 
     holdTime:
       activeExercise === "sj"
         ? sjHold
         : null,
 
+
     landingFlexion:
       jumpMaxLandingFlexion,
 
+
     valid:
       valid,
+
 
     reason:
       valid
@@ -3689,27 +4498,35 @@ function addInvalidJumpResult(
     number:
       jumpResults.length + 1,
 
+
     estimatedHeightCm:
       null,
+
 
     flightTime:
       null,
 
+
     maxFlexion:
       jumpMaxFlexion,
 
+
     descentTime:
       null,
+
 
     holdTime:
       getJumpSettings()
         .holdTarget,
 
+
     landingFlexion:
       null,
 
+
     valid:
       false,
+
 
     reason:
       reason
@@ -3728,19 +4545,6 @@ function addInvalidJumpResult(
 
 
   updateJumpSummary();
-
-
-  if (
-    jumpCount >=
-    getJumpSettings()
-      .targetJumps
-  ) {
-
-    stopAnalysis(
-      true
-    );
-
-  }
 
 }
 
@@ -3818,10 +4622,12 @@ function prepareNextJump() {
 
 
 /* =========================================================
-   WARNING
+   LIVE FEEDBACK
 ========================================================= */
 
-function showWarning(message) {
+function showWarning(
+  message
+) {
 
   const mode =
     getActiveFeedbackMode();
@@ -3870,10 +4676,6 @@ function showWarning(message) {
 }
 
 
-/* =========================================================
-   SUCCESS
-========================================================= */
-
 function showSuccess() {
 
   const mode =
@@ -3897,10 +4699,6 @@ function showSuccess() {
 }
 
 
-/* =========================================================
-   HIDE WARNING
-========================================================= */
-
 function hideWarning() {
 
   warningBox
@@ -3911,10 +4709,6 @@ function hideWarning() {
 
 }
 
-
-/* =========================================================
-   TRACKING WARNING
-========================================================= */
 
 function trackingWarning() {
 
@@ -3939,12 +4733,18 @@ function trackingWarning() {
 
 
   if (
+
     now -
     trackingLostSince
+
     >
+
     1000
+
     &&
+
     !trackingAlertPlayed
+
   ) {
 
     beepWarning();
@@ -3957,10 +4757,6 @@ function trackingWarning() {
 
 }
 
-
-/* =========================================================
-   AUDIO WARNING
-========================================================= */
 
 function beepWarning() {
 
@@ -4054,7 +4850,9 @@ function beepWarning() {
    DRAW SKELETON
 ========================================================= */
 
-function drawSkeleton(pose) {
+function drawSkeleton(
+  pose
+) {
 
   const kp =
     pose.keypoints;
@@ -4099,14 +4897,20 @@ function drawSkeleton(pose) {
 
   connections.forEach(
 
-    ([a, b]) => {
+    (
+      [a, b]
+    ) => {
 
       if (
+
         kp[a].score >
         0.35
+
         &&
+
         kp[b].score >
         0.35
+
       ) {
 
         ctx.beginPath();
@@ -4141,7 +4945,9 @@ function drawSkeleton(pose) {
 
   kp.forEach(
 
-    (point) => {
+    (
+      point
+    ) => {
 
       if (
         point.score >
@@ -4185,7 +4991,9 @@ function drawSkeleton(pose) {
    MOVEMENT RESULT ROW
 ========================================================= */
 
-function addMovementResultRow(rep) {
+function addMovementResultRow(
+  rep
+) {
 
   const row =
     document.createElement(
@@ -4206,7 +5014,9 @@ function addMovementResultRow(rep) {
     <td>
       ${
         rep.eccentric === null
+
           ? "—"
+
           : `${rep.eccentric.toFixed(2)} s`
       }
     </td>
@@ -4253,6 +5063,7 @@ function updateMovementSummary() {
     movementSummary.textContent =
       "Aún no hay resultados.";
 
+
     return;
 
   }
@@ -4262,8 +5073,12 @@ function updateMovementSummary() {
 
     movementResults.reduce(
 
-      (sum, rep) =>
-        sum + rep.angle,
+      (
+        sum,
+        rep
+      ) =>
+        sum +
+        rep.angle,
 
       0
 
@@ -4277,12 +5092,19 @@ function updateMovementSummary() {
   const eccValues =
 
     movementResults
+
       .filter(
-        (rep) =>
-          rep.eccentric !== null
+        (
+          rep
+        ) =>
+          rep.eccentric !==
+          null
       )
+
       .map(
-        (rep) =>
+        (
+          rep
+        ) =>
           rep.eccentric
       );
 
@@ -4291,28 +5113,40 @@ function updateMovementSummary() {
 
     eccValues.length
 
-      ? eccValues.reduce(
+      ?
 
-          (sum, value) =>
-            sum + value,
+      eccValues.reduce(
 
-          0
+        (
+          sum,
+          value
+        ) =>
+          sum +
+          value,
 
-        )
+        0
 
-        /
+      )
 
-        eccValues.length
+      /
 
-      : null;
+      eccValues.length
+
+      :
+
+      null;
 
 
   const avgCon =
 
     movementResults.reduce(
 
-      (sum, rep) =>
-        sum + rep.concentric,
+      (
+        sum,
+        rep
+      ) =>
+        sum +
+        rep.concentric,
 
       0
 
@@ -4331,7 +5165,6 @@ function updateMovementSummary() {
       /
 
       movementResults.length
-
     )
 
     *
@@ -4372,7 +5205,9 @@ function updateMovementSummary() {
     <strong>
       ${
         avgEcc === null
+
           ? "—"
+
           : `${avgEcc.toFixed(2)} s`
       }
     </strong>
@@ -4392,7 +5227,9 @@ function updateMovementSummary() {
    JUMP RESULT ROW
 ========================================================= */
 
-function addJumpResultRow(result) {
+function addJumpResultRow(
+  result
+) {
 
   const row =
     document.createElement(
@@ -4402,23 +5239,30 @@ function addJumpResultRow(result) {
 
   const protocolValue =
 
-    activeExercise === "sj"
+    activeExercise ===
+    "sj"
 
-      ? (
-          result.holdTime === null
+      ?
 
-            ? result.reason
+      (
+        result.holdTime ===
+        null
 
-            : `${result.holdTime.toFixed(2)} s`
-        )
+          ? result.reason
 
-      : (
-          result.descentTime === null
+          : `${result.holdTime.toFixed(2)} s`
+      )
 
-            ? "—"
+      :
 
-            : `${result.descentTime.toFixed(2)} s`
-        );
+      (
+        result.descentTime ===
+        null
+
+          ? "—"
+
+          : `${result.descentTime.toFixed(2)} s`
+      );
 
 
   row.innerHTML = `
@@ -4429,16 +5273,22 @@ function addJumpResultRow(result) {
 
     <td>
       ${
-        result.estimatedHeightCm === null
+        result.estimatedHeightCm ===
+        null
+
           ? "—"
+
           : `${result.estimatedHeightCm.toFixed(1)} cm`
       }
     </td>
 
     <td>
       ${
-        result.flightTime === null
+        result.flightTime ===
+        null
+
           ? "—"
+
           : `${result.flightTime.toFixed(3)} s`
       }
     </td>
@@ -4453,8 +5303,11 @@ function addJumpResultRow(result) {
 
     <td>
       ${
-        result.landingFlexion === null
+        result.landingFlexion ===
+        null
+
           ? "—"
+
           : `${result.landingFlexion.toFixed(0)}°`
       }
     </td>
@@ -4497,6 +5350,7 @@ function updateJumpSummary() {
     jumpSummary.textContent =
       "Aún no hay resultados.";
 
+
     return;
 
   }
@@ -4506,10 +5360,16 @@ function updateJumpSummary() {
 
     jumpResults.filter(
 
-      (result) =>
+      (
+        result
+      ) =>
+
         result.valid
+
         &&
-        result.estimatedHeightCm !== null
+
+        result.estimatedHeightCm !==
+        null
 
     );
 
@@ -4523,7 +5383,9 @@ function updateJumpSummary() {
     valid.length;
 
 
-  if (!valid.length) {
+  if (
+    !valid.length
+  ) {
 
     jumpSummary.innerHTML = `
 
@@ -4551,7 +5413,9 @@ function updateJumpSummary() {
 
     valid.map(
 
-      (result) =>
+      (
+        result
+      ) =>
         result.estimatedHeightCm
 
     );
@@ -4561,7 +5425,9 @@ function updateJumpSummary() {
 
     valid.map(
 
-      (result) =>
+      (
+        result
+      ) =>
         result.flightTime
 
     );
@@ -4578,8 +5444,12 @@ function updateJumpSummary() {
 
     heights.reduce(
 
-      (sum, value) =>
-        sum + value,
+      (
+        sum,
+        value
+      ) =>
+        sum +
+        value,
 
       0
 
@@ -4594,8 +5464,12 @@ function updateJumpSummary() {
 
     flights.reduce(
 
-      (sum, value) =>
-        sum + value,
+      (
+        sum,
+        value
+      ) =>
+        sum +
+        value,
 
       0
 
@@ -4646,7 +5520,7 @@ function updateJumpSummary() {
 
 
 /* =========================================================
-   START ANALYSIS
+   START
 ========================================================= */
 
 function startAnalysis() {
@@ -4655,6 +5529,7 @@ function startAnalysis() {
 
     statusBox.textContent =
       "Activa la cámara primero.";
+
 
     return;
 
@@ -4745,7 +5620,8 @@ function startAnalysis() {
 
     movementState =
 
-      activeExercise === "deadlift"
+      activeExercise ===
+      "deadlift"
 
         ? "WAIT_FLOOR"
 
@@ -4905,7 +5781,7 @@ function startAnalysis() {
 
 
 /* =========================================================
-   STOP ANALYSIS
+   STOP
 ========================================================= */
 
 function stopAnalysis(
@@ -4916,6 +5792,7 @@ function stopAnalysis(
 
     statusBox.textContent =
       "No hay una serie activa.";
+
 
     return;
 
@@ -4974,6 +5851,449 @@ function stopAnalysis(
 
   updateSetupFlow();
 
+
+  updateFeedbackContext();
+
+}
+
+
+/* =========================================================
+   FEEDBACK FORM
+========================================================= */
+
+function detectBrowser() {
+
+  const ua =
+    navigator.userAgent;
+
+
+  if (
+    /CriOS/i.test(
+      ua
+    )
+  ) {
+
+    return "Chrome iOS";
+
+  }
+
+
+  if (
+    /FxiOS/i.test(
+      ua
+    )
+  ) {
+
+    return "Firefox iOS";
+
+  }
+
+
+  if (
+    /EdgiOS/i.test(
+      ua
+    )
+  ) {
+
+    return "Edge iOS";
+
+  }
+
+
+  if (
+
+    /Safari/i.test(
+      ua
+    )
+
+    &&
+
+    !/Chrome|CriOS|Android/i.test(
+      ua
+    )
+
+  ) {
+
+    return "Safari";
+
+  }
+
+
+  if (
+    /Chrome/i.test(
+      ua
+    )
+  ) {
+
+    return "Chrome";
+
+  }
+
+
+  if (
+    /Firefox/i.test(
+      ua
+    )
+  ) {
+
+    return "Firefox";
+
+  }
+
+
+  return "Otro";
+
+}
+
+
+function detectDevice() {
+
+  const ua =
+    navigator.userAgent;
+
+
+  if (
+    /iPhone/i.test(
+      ua
+    )
+  ) {
+
+    return "iPhone";
+
+  }
+
+
+  if (
+    /iPad/i.test(
+      ua
+    )
+  ) {
+
+    return "iPad";
+
+  }
+
+
+  if (
+    /Android/i.test(
+      ua
+    )
+  ) {
+
+    return "Android";
+
+  }
+
+
+  if (
+    /Macintosh/i.test(
+      ua
+    )
+  ) {
+
+    return "Mac";
+
+  }
+
+
+  if (
+    /Windows/i.test(
+      ua
+    )
+  ) {
+
+    return "Windows";
+
+  }
+
+
+  return navigator.platform
+    ||
+    "Desconocido";
+
+}
+
+
+function updateFeedbackContext() {
+
+  if (!feedbackExercise) {
+
+    return;
+
+  }
+
+
+  feedbackExercise.value =
+    exerciseMeta[
+      activeExercise
+    ].name;
+
+}
+
+
+async function submitFeedback(
+  event
+) {
+
+  event.preventDefault();
+
+
+  const message =
+    feedbackMessage
+      .value
+      .trim();
+
+
+  if (!message) {
+
+    feedbackStatus.textContent =
+      "Cuéntame brevemente qué ocurrió o qué mejorarías.";
+
+
+    feedbackStatus.className =
+      "feedback-status error";
+
+
+    feedbackMessage.focus();
+
+
+    return;
+
+  }
+
+
+  feedbackSubmit.disabled =
+    true;
+
+
+  feedbackSubmit.textContent =
+    "Enviando...";
+
+
+  feedbackStatus.textContent =
+    "";
+
+
+  feedbackStatus.className =
+    "feedback-status";
+
+
+  const payload =
+    new FormData();
+
+
+  payload.append(
+    "_subject",
+    `Nuevo feedback ${APP_VERSION}`
+  );
+
+
+  payload.append(
+    "perfil",
+    feedbackProfile.value
+  );
+
+
+  payload.append(
+    "ejercicio",
+    exerciseMeta[
+      activeExercise
+    ].name
+  );
+
+
+  payload.append(
+    "categoria",
+    activeCategory ===
+    "movement"
+
+      ? "Movimiento"
+
+      : "Salto"
+  );
+
+
+  payload.append(
+    "tipo_feedback",
+    feedbackType.value
+  );
+
+
+  payload.append(
+    "experiencia",
+    `${feedbackExperience.value}/5`
+  );
+
+
+  payload.append(
+    "mensaje",
+    message
+  );
+
+
+  payload.append(
+
+    "contacto",
+
+    feedbackContact
+      .value
+      .trim()
+
+    ||
+
+    "No indicado"
+
+  );
+
+
+  payload.append(
+    "version",
+    APP_VERSION
+  );
+
+
+  payload.append(
+    "dispositivo",
+    detectDevice()
+  );
+
+
+  payload.append(
+    "navegador",
+    detectBrowser()
+  );
+
+
+  payload.append(
+    "user_agent",
+    navigator.userAgent
+  );
+
+
+  payload.append(
+
+    "camara",
+
+    currentFacingMode ===
+    "user"
+
+      ? "Frontal"
+
+      : "Trasera"
+
+  );
+
+
+  payload.append(
+
+    "fecha_hora",
+
+    new Date()
+      .toLocaleString(
+        "es-CL"
+      )
+
+  );
+
+
+  try {
+
+    const response =
+      await fetch(
+
+        FORMSPREE_ENDPOINT,
+
+        {
+
+          method:
+            "POST",
+
+          body:
+            payload,
+
+          headers: {
+
+            Accept:
+              "application/json"
+
+          }
+
+        }
+
+      );
+
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        "Formspree respondió con error"
+      );
+
+    }
+
+
+    feedbackStatus.textContent =
+      "✓ ¡Gracias! Tu feedback fue enviado y nos ayuda a mejorar KINEMYX.";
+
+
+    feedbackStatus.className =
+      "feedback-status success";
+
+
+    feedbackForm.reset();
+
+
+    feedbackExperience.value =
+      "5";
+
+
+    updateFeedbackContext();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Error enviando feedback:",
+      error
+    );
+
+
+    feedbackStatus.textContent =
+      "No se pudo enviar el feedback. Revisa tu conexión e inténtalo nuevamente.";
+
+
+    feedbackStatus.className =
+      "feedback-status error";
+
+  }
+
+  finally {
+
+    feedbackSubmit.disabled =
+      false;
+
+
+    feedbackSubmit.textContent =
+      "Enviar feedback";
+
+  }
+
+}
+
+
+if (feedbackForm) {
+
+  feedbackForm.addEventListener(
+
+    "submit",
+
+    submitFeedback
+
+  );
+
 }
 
 
@@ -4987,3 +6307,6 @@ selectCategory(
 
 
 updateSetupFlow();
+
+
+updateFeedbackContext();
