@@ -1,33 +1,24 @@
 /* =========================================================
-   KINEMYX Beta 0.5
-   Movimientos + Saltos + Feedback
+   KINEMYX Beta 0.6
+   Movimientos + Saltos + Feedback + Posicionamiento guiado
    ========================================================= */
 
-const $ = (id) =>
-  document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
-
-const APP_VERSION =
-  "KINEMYX Beta 0.5";
-
-
-const FORMSPREE_ENDPOINT =
-  "https://formspree.io/f/xljdjgbg";
+const APP_VERSION = "KINEMYX Beta 0.6";
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 
 /* =========================================================
    DOM
 ========================================================= */
 
-const video =
-  $("video");
+const video = $("video");
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
 
-const canvas =
-  $("canvas");
-
-const ctx =
-  canvas.getContext("2d");
-
+const cameraWrapper =
+  video.parentElement;
 
 const movementCategoryButton =
   $("movementCategoryButton");
@@ -41,7 +32,6 @@ const movementExerciseSelector =
 const jumpExerciseSelector =
   $("jumpExerciseSelector");
 
-
 const movementSettingsSection =
   $("movementSettingsSection");
 
@@ -54,7 +44,6 @@ const movementConfigDetails =
 const jumpConfigDetails =
   $("jumpConfigDetails");
 
-
 const cameraButton =
   $("cameraButton");
 
@@ -66,7 +55,6 @@ const startButton =
 
 const stopButton =
   $("stopButton");
-
 
 const liveExerciseLabel =
   $("liveExerciseLabel");
@@ -82,7 +70,6 @@ const secondaryMetricLabel =
 
 const tertiaryMetricLabel =
   $("tertiaryMetricLabel");
-
 
 const repDisplay =
   $("repDisplay");
@@ -102,13 +89,20 @@ const conDisplay =
 const sideDisplay =
   $("sideDisplay");
 
-
 const statusBox =
   $("status");
 
 const warningBox =
   $("warning");
 
+const positionGuide =
+  $("positionGuide");
+
+const positionGuideTitle =
+  $("positionGuideTitle");
+
+const positionGuideText =
+  $("positionGuideText");
 
 const movementResultsSection =
   $("movementResults");
@@ -125,7 +119,6 @@ const movementResultsBody =
 const movementAngleHeader =
   $("movementAngleHeader");
 
-
 const jumpResultsSection =
   $("jumpResults");
 
@@ -141,7 +134,6 @@ const jumpResultsBody =
 const jumpProtocolHeader =
   $("jumpProtocolHeader");
 
-
 const stepAnalysis =
   $("stepAnalysis");
 
@@ -153,7 +145,6 @@ const stepPosition =
 
 const stepStart =
   $("stepStart");
-
 
 const stepAnalysisText =
   $("stepAnalysisText");
@@ -167,7 +158,6 @@ const stepPositionText =
 const stepStartText =
   $("stepStartText");
 
-
 const stepAnalysisStatus =
   $("stepAnalysisStatus");
 
@@ -179,7 +169,6 @@ const stepPositionStatus =
 
 const stepStartStatus =
   $("stepStartStatus");
-
 
 const movementAngleName =
   $("movementAngleName");
@@ -220,7 +209,6 @@ const movementCheckCon =
 const movementCheckAngleText =
   $("movementCheckAngleText");
 
-
 const jumpTargetJumps =
   $("jumpTargetJumps");
 
@@ -250,7 +238,6 @@ const jumpCheckLanding =
 
 const jumpProtocolNote =
   $("jumpProtocolNote");
-
 
 const feedbackForm =
   $("feedbackForm");
@@ -284,25 +271,15 @@ const feedbackStatus =
    GENERAL STATE
 ========================================================= */
 
-let detector =
-  null;
+let detector = null;
 
+let cameraReady = false;
+let trackingReady = false;
+let analysisActive = false;
+let detectionLoopStarted = false;
 
-let cameraReady =
-  false;
-
-let trackingReady =
-  false;
-
-let analysisActive =
-  false;
-
-let detectionLoopStarted =
-  false;
-
-let lastGoodTrackingAt =
-  0;
-
+let lastGoodTrackingAt = 0;
+let lastPositionAssessment = null;
 
 let activeCategory =
   "movement";
@@ -310,13 +287,11 @@ let activeCategory =
 let activeExercise =
   "squat";
 
-
 let currentFacingMode =
   "user";
 
 let currentStream =
   null;
-
 
 let candidateSide =
   "left";
@@ -324,10 +299,8 @@ let candidateSide =
 let activeSide =
   "left";
 
-
 let audioContext =
   null;
-
 
 let trackingLostSince =
   null;
@@ -335,10 +308,8 @@ let trackingLostSince =
 let trackingAlertPlayed =
   false;
 
-
 let warningHideTimer =
   null;
-
 
 let angleBuffer =
   [];
@@ -351,25 +322,33 @@ let angleBuffer =
 const MIN_CONFIDENCE =
   0.58;
 
-
 const MIN_POINT_CONFIDENCE =
   0.42;
-
 
 const TRACKING_HOLD_MS =
   450;
 
-
 const SMOOTHING_FRAMES =
   5;
-
 
 const TURNAROUND_DELTA =
   4;
 
-
 const GRAVITY =
   9.81;
+
+const FRAME_MARGIN_X =
+  0.035;
+
+const FRAME_MARGIN_Y =
+  0.045;
+
+/*
+  Heurística 2D para detectar cuando
+  la persona está demasiado frontal.
+*/
+const FRONTAL_RATIO_THRESHOLD =
+  0.58;
 
 
 /* =========================================================
@@ -377,7 +356,6 @@ const GRAVITY =
 ========================================================= */
 
 const exerciseMeta = {
-
 
   squat: {
 
@@ -544,42 +522,32 @@ const exerciseMeta = {
 let movementRepCount =
   0;
 
-
 let movementSuccessfulReps =
   0;
-
 
 let movementState =
   "READY";
 
-
 let movementMaxAngle =
   0;
-
 
 let movementRepStartTime =
   0;
 
-
 let movementBottomTime =
   0;
-
 
 let movementAscentStartTime =
   0;
 
-
 let movementPreviousAngle =
   null;
-
 
 let movementResults =
   [];
 
-
 let deadliftEccentricForNextRep =
   null;
-
 
 let deadliftDescentStartTime =
   0;
@@ -592,110 +560,81 @@ let deadliftDescentStartTime =
 let jumpCount =
   0;
 
-
 let jumpValidCount =
   0;
-
 
 let jumpState =
   "CALIBRATING";
 
-
 let jumpPreviousFlexion =
   null;
-
 
 let jumpPreviousAnkleY =
   null;
 
-
 let jumpMaxFlexion =
   0;
-
 
 let jumpStartTime =
   0;
 
-
 let jumpBottomTime =
   0;
-
 
 let jumpPropulsionStartTime =
   0;
 
-
 let jumpTakeoffTime =
   0;
-
 
 let jumpLandingTime =
   0;
 
-
 let jumpLandingStartTime =
   0;
-
 
 let jumpMaxLandingFlexion =
   0;
 
-
 let jumpResults =
   [];
-
 
 let jumpBaselineAnkleY =
   null;
 
-
 let jumpBaselineSamples =
   [];
-
 
 let sjHoldStartTime =
   0;
 
-
 let sjHeldFlexion =
   null;
-
 
 let sjProtocolInvalid =
   false;
 
 
-/* =========================================================
-   JUMP CONSTANTS
-========================================================= */
-
 const JUMP_READY_FLEXION =
   20;
-
 
 const JUMP_DESCENT_TRIGGER =
   25;
 
-
 const CMJ_MIN_COUNTERMOVEMENT =
   35;
-
 
 const JUMP_TAKEOFF_MIN_MS =
   70;
 
-
 const JUMP_MIN_FLIGHT_MS =
   120;
-
 
 const JUMP_MAX_FLIGHT_MS =
   1300;
 
-
 const JUMP_LANDING_CAPTURE_MS =
   420;
-
 
 const SJ_COUNTERMOVEMENT_ALLOWANCE =
   6;
@@ -717,12 +656,10 @@ function getMovementSettings() {
         ) || 1
       ),
 
-
     angleTarget:
       Number(
         movementAngleTarget.value
       ) || 0,
-
 
     angleTolerance:
       Math.max(
@@ -732,7 +669,6 @@ function getMovementSettings() {
         ) || 0
       ),
 
-
     eccTarget:
       Math.max(
         0,
@@ -740,7 +676,6 @@ function getMovementSettings() {
           movementEccTarget.value
         ) || 0
       ),
-
 
     eccTolerance:
       Math.max(
@@ -750,7 +685,6 @@ function getMovementSettings() {
         ) || 0
       ),
 
-
     conTarget:
       Math.max(
         0,
@@ -758,7 +692,6 @@ function getMovementSettings() {
           movementConTarget.value
         ) || 0
       ),
-
 
     conTolerance:
       Math.max(
@@ -768,18 +701,14 @@ function getMovementSettings() {
         ) || 0
       ),
 
-
     feedbackMode:
       movementFeedbackMode.value,
-
 
     checkAngle:
       movementCheckAngle.checked,
 
-
     checkEcc:
       movementCheckEcc.checked,
-
 
     checkCon:
       movementCheckCon.checked
@@ -801,12 +730,10 @@ function getJumpSettings() {
         ) || 1
       ),
 
-
     kneeTarget:
       Number(
         jumpKneeTarget.value
       ) || 90,
-
 
     kneeTolerance:
       Math.max(
@@ -816,7 +743,6 @@ function getJumpSettings() {
         ) || 0
       ),
 
-
     holdTarget:
       Math.max(
         0.3,
@@ -825,18 +751,14 @@ function getJumpSettings() {
         ) || 1
       ),
 
-
     feedbackMode:
       jumpFeedbackMode.value,
-
 
     checkFlight:
       jumpCheckFlight.checked,
 
-
     checkKnee:
       jumpCheckKnee.checked,
-
 
     checkLanding:
       jumpCheckLanding.checked
@@ -877,15 +799,12 @@ function setStep(
     "warning-step"
   );
 
-
   element.classList.add(
     state
   );
 
-
   textElement.textContent =
     text;
-
 
   statusElement.textContent =
     status;
@@ -929,7 +848,6 @@ function updateSetupFlow() {
       "2"
     );
 
-
     setStep(
       stepPosition,
       stepPositionText,
@@ -938,7 +856,6 @@ function updateSetupFlow() {
       "Esperando cámara",
       "3"
     );
-
 
     setStep(
       stepStart,
@@ -949,10 +866,8 @@ function updateSetupFlow() {
       "4"
     );
 
-
     startButton.disabled =
       true;
-
 
     return;
 
@@ -980,6 +895,12 @@ function updateSetupFlow() {
 
   if (!trackingReady) {
 
+    const shortText =
+      lastPositionAssessment?.short
+      ||
+      "Ajusta posición";
+
+
     setStep(
 
       stepPosition,
@@ -992,7 +913,7 @@ function updateSetupFlow() {
         ? "warning-step"
         : "active",
 
-      "Ajusta posición",
+      shortText,
 
       "!"
 
@@ -1013,7 +934,7 @@ function updateSetupFlow() {
 
       analysisActive
         ? "Serie en curso"
-        : "Esperando tracking",
+        : "Esperando posición",
 
       analysisActive
         ? "●"
@@ -1028,7 +949,6 @@ function updateSetupFlow() {
         true;
 
     }
-
 
     return;
 
@@ -1045,7 +965,7 @@ function updateSetupFlow() {
 
     "done",
 
-    "Tracking listo",
+    "Posición correcta",
 
     "✓"
 
@@ -1063,7 +983,6 @@ function updateSetupFlow() {
       "●"
     );
 
-
     startButton.disabled =
       true;
 
@@ -1079,7 +998,6 @@ function updateSetupFlow() {
       "Listo para iniciar",
       "4"
     );
-
 
     startButton.disabled =
       false;
@@ -1163,6 +1081,41 @@ stopButton
   );
 
 
+window.addEventListener(
+  "resize",
+  syncCanvasToVideoFrame
+);
+
+
+window.addEventListener(
+  "orientationchange",
+  () =>
+    setTimeout(
+      syncCanvasToVideoFrame,
+      250
+    )
+);
+
+
+if (
+  "ResizeObserver"
+  in window
+) {
+
+  const resizeObserver =
+    new ResizeObserver(
+      () =>
+        syncCanvasToVideoFrame()
+    );
+
+
+  resizeObserver.observe(
+    cameraWrapper
+  );
+
+}
+
+
 /* =========================================================
    CATEGORY
 ========================================================= */
@@ -1176,7 +1129,6 @@ function selectCategory(
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de categoría.";
 
-
     return;
 
   }
@@ -1187,7 +1139,8 @@ function selectCategory(
 
 
   const isMovement =
-    category === "movement";
+    category ===
+    "movement";
 
 
   movementCategoryButton
@@ -1246,7 +1199,6 @@ function selectExercise(
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de análisis.";
 
-
     return;
 
   }
@@ -1274,7 +1226,12 @@ function selectExercise(
     0;
 
 
+  lastPositionAssessment =
+    null;
+
+
   hideWarning();
+  hidePositionGuide();
 
 
   movementConfigDetails.open =
@@ -1366,7 +1323,7 @@ function selectExercise(
   statusBox.textContent =
     cameraReady
 
-      ? "Ubícate según el protocolo hasta completar el tracking."
+      ? "Ubícate según la guía hasta completar la posición."
 
       : "Activa la cámara";
 
@@ -1455,7 +1412,8 @@ function configureMovementUI(
 
 
   stateDisplay.textContent =
-    activeExercise === "deadlift"
+    activeExercise ===
+    "deadlift"
 
       ? "WAIT_FLOOR"
 
@@ -1691,6 +1649,149 @@ async function getCameraStream() {
 
 
 /* =========================================================
+   CANVAS / VIDEO ALIGNMENT
+========================================================= */
+
+function syncCanvasToVideoFrame() {
+
+  if (
+    !video.videoWidth
+    ||
+    !video.videoHeight
+    ||
+    !cameraWrapper
+  ) {
+
+    return;
+
+  }
+
+
+  const boxWidth =
+    cameraWrapper.clientWidth;
+
+
+  const boxHeight =
+    cameraWrapper.clientHeight;
+
+
+  if (
+    !boxWidth
+    ||
+    !boxHeight
+  ) {
+
+    return;
+
+  }
+
+
+  const videoRatio =
+    video.videoWidth
+    /
+    video.videoHeight;
+
+
+  const boxRatio =
+    boxWidth
+    /
+    boxHeight;
+
+
+  let drawWidth;
+  let drawHeight;
+
+
+  /*
+    El video usa object-fit: contain.
+
+    Por eso calculamos la zona REAL
+    donde se está mostrando la imagen.
+  */
+
+  if (
+    videoRatio >
+    boxRatio
+  ) {
+
+    drawWidth =
+      boxWidth;
+
+
+    drawHeight =
+      boxWidth
+      /
+      videoRatio;
+
+  }
+
+  else {
+
+    drawHeight =
+      boxHeight;
+
+
+    drawWidth =
+      boxHeight
+      *
+      videoRatio;
+
+  }
+
+
+  const left =
+    (
+      boxWidth -
+      drawWidth
+    )
+    /
+    2;
+
+
+  const top =
+    (
+      boxHeight -
+      drawHeight
+    )
+    /
+    2;
+
+
+  canvas.width =
+    video.videoWidth;
+
+
+  canvas.height =
+    video.videoHeight;
+
+
+  canvas.style.left =
+    `${left}px`;
+
+
+  canvas.style.top =
+    `${top}px`;
+
+
+  canvas.style.width =
+    `${drawWidth}px`;
+
+
+  canvas.style.height =
+    `${drawHeight}px`;
+
+
+  canvas.style.right =
+    "auto";
+
+
+  canvas.style.bottom =
+    "auto";
+
+}
+
+
+/* =========================================================
    MOVENET
 ========================================================= */
 
@@ -1780,6 +1881,13 @@ async function initializeCamera() {
       false;
 
 
+    lastPositionAssessment =
+      null;
+
+
+    hidePositionGuide();
+
+
     updateSetupFlow();
 
 
@@ -1799,20 +1907,16 @@ async function initializeCamera() {
 
             await video.play();
 
+
+            syncCanvasToVideoFrame();
+
+
             resolve();
 
           };
 
       }
     );
-
-
-    canvas.width =
-      video.videoWidth;
-
-
-    canvas.height =
-      video.videoHeight;
 
 
     cameraReady =
@@ -1825,7 +1929,7 @@ async function initializeCamera() {
     ) {
 
       statusBox.textContent =
-        "Cámara frontal activa · muestra el segmento corporal completo.";
+        "Cámara frontal activa · ubícate de lado y deja visible el segmento completo.";
 
 
       switchCameraButton.textContent =
@@ -1836,7 +1940,7 @@ async function initializeCamera() {
     else {
 
       statusBox.textContent =
-        "Cámara trasera activa · muestra el segmento corporal completo.";
+        "Cámara trasera activa · ubícate de lado y deja visible el segmento completo.";
 
 
       switchCameraButton.textContent =
@@ -1906,7 +2010,6 @@ async function switchCamera() {
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de cámara.";
 
-
     return;
 
   }
@@ -1916,7 +2019,6 @@ async function switchCamera() {
 
     statusBox.textContent =
       "Primero activa la cámara.";
-
 
     return;
 
@@ -1937,6 +2039,10 @@ async function switchCamera() {
 
   trackingReady =
     false;
+
+
+  lastPositionAssessment =
+    null;
 
 
   updateSetupFlow();
@@ -2107,11 +2213,34 @@ function sideData(
 }
 
 
+const pointLabels = {
+
+  shoulder:
+    "hombro",
+
+  elbow:
+    "codo",
+
+  wrist:
+    "muñeca",
+
+  hip:
+    "cadera",
+
+  knee:
+    "rodilla",
+
+  ankle:
+    "tobillo"
+
+};
+
+
 /* =========================================================
    REQUIRED POINTS
 ========================================================= */
 
-function requiredPoints(
+function requiredPointEntries(
   points
 ) {
 
@@ -2122,9 +2251,20 @@ function requiredPoints(
 
     return [
 
-      points.shoulder,
-      points.elbow,
-      points.wrist
+      [
+        "shoulder",
+        points.shoulder
+      ],
+
+      [
+        "elbow",
+        points.elbow
+      ],
+
+      [
+        "wrist",
+        points.wrist
+      ]
 
     ];
 
@@ -2138,9 +2278,20 @@ function requiredPoints(
 
     return [
 
-      points.shoulder,
-      points.hip,
-      points.knee
+      [
+        "shoulder",
+        points.shoulder
+      ],
+
+      [
+        "hip",
+        points.hip
+      ],
+
+      [
+        "knee",
+        points.knee
+      ]
 
     ];
 
@@ -2149,12 +2300,44 @@ function requiredPoints(
 
   return [
 
-    points.shoulder,
-    points.hip,
-    points.knee,
-    points.ankle
+    [
+      "shoulder",
+      points.shoulder
+    ],
+
+    [
+      "hip",
+      points.hip
+    ],
+
+    [
+      "knee",
+      points.knee
+    ],
+
+    [
+      "ankle",
+      points.ankle
+    ]
 
   ];
+
+}
+
+
+function requiredPoints(
+  points
+) {
+
+  return requiredPointEntries(
+    points
+  )
+    .map(
+      (
+        [, point]
+      ) =>
+        point
+    );
 
 }
 
@@ -2263,24 +2446,650 @@ function hasEnoughTracking(
 
 
 /* =========================================================
+   GEOMETRY HELPERS
+========================================================= */
+
+function distance(
+  a,
+  b
+) {
+
+  return Math.hypot(
+
+    a.x -
+    b.x,
+
+    a.y -
+    b.y
+
+  );
+
+}
+
+
+function capitalize(
+  text
+) {
+
+  return text
+    .charAt(
+      0
+    )
+    .toUpperCase()
+    +
+    text.slice(
+      1
+    );
+
+}
+
+
+/* =========================================================
+   POSITION QUALITY
+========================================================= */
+
+function isLikelyFrontal(
+  pose
+) {
+
+  const kp =
+    pose.keypoints;
+
+
+  const leftShoulder =
+    kp[5];
+
+
+  const rightShoulder =
+    kp[6];
+
+
+  const leftHip =
+    kp[11];
+
+
+  const rightHip =
+    kp[12];
+
+
+  const visible = [
+
+    leftShoulder,
+    rightShoulder,
+    leftHip,
+    rightHip
+
+  ].every(
+
+    (point) =>
+      point
+      &&
+      point.score
+      >=
+      0.35
+
+  );
+
+
+  if (!visible) {
+
+    return false;
+
+  }
+
+
+  const shoulderWidth =
+    distance(
+      leftShoulder,
+      rightShoulder
+    );
+
+
+  const hipWidth =
+    distance(
+      leftHip,
+      rightHip
+    );
+
+
+  const leftTorso =
+    distance(
+      leftShoulder,
+      leftHip
+    );
+
+
+  const rightTorso =
+    distance(
+      rightShoulder,
+      rightHip
+    );
+
+
+  const torsoHeight =
+    (
+      leftTorso
+      +
+      rightTorso
+    )
+    /
+    2;
+
+
+  if (!torsoHeight) {
+
+    return false;
+
+  }
+
+
+  const bodyWidth =
+    (
+      shoulderWidth
+      +
+      hipWidth
+    )
+    /
+    2;
+
+
+  return (
+
+    bodyWidth
+    /
+    torsoHeight
+
+    >
+
+    FRONTAL_RATIO_THRESHOLD
+
+  );
+
+}
+
+
+/* =========================================================
+   MISSING POINT DETECTION
+========================================================= */
+
+function buildMissingPointAssessment(
+  points
+) {
+
+  const missing =
+    requiredPointEntries(
+      points
+    )
+
+      .filter(
+        (
+          [, point]
+        ) =>
+          !point
+          ||
+          point.score
+          <
+          MIN_POINT_CONFIDENCE
+      )
+
+      .map(
+        (
+          [name]
+        ) =>
+          pointLabels[
+            name
+          ]
+      );
+
+
+  if (
+    !missing.length
+  ) {
+
+    return null;
+
+  }
+
+
+  const main =
+    missing[0];
+
+
+  let correction =
+    "Muévete un poco y asegúrate de que el segmento quede completamente visible.";
+
+
+  if (
+    main === "tobillo"
+    ||
+    main === "rodilla"
+  ) {
+
+    correction =
+      "Aléjate de la cámara hasta que la pierna y el pie completos queden dentro de la imagen.";
+
+  }
+
+  else if (
+    main === "hombro"
+    ||
+    main === "codo"
+    ||
+    main === "muñeca"
+  ) {
+
+    correction =
+      "Ajusta el encuadre para que todo el brazo del lado analizado quede visible.";
+
+  }
+
+  else if (
+    main === "cadera"
+  ) {
+
+    correction =
+      "Evita que ropa, muebles o implementos tapen la cadera y aléjate un poco si está fuera de cuadro.";
+
+  }
+
+
+  return {
+
+    ready:
+      false,
+
+    type:
+      "missing",
+
+    short:
+      `Falta ${main}`,
+
+    title:
+      `Falta detectar ${main}`,
+
+    text:
+      correction
+
+  };
+
+}
+
+
+/* =========================================================
+   EDGE DETECTION
+========================================================= */
+
+function buildEdgeAssessment(
+  points
+) {
+
+  if (
+    !video.videoWidth
+    ||
+    !video.videoHeight
+  ) {
+
+    return null;
+
+  }
+
+
+  const marginX =
+    video.videoWidth
+    *
+    FRAME_MARGIN_X;
+
+
+  const marginY =
+    video.videoHeight
+    *
+    FRAME_MARGIN_Y;
+
+
+  const entries =
+    requiredPointEntries(
+      points
+    )
+      .filter(
+        (
+          [, point]
+        ) =>
+          point.score
+          >=
+          MIN_POINT_CONFIDENCE
+      );
+
+
+  for (
+    const [
+      name,
+      point
+    ]
+    of entries
+  ) {
+
+
+    if (
+      point.y
+      >
+      video.videoHeight
+      -
+      marginY
+    ) {
+
+      return {
+
+        ready:
+          false,
+
+        type:
+          "edge",
+
+        short:
+          `${capitalize(pointLabels[name])} muy abajo`,
+
+        title:
+          `${capitalize(pointLabels[name])} demasiado cerca del borde`,
+
+        text:
+          "Aléjate de la cámara o inclínala ligeramente hacia abajo hasta dejar más margen alrededor del segmento."
+
+      };
+
+    }
+
+
+    if (
+      point.y
+      <
+      marginY
+    ) {
+
+      return {
+
+        ready:
+          false,
+
+        type:
+          "edge",
+
+        short:
+          `${capitalize(pointLabels[name])} muy arriba`,
+
+        title:
+          `${capitalize(pointLabels[name])} demasiado cerca del borde`,
+
+        text:
+          "Aléjate de la cámara o reajusta su altura para dejar más espacio dentro de la imagen."
+
+      };
+
+    }
+
+
+    if (
+      point.x
+      <
+      marginX
+
+      ||
+
+      point.x
+      >
+      video.videoWidth
+      -
+      marginX
+    ) {
+
+      return {
+
+        ready:
+          false,
+
+        type:
+          "edge",
+
+        short:
+          "Muévete al centro",
+
+        title:
+          "Segmento demasiado cerca del borde",
+
+        text:
+          "Muévete hacia el centro de la imagen para evitar que el cuerpo salga del encuadre durante el movimiento."
+
+      };
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+/* =========================================================
+   COMPLETE POSITION ASSESSMENT
+========================================================= */
+
+function assessPosition(
+  pose,
+  side
+) {
+
+  const points =
+    sideData(
+      pose,
+      side
+    );
+
+
+  const missingAssessment =
+    buildMissingPointAssessment(
+      points
+    );
+
+
+  if (
+    missingAssessment
+  ) {
+
+    return missingAssessment;
+
+  }
+
+
+  if (
+    !hasEnoughTracking(
+      points
+    )
+  ) {
+
+    return {
+
+      ready:
+        false,
+
+      type:
+        "confidence",
+
+      short:
+        "Mejora visibilidad",
+
+      title:
+        "Tracking inestable",
+
+      text:
+        "Mejora la iluminación, evita ropa u objetos que oculten las articulaciones y mantén el cuerpo claramente visible."
+
+    };
+
+  }
+
+
+  const edgeAssessment =
+    buildEdgeAssessment(
+      points
+    );
+
+
+  if (
+    edgeAssessment
+  ) {
+
+    return edgeAssessment;
+
+  }
+
+
+  if (
+    isLikelyFrontal(
+      pose
+    )
+  ) {
+
+    return {
+
+      ready:
+        false,
+
+      type:
+        "orientation",
+
+      short:
+        "Gira de lado",
+
+      title:
+        "Gira hacia una vista lateral",
+
+      text:
+        "Colócate de perfil respecto al teléfono. KINEMYX mide estos ángulos en 2D y necesita una vista lateral estable."
+
+    };
+
+  }
+
+
+  return {
+
+    ready:
+      true,
+
+    type:
+      "ready",
+
+    short:
+      "Posición correcta",
+
+    title:
+      "Posición correcta",
+
+    text:
+      "Tracking estable. Mantén esta ubicación durante toda la evaluación."
+
+  };
+
+}
+
+
+/* =========================================================
+   POSITION GUIDE
+========================================================= */
+
+function showPositionGuide(
+  assessment
+) {
+
+  if (
+    !assessment
+    ||
+    !positionGuide
+  ) {
+
+    return;
+
+  }
+
+
+  positionGuideTitle.textContent =
+    assessment.title;
+
+
+  positionGuideText.textContent =
+    assessment.text;
+
+
+  positionGuide.classList.remove(
+    "hidden",
+    "ready-guide"
+  );
+
+
+  if (
+    assessment.ready
+  ) {
+
+    positionGuide.classList.add(
+      "ready-guide"
+    );
+
+  }
+
+}
+
+
+function hidePositionGuide() {
+
+  if (
+    !positionGuide
+  ) {
+
+    return;
+
+  }
+
+
+  positionGuide
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  positionGuide
+    .classList
+    .remove(
+      "ready-guide"
+    );
+
+}
+
+
+/* =========================================================
    TRACKING
 ========================================================= */
 
 function updateTrackingState(
-  goodTracking
+  positionReady
 ) {
 
   const now =
     performance.now();
 
 
-  if (goodTracking) {
+  if (
+    positionReady
+  ) {
 
     lastGoodTrackingAt =
       now;
 
 
-    if (!trackingReady) {
+    if (
+      !trackingReady
+    ) {
 
       trackingReady =
         true;
@@ -2300,7 +3109,9 @@ function updateTrackingState(
 
     now -
     lastGoodTrackingAt
+
     >
+
     TRACKING_HOLD_MS
 
     &&
@@ -2322,14 +3133,46 @@ function updateTrackingState(
 
 function handleMissingPose() {
 
+  lastPositionAssessment = {
+
+    ready:
+      false,
+
+    type:
+      "pose",
+
+    short:
+      "No te detecto",
+
+    title:
+      "No se detecta el cuerpo",
+
+    text:
+      "Entra completamente en la imagen, mejora la iluminación y evita quedar demasiado cerca de la cámara."
+
+  };
+
+
+  showPositionGuide(
+    lastPositionAssessment
+  );
+
+
   updateTrackingState(
     false
   );
 
 
-  if (analysisActive) {
+  updateSetupFlow();
 
-    trackingWarning();
+
+  if (
+    analysisActive
+  ) {
+
+    trackingWarning(
+      lastPositionAssessment.short
+    );
 
   }
 
@@ -2365,15 +3208,18 @@ function calculateAngle(
 
     Math.abs(
 
-      radians *
-      180 /
+      radians
+      *
+      180
+      /
       Math.PI
 
     );
 
 
   if (
-    angle > 180
+    angle >
+    180
   ) {
 
     angle =
@@ -2402,7 +3248,8 @@ function flexionFromAngle(
 
       170,
 
-      180 -
+      180
+      -
       calculateAngle(
         a,
         b,
@@ -2442,7 +3289,8 @@ function smoothAngle(
       sum,
       value
     ) =>
-      sum +
+      sum
+      +
       value,
 
     0
@@ -2536,26 +3384,45 @@ function processPose(
     );
 
 
-  const goodTracking =
-    hasEnoughTracking(
-      points
+  const assessment =
+    assessPosition(
+      pose,
+      side
     );
 
 
-  updateTrackingState(
-    goodTracking
+  lastPositionAssessment =
+    assessment;
+
+
+  showPositionGuide(
+    assessment
   );
 
 
-  if (!goodTracking) {
+  updateTrackingState(
+    assessment.ready
+  );
+
+
+  updateSetupFlow();
+
+
+  if (
+    !assessment.ready
+  ) {
 
     angleDisplay.textContent =
       "—";
 
 
-    if (analysisActive) {
+    if (
+      analysisActive
+    ) {
 
-      trackingWarning();
+      trackingWarning(
+        assessment.short
+      );
 
     }
 
@@ -2574,8 +3441,9 @@ function processPose(
 
 
   if (
-    warningBox.textContent ===
-    "Ajusta posición"
+    warningBox.dataset.positionWarning
+    ===
+    "true"
   ) {
 
     hideWarning();
@@ -2597,7 +3465,9 @@ function processPose(
     `${primaryAngle.toFixed(0)}°`;
 
 
-  if (!analysisActive) {
+  if (
+    !analysisActive
+  ) {
 
     return;
 
@@ -2657,7 +3527,6 @@ function processPose(
 
 /* =========================================================
    STANDARD MOVEMENT
-   SQUAT + BENCH
 ========================================================= */
 
 function updateStandardMovement(
@@ -2756,7 +3625,8 @@ function updateStandardMovement(
 
     if (
 
-      movementMaxAngle -
+      movementMaxAngle
+      -
       angle
 
       >=
@@ -2808,14 +3678,16 @@ function updateStandardMovement(
       completeMovementRep(
 
         (
-          movementBottomTime -
+          movementBottomTime
+          -
           movementRepStartTime
         )
         /
         1000,
 
         (
-          timestamp -
+          timestamp
+          -
           movementAscentStartTime
         )
         /
@@ -2824,7 +3696,9 @@ function updateStandardMovement(
       );
 
 
-      if (analysisActive) {
+      if (
+        analysisActive
+      ) {
 
         movementState =
           "READY";
@@ -2917,12 +3791,14 @@ function updateDeadlift(
 
     if (
 
-      movementPreviousAngle !==
+      movementPreviousAngle
+      !==
       null
 
       &&
 
-      movementPreviousAngle -
+      movementPreviousAngle
+      -
       angle
 
       >=
@@ -2953,14 +3829,12 @@ function updateDeadlift(
     ) {
 
       const concentric =
-
         (
-          timestamp -
+          timestamp
+          -
           movementAscentStartTime
         )
-
         /
-
         1000;
 
 
@@ -2973,7 +3847,9 @@ function updateDeadlift(
       );
 
 
-      if (analysisActive) {
+      if (
+        analysisActive
+      ) {
 
         movementState =
           "TOP";
@@ -3022,14 +3898,12 @@ function updateDeadlift(
     ) {
 
       deadliftEccentricForNextRep =
-
         (
-          timestamp -
+          timestamp
+          -
           deadliftDescentStartTime
         )
-
         /
-
         1000;
 
 
@@ -3085,7 +3959,8 @@ function completeMovementRep(
 
     >=
 
-    settings.angleTarget -
+    settings.angleTarget
+    -
     settings.angleTolerance;
 
 
@@ -3102,7 +3977,8 @@ function completeMovementRep(
     ||
 
     Math.abs(
-      eccentric -
+      eccentric
+      -
       settings.eccTarget
     )
 
@@ -3113,7 +3989,8 @@ function completeMovementRep(
   const conPassed =
 
     Math.abs(
-      concentric -
+      concentric
+      -
       settings.conTarget
     )
 
@@ -3161,7 +4038,9 @@ function completeMovementRep(
   }
 
 
-  if (passed) {
+  if (
+    passed
+  ) {
 
     movementSuccessfulReps++;
 
@@ -3245,7 +4124,8 @@ function completeMovementRep(
 
 
   if (
-    movementRepCount >=
+    movementRepCount
+    >=
     settings.targetReps
   ) {
 
@@ -3292,7 +4172,8 @@ function buildMovementWarning(
     )
   ) {
 
-    return eccentric <
+    return eccentric
+      <
       settings.eccTarget
 
       ? "Fase excéntrica más lenta"
@@ -3308,7 +4189,8 @@ function buildMovementWarning(
     !conPassed
   ) {
 
-    return concentric <
+    return concentric
+      <
       settings.conTarget
 
       ? "Fase concéntrica más lenta"
@@ -3332,62 +4214,47 @@ function resetJumpState() {
   jumpState =
     "CALIBRATING";
 
-
   jumpPreviousFlexion =
     null;
-
 
   jumpPreviousAnkleY =
     null;
 
-
   jumpMaxFlexion =
     0;
-
 
   jumpStartTime =
     0;
 
-
   jumpBottomTime =
     0;
-
 
   jumpPropulsionStartTime =
     0;
 
-
   jumpTakeoffTime =
     0;
-
 
   jumpLandingTime =
     0;
 
-
   jumpLandingStartTime =
     0;
-
 
   jumpMaxLandingFlexion =
     0;
 
-
   jumpBaselineAnkleY =
     null;
-
 
   jumpBaselineSamples =
     [];
 
-
   sjHoldStartTime =
     0;
 
-
   sjHeldFlexion =
     null;
-
 
   sjProtocolInvalid =
     false;
@@ -3410,7 +4277,8 @@ function updateJump(
 
 
   if (
-    jumpBaselineAnkleY ===
+    jumpBaselineAnkleY
+    ===
     null
   ) {
 
@@ -3444,7 +4312,8 @@ function updateJump(
             sum,
             value
           ) =>
-            sum +
+            sum
+            +
             value,
 
           0
@@ -3556,20 +4425,14 @@ function updateSquatJump(
 ) {
 
   const lower =
-
     settings.kneeTarget
-
     -
-
     settings.kneeTolerance;
 
 
   const upper =
-
     settings.kneeTarget
-
     +
-
     settings.kneeTolerance;
 
 
@@ -3653,7 +4516,8 @@ function updateSquatJump(
     if (
 
       (
-        timestamp -
+        timestamp
+        -
         sjHoldStartTime
       )
 
@@ -3697,7 +4561,8 @@ function updateSquatJump(
 
       >
 
-      sjHeldFlexion +
+      sjHeldFlexion
+      +
       SJ_COUNTERMOVEMENT_ALLOWANCE
 
     ) {
@@ -3725,7 +4590,8 @@ function updateSquatJump(
 
     if (
 
-      sjHeldFlexion -
+      sjHeldFlexion
+      -
       flexion
 
       >=
@@ -3848,7 +4714,8 @@ function updateCountermovementJump(
 
       &&
 
-      jumpPreviousFlexion !==
+      jumpPreviousFlexion
+      !==
       null
 
       &&
@@ -3900,7 +4767,8 @@ function updateCountermovementJump(
 
     if (
 
-      jumpMaxFlexion -
+      jumpMaxFlexion
+      -
       flexion
 
       >=
@@ -4011,7 +4879,8 @@ function getTakeoffThreshold() {
 
     8,
 
-    canvas.height *
+    canvas.height
+    *
     0.012
 
   );
@@ -4025,7 +4894,8 @@ function getLandingTolerance() {
 
     10,
 
-    canvas.height *
+    canvas.height
+    *
     0.02
 
   );
@@ -4041,7 +4911,8 @@ function detectJumpTakeoff(
 
   const propulsionMs =
 
-    timestamp -
+    timestamp
+    -
     jumpPropulsionStartTime;
 
 
@@ -4091,7 +4962,8 @@ function detectJumpLanding(
 
   const flightMs =
 
-    timestamp -
+    timestamp
+    -
     jumpTakeoffTime;
 
 
@@ -4114,12 +4986,14 @@ function detectJumpLanding(
 
   const ankleReturning =
 
-    jumpPreviousAnkleY !==
+    jumpPreviousAnkleY
+    !==
     null
 
     &&
 
-    points.ankle.y >
+    points.ankle.y
+    >
     jumpPreviousAnkleY;
 
 
@@ -4199,7 +5073,8 @@ function captureLanding(
 
   if (
 
-    timestamp -
+    timestamp
+    -
     jumpLandingStartTime
 
     >=
@@ -4217,7 +5092,9 @@ function captureLanding(
     );
 
 
-    if (analysisActive) {
+    if (
+      analysisActive
+    ) {
 
       prepareNextJump();
 
@@ -4243,7 +5120,8 @@ function completeJump(
   const flightTime =
 
     (
-      jumpLandingTime -
+      jumpLandingTime
+      -
       jumpTakeoffTime
     )
 
@@ -4282,7 +5160,8 @@ function completeJump(
       ? null
 
       : (
-          jumpBottomTime -
+          jumpBottomTime
+          -
           jumpStartTime
         )
         /
@@ -4295,7 +5174,8 @@ function completeJump(
 
     >=
 
-    settings.kneeTarget -
+    settings.kneeTarget
+    -
     settings.kneeTolerance
 
     &&
@@ -4304,7 +5184,8 @@ function completeJump(
 
     <=
 
-    settings.kneeTarget +
+    settings.kneeTarget
+    +
     settings.kneeTolerance;
 
 
@@ -4314,7 +5195,8 @@ function completeJump(
 
     >=
 
-    JUMP_MIN_FLIGHT_MS /
+    JUMP_MIN_FLIGHT_MS
+    /
     1000
 
     &&
@@ -4323,7 +5205,8 @@ function completeJump(
 
     <=
 
-    JUMP_MAX_FLIGHT_MS /
+    JUMP_MAX_FLIGHT_MS
+    /
     1000;
 
 
@@ -4373,7 +5256,9 @@ function completeJump(
   }
 
 
-  if (valid) {
+  if (
+    valid
+  ) {
 
     jumpValidCount++;
 
@@ -4386,8 +5271,11 @@ function completeJump(
 
     showWarning(
 
-      activeExercise === "sj"
+      activeExercise ===
+      "sj"
+
       &&
+
       sjProtocolInvalid
 
         ? "Salto no válido"
@@ -4405,42 +5293,41 @@ function completeJump(
   const result = {
 
     number:
-      jumpResults.length + 1,
-
+      jumpResults.length
+      +
+      1,
 
     estimatedHeightCm:
       estimatedHeightCm,
 
-
     flightTime:
       flightTime,
-
 
     maxFlexion:
       jumpMaxFlexion,
 
-
     descentTime:
       descentTime,
 
-
     holdTime:
-      activeExercise === "sj"
-        ? sjHold
-        : null,
+      activeExercise ===
+      "sj"
 
+        ? sjHold
+
+        : null,
 
     landingFlexion:
       jumpMaxLandingFlexion,
 
-
     valid:
       valid,
 
-
     reason:
       valid
+
         ? "Válido"
+
         : "Revisar"
 
   };
@@ -4472,7 +5359,8 @@ function completeJump(
 
 
   if (
-    jumpCount >=
+    jumpCount
+    >=
     settings.targetJumps
   ) {
 
@@ -4496,37 +5384,31 @@ function addInvalidJumpResult(
   const result = {
 
     number:
-      jumpResults.length + 1,
-
+      jumpResults.length
+      +
+      1,
 
     estimatedHeightCm:
       null,
 
-
     flightTime:
       null,
-
 
     maxFlexion:
       jumpMaxFlexion,
 
-
     descentTime:
       null,
-
 
     holdTime:
       getJumpSettings()
         .holdTarget,
 
-
     landingFlexion:
       null,
 
-
     valid:
       false,
-
 
     reason:
       reason
@@ -4558,62 +5440,47 @@ function prepareNextJump() {
   jumpState =
     "CALIBRATING";
 
-
   jumpPreviousFlexion =
     null;
-
 
   jumpPreviousAnkleY =
     null;
 
-
   jumpMaxFlexion =
     0;
-
 
   jumpStartTime =
     0;
 
-
   jumpBottomTime =
     0;
-
 
   jumpPropulsionStartTime =
     0;
 
-
   jumpTakeoffTime =
     0;
-
 
   jumpLandingTime =
     0;
 
-
   jumpLandingStartTime =
     0;
-
 
   jumpMaxLandingFlexion =
     0;
 
-
   jumpBaselineAnkleY =
     null;
-
 
   jumpBaselineSamples =
     [];
 
-
   sjHoldStartTime =
     0;
 
-
   sjHeldFlexion =
     null;
-
 
   sjProtocolInvalid =
     false;
@@ -4626,7 +5493,8 @@ function prepareNextJump() {
 ========================================================= */
 
 function showWarning(
-  message
+  message,
+  positionWarning = false
 ) {
 
   const mode =
@@ -4648,6 +5516,14 @@ function showWarning(
     message;
 
 
+  warningBox.dataset.positionWarning =
+    positionWarning
+
+      ? "true"
+
+      : "false";
+
+
   warningBox
     .classList
     .remove(
@@ -4655,7 +5531,9 @@ function showWarning(
     );
 
 
-  if (warningHideTimer) {
+  if (
+    warningHideTimer
+  ) {
 
     clearTimeout(
       warningHideTimer
@@ -4667,7 +5545,19 @@ function showWarning(
   warningHideTimer =
     setTimeout(
 
-      hideWarning,
+      () => {
+
+        if (
+          warningBox.dataset.positionWarning
+          !==
+          "true"
+        ) {
+
+          hideWarning();
+
+        }
+
+      },
 
       1500
 
@@ -4707,10 +5597,17 @@ function hideWarning() {
       "hidden"
     );
 
+
+  warningBox.dataset.positionWarning =
+    "false";
+
 }
 
 
-function trackingWarning() {
+function trackingWarning(
+  shortMessage =
+    "Ajusta posición"
+) {
 
   const now =
     performance.now();
@@ -4728,13 +5625,15 @@ function trackingWarning() {
 
 
   showWarning(
-    "Ajusta posición"
+    shortMessage,
+    true
   );
 
 
   if (
 
-    now -
+    now
+    -
     trackingLostSince
 
     >
@@ -4775,7 +5674,9 @@ function beepWarning() {
   }
 
 
-  if (!audioContext) {
+  if (
+    !audioContext
+  ) {
 
     audioContext =
 
@@ -4836,9 +5737,7 @@ function beepWarning() {
   oscillator.stop(
 
     audioContext.currentTime
-
     +
-
     0.12
 
   );
@@ -4967,7 +5866,9 @@ function drawSkeleton(
 
           0,
 
-          Math.PI * 2
+          Math.PI
+          *
+          2
 
         );
 
@@ -5013,7 +5914,8 @@ function addMovementResultRow(
 
     <td>
       ${
-        rep.eccentric === null
+        rep.eccentric ===
+        null
 
           ? "—"
 
@@ -5063,7 +5965,6 @@ function updateMovementSummary() {
     movementSummary.textContent =
       "Aún no hay resultados.";
 
-
     return;
 
   }
@@ -5077,7 +5978,8 @@ function updateMovementSummary() {
         sum,
         rep
       ) =>
-        sum +
+        sum
+        +
         rep.angle,
 
       0
@@ -5097,7 +5999,8 @@ function updateMovementSummary() {
         (
           rep
         ) =>
-          rep.eccentric !==
+          rep.eccentric
+          !==
           null
       )
 
@@ -5121,7 +6024,8 @@ function updateMovementSummary() {
           sum,
           value
         ) =>
-          sum +
+          sum
+          +
           value,
 
         0
@@ -5145,7 +6049,8 @@ function updateMovementSummary() {
         sum,
         rep
       ) =>
-        sum +
+        sum
+        +
         rep.concentric,
 
       0
@@ -5204,7 +6109,8 @@ function updateMovementSummary() {
 
     <strong>
       ${
-        avgEcc === null
+        avgEcc ===
+        null
 
           ? "—"
 
@@ -5350,7 +6256,6 @@ function updateJumpSummary() {
     jumpSummary.textContent =
       "Aún no hay resultados.";
 
-
     return;
 
   }
@@ -5368,7 +6273,8 @@ function updateJumpSummary() {
 
         &&
 
-        result.estimatedHeightCm !==
+        result.estimatedHeightCm
+        !==
         null
 
     );
@@ -5448,7 +6354,8 @@ function updateJumpSummary() {
         sum,
         value
       ) =>
-        sum +
+        sum
+        +
         value,
 
       0
@@ -5468,7 +6375,8 @@ function updateJumpSummary() {
         sum,
         value
       ) =>
-        sum +
+        sum
+        +
         value,
 
       0
@@ -5525,25 +6433,43 @@ function updateJumpSummary() {
 
 function startAnalysis() {
 
-  if (!cameraReady) {
+  if (
+    !cameraReady
+  ) {
 
     statusBox.textContent =
       "Activa la cámara primero.";
-
 
     return;
 
   }
 
 
-  if (!trackingReady) {
+  if (
+    !trackingReady
+  ) {
 
     statusBox.textContent =
+
+      lastPositionAssessment?.text
+
+      ||
+
       "Ajusta tu posición antes de iniciar.";
 
 
-    updateSetupFlow();
+    if (
+      lastPositionAssessment
+    ) {
 
+      showPositionGuide(
+        lastPositionAssessment
+      );
+
+    }
+
+
+    updateSetupFlow();
 
     return;
 
@@ -5751,7 +6677,9 @@ function startAnalysis() {
   }
 
 
-  if (!audioContext) {
+  if (
+    !audioContext
+  ) {
 
     audioContext =
 
@@ -5788,11 +6716,12 @@ function stopAnalysis(
   automatic = false
 ) {
 
-  if (!analysisActive) {
+  if (
+    !analysisActive
+  ) {
 
     statusBox.textContent =
       "No hay una serie activa.";
-
 
     return;
 
@@ -6016,7 +6945,9 @@ function detectDevice() {
 
 function updateFeedbackContext() {
 
-  if (!feedbackExercise) {
+  if (
+    !feedbackExercise
+  ) {
 
     return;
 
@@ -6044,7 +6975,9 @@ async function submitFeedback(
       .trim();
 
 
-  if (!message) {
+  if (
+    !message
+  ) {
 
     feedbackStatus.textContent =
       "Cuéntame brevemente qué ocurrió o qué mejorarías.";
@@ -6103,13 +7036,16 @@ async function submitFeedback(
 
 
   payload.append(
+
     "categoria",
+
     activeCategory ===
     "movement"
 
       ? "Movimiento"
 
       : "Salto"
+
   );
 
 
@@ -6284,7 +7220,9 @@ async function submitFeedback(
 }
 
 
-if (feedbackForm) {
+if (
+  feedbackForm
+) {
 
   feedbackForm.addEventListener(
 
