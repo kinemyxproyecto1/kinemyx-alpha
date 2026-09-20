@@ -27,7 +27,6 @@
   <div class="header-row">
 
     <div>
-
       <div class="brand">
         KINEMY<span>X</span>
       </div>
@@ -35,11 +34,10 @@
       <div class="subtitle">
         Human Movement Intelligence
       </div>
-
     </div>
 
     <div class="beta-badge">
-      BETA 0.5
+      BETA 0.6
     </div>
 
   </div>
@@ -48,11 +46,6 @@
 
 
 <main>
-
-
-  <!-- =====================================================
-       SELECCIÓN DE ANÁLISIS
-  ====================================================== -->
 
   <section class="panel category-panel">
 
@@ -149,10 +142,6 @@
 
   </section>
 
-
-  <!-- =====================================================
-       FLUJO DE 4 PASOS
-  ====================================================== -->
 
   <section class="panel setup-panel">
 
@@ -323,10 +312,6 @@
   </section>
 
 
-  <!-- =====================================================
-       CÁMARA
-  ====================================================== -->
-
   <section class="camera-section">
 
     <div class="camera-wrapper">
@@ -336,17 +321,38 @@
         autoplay
         muted
         playsinline
-      >
-      </video>
+      ></video>
 
-      <canvas id="canvas">
-      </canvas>
+      <canvas id="canvas"></canvas>
+
+
+      <div
+        id="positionGuide"
+        class="position-guide hidden"
+        aria-live="polite"
+      >
+
+        <div class="position-guide-dot"></div>
+
+        <div class="position-guide-copy">
+
+          <strong id="positionGuideTitle">
+            Ajusta posición
+          </strong>
+
+          <span id="positionGuideText">
+            Mantén el segmento visible.
+          </span>
+
+        </div>
+
+      </div>
+
 
       <div
         id="warning"
         class="warning hidden"
-      >
-      </div>
+      ></div>
 
     </div>
 
@@ -461,10 +467,6 @@
   </section>
 
 
-  <!-- =====================================================
-       CONTROLES
-  ====================================================== -->
-
   <section class="panel control-panel">
 
     <div class="section-eyebrow">
@@ -513,10 +515,6 @@
 
   </section>
 
-
-  <!-- =====================================================
-       CONFIGURACIÓN MOVIMIENTOS
-  ====================================================== -->
 
   <section
     id="movementSettingsSection"
@@ -812,10 +810,6 @@
   </section>
 
 
-  <!-- =====================================================
-       CONFIGURACIÓN SALTOS
-  ====================================================== -->
-
   <section
     id="jumpSettingsSection"
     class="panel config-shell hidden"
@@ -1053,10 +1047,6 @@
   </section>
 
 
-  <!-- =====================================================
-       RESULTADOS MOVIMIENTOS
-  ====================================================== -->
-
   <section
     id="movementResults"
     class="panel results"
@@ -1109,18 +1099,12 @@
 
       </thead>
 
-
-      <tbody id="movementResultsBody">
-      </tbody>
+      <tbody id="movementResultsBody"></tbody>
 
     </table>
 
   </section>
 
-
-  <!-- =====================================================
-       RESULTADOS SALTOS
-  ====================================================== -->
 
   <section
     id="jumpResults"
@@ -1182,18 +1166,12 @@
 
       </thead>
 
-
-      <tbody id="jumpResultsBody">
-      </tbody>
+      <tbody id="jumpResultsBody"></tbody>
 
     </table>
 
   </section>
 
-
-  <!-- =====================================================
-       FEEDBACK
-  ====================================================== -->
 
   <section class="panel feedback-panel">
 
@@ -1235,14 +1213,12 @@
 
       <div class="feedback-content">
 
-
         <div class="feedback-intro">
           Tu experiencia ayuda directamente al desarrollo de KINEMYX. El formulario tarda menos de un minuto.
         </div>
 
 
         <form id="feedbackForm">
-
 
           <input
             type="hidden"
@@ -1252,7 +1228,6 @@
 
 
           <div class="feedback-grid">
-
 
             <label>
 
@@ -1365,7 +1340,6 @@
 
             </label>
 
-
           </div>
 
 
@@ -1387,6 +1361,7 @@
           <label>
 
             Nombre o contacto
+
             <span class="optional">
               (opcional)
             </span>
@@ -1415,14 +1390,11 @@
               id="feedbackStatus"
               class="feedback-status"
               aria-live="polite"
-            >
-            </div>
+            ></div>
 
           </div>
 
-
         </form>
-
 
       </div>
 
@@ -1434,7 +1406,7 @@
   <footer class="app-footer">
 
     <strong>
-      KINEMYX Beta 0.5
+      KINEMYX Beta 0.6
     </strong>
 
     <span>
@@ -1442,7 +1414,6 @@
     </span>
 
   </footer>
-
 
 </main>
 
