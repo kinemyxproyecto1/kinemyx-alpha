@@ -1,13 +1,17 @@
 /* =========================================================
-   KINEMYX UI 1.2
-   Guided Flow + Collapsible Configuration
-========================================================= */
+   KINEMYX UI 1.3
+   Guided Flow + Compact Mobile + Collapsible Settings
+   ========================================================= */
 
+
+/* =========================================================
+   VARIABLES
+========================================================= */
 
 :root {
 
   --bg-main: #f3f6fa;
-
+  --bg-soft: #eef3f8;
   --white: #ffffff;
 
   --dark-950: #070b10;
@@ -25,22 +29,26 @@
   --blue-border: #cfe1ff;
 
   --green: #18a66a;
-  --green-soft: #e9f8f1;
+  --green-soft: #eaf8f1;
 
   --amber: #d99114;
   --amber-soft: #fff6e5;
+
+  --red: #d84c4c;
 
   --border: #dde5ed;
   --border-soft: #e9eef3;
 
   --shadow-sm:
-    0 5px 16px
-    rgba(21, 37, 56, 0.05);
+    0 5px 16px rgba(21, 37, 56, 0.05);
+
+  --shadow-md:
+    0 12px 30px rgba(21, 37, 56, 0.08);
 
   --shadow-lg:
-    0 20px 55px
-    rgba(9, 22, 38, 0.12);
+    0 20px 55px rgba(9, 22, 38, 0.12);
 
+  --radius-sm: 10px;
   --radius-md: 15px;
   --radius-lg: 22px;
 
@@ -52,20 +60,13 @@
 ========================================================= */
 
 * {
-
   box-sizing: border-box;
-
 }
-
 
 html {
-
   scroll-behavior: smooth;
-
   -webkit-text-size-adjust: 100%;
-
 }
-
 
 body {
 
@@ -84,13 +85,11 @@ body {
     sans-serif;
 
   background:
-
     radial-gradient(
       circle at 8% 0%,
       rgba(22, 119, 255, 0.055),
       transparent 28%
     ),
-
     linear-gradient(
       180deg,
       #f8fafc 0%,
@@ -149,9 +148,7 @@ header {
 
 
 .brand span {
-
   color: var(--blue);
-
 }
 
 
@@ -190,7 +187,7 @@ main {
 
 
 /* =========================================================
-   PANEL
+   PANELES
 ========================================================= */
 
 .panel {
@@ -201,15 +198,28 @@ main {
 
   margin-bottom: 16px;
 
-  background: rgba(255, 255, 255, 0.95);
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    );
 
   border:
     1px solid
-    rgba(215, 225, 235, 0.95);
+    rgba(
+      215,
+      225,
+      235,
+      0.95
+    );
 
-  border-radius: var(--radius-lg);
+  border-radius:
+    var(--radius-lg);
 
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    var(--shadow-sm);
 
 }
 
@@ -221,7 +231,8 @@ main {
     0
     18px;
 
-  color: var(--dark-900);
+  color:
+    var(--dark-900);
 
   font-size:
     clamp(
@@ -232,7 +243,8 @@ main {
 
   font-weight: 800;
 
-  letter-spacing: -0.7px;
+  letter-spacing:
+    -0.7px;
 
   line-height: 1.15;
 
@@ -242,19 +254,22 @@ main {
 .panel h3 {
 
   margin:
-    25px
+    24px
     0
     12px;
 
-  color: var(--text-secondary);
+  color:
+    var(--text-secondary);
 
   font-size: 12px;
 
   font-weight: 800;
 
-  letter-spacing: 1.6px;
+  letter-spacing:
+    1.5px;
 
-  text-transform: uppercase;
+  text-transform:
+    uppercase;
 
 }
 
@@ -263,21 +278,26 @@ main {
 
   margin-bottom: 7px;
 
-  color: var(--blue);
+  color:
+    var(--blue);
 
   font-size: 9px;
 
+  line-height: 1;
+
   font-weight: 850;
 
-  letter-spacing: 1.8px;
+  letter-spacing:
+    1.8px;
 
-  text-transform: uppercase;
+  text-transform:
+    uppercase;
 
 }
 
 
 /* =========================================================
-   BUTTONS
+   BOTONES
 ========================================================= */
 
 .buttons {
@@ -300,15 +320,19 @@ button {
     18px;
 
   border:
-    1px solid transparent;
+    1px solid
+    transparent;
 
   border-radius: 11px;
 
-  background: var(--blue);
+  background:
+    var(--blue);
 
-  color: #ffffff;
+  color:
+    #ffffff;
 
-  font: inherit;
+  font-family:
+    inherit;
 
   font-size: 14px;
 
@@ -318,10 +342,16 @@ button {
 
   box-shadow:
     0 6px 14px
-    rgba(22, 119, 255, 0.19);
+    rgba(
+      22,
+      119,
+      255,
+      0.19
+    );
 
   transition:
     background 0.15s ease,
+    border-color 0.15s ease,
     transform 0.15s ease,
     opacity 0.15s ease;
 
@@ -330,22 +360,41 @@ button {
 
 button:hover {
 
-  background: var(--blue-hover);
+  background:
+    var(--blue-hover);
 
-  transform: translateY(-1px);
+}
+
+
+button:active {
+
+  transform:
+    scale(0.99);
 
 }
 
 
 button.secondary {
 
-  background: #f3f6f9;
+  background:
+    #f3f6f9;
 
-  color: #556477;
+  color:
+    #556477;
 
-  border-color: #d9e1e9;
+  border-color:
+    #d9e1e9;
 
-  box-shadow: none;
+  box-shadow:
+    none;
+
+}
+
+
+button.secondary:hover {
+
+  background:
+    #eaf0f5;
 
 }
 
@@ -364,291 +413,486 @@ button:disabled {
 
 
 /* =========================================================
-   GUIDED SETUP
+   FLUJO GUIADO
 ========================================================= */
+
+section.panel.setup-panel {
+
+  padding: 22px !important;
+
+}
+
 
 .setup-header {
 
-  display: flex;
+  display: flex !important;
 
-  align-items: flex-start;
+  align-items: center !important;
 
-  justify-content: space-between;
+  justify-content: space-between !important;
 
-  gap: 20px;
+  gap: 16px !important;
 
-  margin-bottom: 17px;
+  margin-bottom: 17px !important;
 
 }
 
 
 .setup-header h2 {
 
-  margin-bottom: 0;
+  margin: 0 !important;
 
 }
 
 
 .setup-helper {
 
+  flex: 0 0 auto !important;
+
   padding:
     7px
-    10px;
+    10px !important;
 
-  border-radius: 999px;
+  border-radius:
+    999px !important;
 
-  background: var(--blue-soft);
+  background:
+    var(--blue-soft) !important;
 
-  color: var(--blue);
+  color:
+    var(--blue) !important;
 
-  font-size: 10px;
+  font-size:
+    10px !important;
 
-  font-weight: 750;
+  font-weight:
+    750 !important;
+
+  white-space:
+    nowrap !important;
 
 }
 
 
+/* =========================================================
+   4 PASOS
+========================================================= */
+
 .setup-flow {
 
-  display: grid;
+  display: grid !important;
 
   grid-template-columns:
-    repeat(4, 1fr);
+    repeat(
+      4,
+      minmax(0, 1fr)
+    ) !important;
 
-  gap: 9px;
+  gap: 8px !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
 
 }
 
 
 .setup-step {
 
-  display: grid;
+  display: flex !important;
 
-  grid-template-columns:
-    34px
-    minmax(0, 1fr)
-    27px;
+  flex-direction: column !important;
 
-  align-items: center;
+  align-items: center !important;
 
-  gap: 9px;
+  justify-content: center !important;
 
-  min-width: 0;
+  gap: 0 !important;
 
-  min-height: 76px;
+  min-width: 0 !important;
+
+  min-height: 92px !important;
 
   padding:
-    11px;
+    11px
+    7px !important;
+
+  margin: 0 !important;
 
   border:
     1px solid
-    var(--border);
+    var(--border) !important;
 
-  border-radius: 13px;
+  border-radius:
+    13px !important;
 
-  background: #f8fafc;
+  background:
+    #f7f9fc !important;
 
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease;
+  text-align:
+    center !important;
 
-}
-
-
-.step-number,
-.step-status {
-
-  display: grid;
-
-  place-items: center;
-
-  width: 28px;
-
-  height: 28px;
-
-  border-radius: 50%;
-
-  background: #e8edf3;
-
-  color: #788697;
-
-  font-size: 11px;
-
-  font-weight: 850;
-
-}
-
-
-.step-copy {
-
-  min-width: 0;
-
-}
-
-
-.step-copy strong {
-
-  display: block;
-
-  margin-bottom: 3px;
-
-  color: var(--dark-900);
-
-  font-size: 12px;
-
-  font-weight: 800;
-
-}
-
-
-.step-copy small {
-
-  display: block;
-
-  overflow: hidden;
-
-  color: var(--text-secondary);
-
-  font-size: 9px;
-
-  line-height: 1.35;
-
-  text-overflow: ellipsis;
-
-}
-
-
-.step-status {
-
-  width: 24px;
-
-  height: 24px;
-
-}
-
-
-/* COMPLETE */
-
-.setup-step.done {
-
-  border-color:
-    rgba(24, 166, 106, 0.25);
-
-  background: var(--green-soft);
-
-}
-
-
-.setup-step.done
-.step-number,
-.setup-step.done
-.step-status {
-
-  background: var(--green);
-
-  color: white;
-
-}
-
-
-/* ACTIVE */
-
-.setup-step.active {
-
-  border-color: var(--blue-border);
-
-  background: var(--blue-soft);
-
-}
-
-
-.setup-step.active
-.step-number,
-.setup-step.active
-.step-status {
-
-  background: var(--blue);
-
-  color: white;
-
-}
-
-
-/* WARNING */
-
-.setup-step.warning-step {
-
-  border-color:
-    rgba(217, 145, 20, 0.30);
-
-  background: var(--amber-soft);
-
-}
-
-
-.setup-step.warning-step
-.step-number,
-.setup-step.warning-step
-.step-status {
-
-  background: var(--amber);
-
-  color: white;
-
-}
-
-
-/* PENDING */
-
-.setup-step.pending {
-
-  opacity: 0.72;
-
-}
-
-
-.position-tip {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  margin-top: 12px;
-
-  color: var(--text-secondary);
-
-  font-size: 10px;
-
-}
-
-
-.tip-icon {
-
-  display: grid;
-
-  place-items: center;
-
-  width: 20px;
-
-  height: 20px;
-
-  flex: 0 0 auto;
-
-  border-radius: 50%;
-
-  background: var(--blue-soft);
-
-  color: var(--blue);
-
-  font-weight: 800;
+  overflow:
+    hidden !important;
 
 }
 
 
 /* =========================================================
-   CAMERA
+   NÚMERO DEL PASO
+========================================================= */
+
+.setup-step .step-number {
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: center !important;
+
+  flex:
+    0 0 auto !important;
+
+  width: 30px !important;
+
+  height: 30px !important;
+
+  min-width: 30px !important;
+
+  min-height: 30px !important;
+
+  margin:
+    0
+    0
+    8px
+    0 !important;
+
+  padding: 0 !important;
+
+  border-radius:
+    50% !important;
+
+  background:
+    #e6ebf1 !important;
+
+  color:
+    #738194 !important;
+
+  font-size:
+    12px !important;
+
+  line-height:
+    30px !important;
+
+  font-weight:
+    850 !important;
+
+  text-align:
+    center !important;
+
+}
+
+
+/* =========================================================
+   TEXTO PASO
+========================================================= */
+
+.setup-step .step-copy {
+
+  display: block !important;
+
+  width: 100% !important;
+
+  min-width: 0 !important;
+
+  padding: 0 !important;
+
+  margin: 0 !important;
+
+}
+
+
+.setup-step .step-copy strong {
+
+  display: block !important;
+
+  width: 100% !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  color:
+    var(--dark-900) !important;
+
+  font-size:
+    11px !important;
+
+  line-height:
+    1.2 !important;
+
+  font-weight:
+    800 !important;
+
+  text-align:
+    center !important;
+
+  white-space:
+    nowrap !important;
+
+  overflow:
+    hidden !important;
+
+  text-overflow:
+    ellipsis !important;
+
+}
+
+
+/*
+   No mostramos la frase larga dentro
+   de cada paso porque hace que el flujo
+   crezca demasiado.
+*/
+
+.setup-step .step-copy small {
+
+  display:
+    none !important;
+
+}
+
+
+/*
+   El segundo número / check del HTML
+   queda oculto visualmente.
+*/
+
+.setup-step .step-status {
+
+  display:
+    none !important;
+
+}
+
+
+/* =========================================================
+   PASO COMPLETADO
+========================================================= */
+
+.setup-step.done {
+
+  background:
+    var(--green-soft) !important;
+
+  border-color:
+    #bee7d2 !important;
+
+  opacity:
+    1 !important;
+
+}
+
+
+.setup-step.done
+.step-number {
+
+  background:
+    var(--green) !important;
+
+  color:
+    white !important;
+
+  font-size:
+    0 !important;
+
+}
+
+
+.setup-step.done
+.step-number::after {
+
+  content: "✓";
+
+  display: block;
+
+  color: white;
+
+  font-size:
+    14px !important;
+
+  line-height:
+    30px;
+
+  font-weight:
+    900;
+
+}
+
+
+/* =========================================================
+   PASO ACTIVO
+========================================================= */
+
+.setup-step.active {
+
+  background:
+    var(--blue-soft) !important;
+
+  border-color:
+    var(--blue-border) !important;
+
+  opacity:
+    1 !important;
+
+}
+
+
+.setup-step.active
+.step-number {
+
+  background:
+    var(--blue) !important;
+
+  color:
+    white !important;
+
+}
+
+
+/* =========================================================
+   PASO PENDIENTE
+========================================================= */
+
+.setup-step.pending {
+
+  background:
+    #f7f9fc !important;
+
+  border-color:
+    #e1e7ee !important;
+
+  opacity:
+    0.6 !important;
+
+}
+
+
+/* =========================================================
+   PASO WARNING
+========================================================= */
+
+.setup-step.warning-step {
+
+  background:
+    var(--amber-soft) !important;
+
+  border-color:
+    #efd69d !important;
+
+  opacity:
+    1 !important;
+
+}
+
+
+.setup-step.warning-step
+.step-number {
+
+  background:
+    var(--amber) !important;
+
+  color:
+    white !important;
+
+}
+
+
+/* =========================================================
+   CONSEJO POSICIÓN
+========================================================= */
+
+.position-tip {
+
+  display: flex !important;
+
+  align-items:
+    flex-start !important;
+
+  gap: 8px !important;
+
+  width: 100% !important;
+
+  margin-top:
+    13px !important;
+
+  padding:
+    10px
+    12px !important;
+
+  border-radius:
+    10px !important;
+
+  background:
+    #f4f7fb !important;
+
+  color:
+    var(--text-secondary) !important;
+
+  font-size:
+    10px !important;
+
+  line-height:
+    1.4 !important;
+
+  font-weight:
+    600 !important;
+
+}
+
+
+.position-tip .tip-icon {
+
+  display:
+    flex !important;
+
+  align-items:
+    center !important;
+
+  justify-content:
+    center !important;
+
+  flex:
+    0 0 auto !important;
+
+  width:
+    20px !important;
+
+  height:
+    20px !important;
+
+  border-radius:
+    50% !important;
+
+  background:
+    var(--blue-soft) !important;
+
+  color:
+    var(--blue) !important;
+
+  font-size:
+    11px !important;
+
+  font-weight:
+    850 !important;
+
+}
+
+
+/* =========================================================
+   CÁMARA
 ========================================================= */
 
 .camera-section {
@@ -676,7 +920,8 @@ button:disabled {
       var(--dark-850)
     );
 
-  box-shadow: var(--shadow-lg);
+  box-shadow:
+    var(--shadow-lg);
 
   overflow: hidden;
 
@@ -689,13 +934,16 @@ button:disabled {
 
   width: 100%;
 
-  aspect-ratio: 16 / 9;
+  aspect-ratio:
+    16 / 9;
 
   overflow: hidden;
 
-  border-radius: 16px;
+  border-radius:
+    16px;
 
-  background: #030609;
+  background:
+    #030609;
 
 }
 
@@ -708,9 +956,11 @@ video {
 
   height: 100%;
 
-  object-fit: contain;
+  object-fit:
+    contain;
 
-  background: #030609;
+  background:
+    #030609;
 
 }
 
@@ -730,6 +980,10 @@ canvas {
 }
 
 
+/* =========================================================
+   WARNING
+========================================================= */
+
 .warning {
 
   position: absolute;
@@ -740,7 +994,8 @@ canvas {
 
   bottom: 12px;
 
-  transform: translateX(-50%);
+  transform:
+    translateX(-50%);
 
   max-width: 82%;
 
@@ -751,13 +1006,21 @@ canvas {
   border-radius: 9px;
 
   background:
-    rgba(140, 89, 10, 0.9);
+    rgba(
+      140,
+      89,
+      10,
+      0.9
+    );
 
-  color: white;
+  color:
+    white;
 
-  font-size: 11px;
+  font-size:
+    11px;
 
-  font-weight: 750;
+  font-weight:
+    750;
 
 }
 
@@ -789,15 +1052,20 @@ canvas {
 
   min-height: 24px;
 
-  color: #58a4ff;
+  color:
+    #58a4ff;
 
-  font-size: 9px;
+  font-size:
+    9px;
 
-  font-weight: 850;
+  font-weight:
+    850;
 
-  letter-spacing: 2px;
+  letter-spacing:
+    2px;
 
-  text-transform: uppercase;
+  text-transform:
+    uppercase;
 
 }
 
@@ -810,12 +1078,21 @@ canvas {
 
   height: 7px;
 
-  border-radius: 50%;
+  flex:
+    0 0 auto;
 
-  background: var(--blue);
+  border-radius:
+    50%;
+
+  background:
+    var(--blue);
 
 }
 
+
+/* =========================================================
+   MÉTRICAS
+========================================================= */
 
 .metric {
 
@@ -833,41 +1110,72 @@ canvas {
 
   border:
     1px solid
-    rgba(255, 255, 255, 0.055);
+    rgba(
+      255,
+      255,
+      255,
+      0.055
+    );
 
-  border-radius: 11px;
+  border-radius:
+    11px;
 
   background:
-    rgba(255, 255, 255, 0.047);
+    rgba(
+      255,
+      255,
+      255,
+      0.047
+    );
 
 }
 
 
 .metric small {
 
+  display: block;
+
   margin-bottom: 4px;
 
-  color: #8899ad;
+  color:
+    #8899ad;
 
-  font-size: 8px;
+  font-size:
+    8px;
 
-  font-weight: 800;
+  font-weight:
+    800;
 
-  letter-spacing: 1.3px;
+  letter-spacing:
+    1.3px;
+
+  text-transform:
+    uppercase;
 
 }
 
 
 .metric strong {
 
+  display: block;
+
   color: white;
 
-  font-size: 20px;
+  font-size:
+    20px;
 
-  font-weight: 800;
+  line-height:
+    1.05;
+
+  font-weight:
+    800;
 
 }
 
+
+/* =========================================================
+   STATUS
+========================================================= */
 
 .status {
 
@@ -877,38 +1185,58 @@ canvas {
 
   border:
     1px solid
-    rgba(22, 119, 255, 0.18);
+    rgba(
+      22,
+      119,
+      255,
+      0.18
+    );
 
-  border-radius: 9px;
+  border-radius:
+    9px;
 
   background:
-    rgba(22, 119, 255, 0.08);
+    rgba(
+      22,
+      119,
+      255,
+      0.08
+    );
 
-  color: #b9d5ff;
+  color:
+    #b9d5ff;
 
-  font-size: 10px;
+  font-size:
+    10px;
 
-  line-height: 1.4;
+  line-height:
+    1.4;
+
+  font-weight:
+    600;
 
 }
 
 
 /* =========================================================
-   COLLAPSIBLE CONFIG
+   CONFIGURACIÓN PLEGABLE
 ========================================================= */
 
 .config-shell {
 
-  padding: 0;
+  padding:
+    0 !important;
 
-  overflow: hidden;
+  overflow:
+    hidden;
 
 }
 
 
 .config-details {
 
-  width: 100%;
+  width:
+    100%;
 
 }
 
@@ -917,87 +1245,121 @@ canvas {
 
   display: flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  justify-content: space-between;
+  justify-content:
+    space-between;
 
   gap: 18px;
 
-  padding: 20px 22px;
+  padding:
+    20px
+    22px;
 
-  list-style: none;
+  list-style:
+    none;
 
-  cursor: pointer;
+  cursor:
+    pointer;
 
-  user-select: none;
+  user-select:
+    none;
 
 }
 
 
 .config-details summary::-webkit-details-marker {
 
-  display: none;
+  display:
+    none;
+
+}
+
+
+.config-details summary::marker {
+
+  display:
+    none;
 
 }
 
 
 .config-summary-copy {
 
-  min-width: 0;
+  min-width:
+    0;
 
 }
 
 
 .config-summary-copy strong {
 
-  display: block;
+  display:
+    block;
 
-  color: var(--dark-900);
+  color:
+    var(--dark-900);
 
-  font-size: 18px;
+  font-size:
+    18px;
 
-  font-weight: 800;
+  font-weight:
+    800;
 
 }
 
 
 .config-summary-copy small {
 
-  display: block;
+  display:
+    block;
 
-  margin-top: 5px;
+  margin-top:
+    5px;
 
-  color: var(--text-secondary);
+  color:
+    var(--text-secondary);
 
-  font-size: 10px;
+  font-size:
+    10px;
 
-  line-height: 1.4;
+  line-height:
+    1.4;
 
 }
 
 
 .config-toggle {
 
-  display: flex;
+  display:
+    flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: 8px;
+  gap:
+    8px;
 
-  flex: 0 0 auto;
+  flex:
+    0 0 auto;
 
-  color: var(--blue);
+  color:
+    var(--blue);
 
-  font-size: 10px;
+  font-size:
+    10px;
 
-  font-weight: 800;
+  font-weight:
+    800;
 
 }
 
 
 .config-hide {
 
-  display: none;
+  display:
+    none;
 
 }
 
@@ -1005,7 +1367,8 @@ canvas {
 .config-details[open]
 .config-show {
 
-  display: none;
+  display:
+    none;
 
 }
 
@@ -1013,7 +1376,8 @@ canvas {
 .config-details[open]
 .config-hide {
 
-  display: inline;
+  display:
+    inline;
 
 }
 
@@ -1021,7 +1385,8 @@ canvas {
 .config-chevron {
 
   transition:
-    transform 0.2s ease;
+    transform
+    0.2s ease;
 
 }
 
@@ -1060,7 +1425,10 @@ canvas {
   grid-template-columns:
     repeat(
       auto-fit,
-      minmax(180px, 1fr)
+      minmax(
+        180px,
+        1fr
+      )
     );
 
   gap: 14px;
@@ -1070,11 +1438,19 @@ canvas {
 
 label {
 
-  color: var(--text-secondary);
+  display: block;
 
-  font-size: 12px;
+  color:
+    var(--text-secondary);
 
-  font-weight: 650;
+  font-size:
+    12px;
+
+  line-height:
+    1.35;
+
+  font-weight:
+    650;
 
 }
 
@@ -1083,11 +1459,14 @@ label span {
 
   display: block;
 
-  margin-top: 5px;
+  margin-top:
+    5px;
 
-  color: var(--text-muted);
+  color:
+    var(--text-muted);
 
-  font-size: 10px;
+  font-size:
+    10px;
 
 }
 
@@ -1097,9 +1476,11 @@ select {
 
   width: 100%;
 
-  min-height: 44px;
+  min-height:
+    44px;
 
-  margin-top: 7px;
+  margin-top:
+    7px;
 
   padding:
     10px
@@ -1109,19 +1490,26 @@ select {
     1px solid
     var(--border);
 
-  border-radius: 10px;
+  border-radius:
+    10px;
 
-  background: #fbfcfe;
+  background:
+    #fbfcfe;
 
-  color: var(--text-main);
+  color:
+    var(--text-main);
 
-  font: inherit;
+  font-family:
+    inherit;
 
-  font-size: 15px;
+  font-size:
+    15px;
 
-  font-weight: 700;
+  font-weight:
+    700;
 
-  outline: none;
+  outline:
+    none;
 
 }
 
@@ -1129,11 +1517,17 @@ select {
 input:focus,
 select:focus {
 
-  border-color: var(--blue);
+  border-color:
+    var(--blue);
 
   box-shadow:
     0 0 0 3px
-    rgba(22, 119, 255, 0.1);
+    rgba(
+      22,
+      119,
+      255,
+      0.1
+    );
 
 }
 
@@ -1144,24 +1538,31 @@ select:focus {
 
 .checks {
 
-  display: flex;
+  display:
+    flex;
 
-  flex-wrap: wrap;
+  flex-wrap:
+    wrap;
 
-  gap: 8px;
+  gap:
+    8px;
 
 }
 
 
 .checks label {
 
-  display: inline-flex;
+  display:
+    inline-flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: 7px;
+  gap:
+    7px;
 
-  min-height: 38px;
+  min-height:
+    38px;
 
   padding:
     8px
@@ -1171,58 +1572,82 @@ select:focus {
     1px solid
     #e0e7ee;
 
-  border-radius: 9px;
+  border-radius:
+    9px;
 
-  background: #f6f8fb;
+  background:
+    #f6f8fb;
 
-  font-size: 11px;
+  color:
+    #566577;
+
+  font-size:
+    11px;
+
+  font-weight:
+    700;
 
 }
 
 
 .checks input {
 
-  width: 16px;
+  width:
+    16px;
 
-  height: 16px;
+  height:
+    16px;
 
-  min-height: 0;
+  min-height:
+    0;
 
-  margin: 0;
+  margin:
+    0;
 
-  accent-color: var(--blue);
+  padding:
+    0;
+
+  accent-color:
+    var(--blue);
 
 }
 
 
 .config-note {
 
-  margin-top: 19px;
+  margin-top:
+    19px;
 
   padding:
     11px
     12px;
 
-  border-radius: 10px;
+  border-radius:
+    10px;
 
-  background: #f5f8fc;
+  background:
+    #f5f8fc;
 
-  color: var(--text-secondary);
+  color:
+    var(--text-secondary);
 
-  font-size: 10px;
+  font-size:
+    10px;
 
-  line-height: 1.5;
+  line-height:
+    1.5;
 
 }
 
 
 /* =========================================================
-   RESULTS
+   RESULTADOS
 ========================================================= */
 
 .results {
 
-  overflow: hidden;
+  overflow:
+    hidden;
 
 }
 
@@ -1233,13 +1658,15 @@ select:focus {
     14px
     16px;
 
-  margin-bottom: 16px;
+  margin-bottom:
+    16px;
 
   border:
     1px solid
     #dce9fb;
 
-  border-radius: 12px;
+  border-radius:
+    12px;
 
   background:
     linear-gradient(
@@ -1248,27 +1675,45 @@ select:focus {
       #eff6ff
     );
 
-  color: var(--text-secondary);
+  color:
+    var(--text-secondary);
 
-  font-size: 12px;
+  font-size:
+    12px;
 
-  line-height: 1.7;
+  line-height:
+    1.7;
 
 }
 
 
 .summary strong {
 
-  color: var(--dark-900);
+  color:
+    var(--dark-900);
 
 }
 
 
+/* =========================================================
+   TABLA DESKTOP
+========================================================= */
+
 table {
 
-  width: 100%;
+  width:
+    100%;
 
-  border-collapse: collapse;
+  border-collapse:
+    collapse;
+
+}
+
+
+thead {
+
+  background:
+    #f7f9fc;
 
 }
 
@@ -1283,53 +1728,81 @@ th {
     1px solid
     var(--border);
 
-  color: #778699;
+  color:
+    #778699;
 
-  font-size: 9px;
+  font-size:
+    9px;
 
-  font-weight: 800;
+  font-weight:
+    800;
 
-  text-align: center;
+  letter-spacing:
+    0.7px;
+
+  text-align:
+    center;
+
+  text-transform:
+    uppercase;
 
 }
 
 
 td {
 
-  padding: 12px;
+  padding:
+    12px;
 
   border-bottom:
     1px solid
     #edf1f5;
 
-  color: #344253;
+  color:
+    #344253;
 
-  font-size: 12px;
+  font-size:
+    12px;
 
-  font-weight: 650;
+  font-weight:
+    650;
 
-  text-align: center;
+  text-align:
+    center;
 
 }
 
 
 .pass {
 
-  color: var(--green);
+  color:
+    var(--green);
+
+  font-weight:
+    850;
 
 }
 
 
 .fail {
 
-  color: var(--amber);
+  color:
+    var(--amber);
+
+  font-weight:
+    850;
 
 }
 
 
+/* =========================================================
+   UTILIDADES
+========================================================= */
+
 .hidden {
 
-  display: none !important;
+  display:
+    none !important;
 
 }
 
@@ -1343,17 +1816,25 @@ td {
 
   .camera-section {
 
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
 
   }
 
 
   .live-panel {
 
-    display: grid;
+    display:
+      grid;
 
     grid-template-columns:
-      repeat(4, 1fr);
+      repeat(
+        4,
+        minmax(
+          0,
+          1fr
+        )
+      );
 
   }
 
@@ -1366,29 +1847,33 @@ td {
 
   }
 
-
-  .setup-flow {
-
-    grid-template-columns:
-      1fr
-      1fr;
-
-  }
-
 }
 
 
 /* =========================================================
-   MOBILE
+   MÓVIL
 ========================================================= */
 
 @media
 (max-width: 700px) {
 
+
+  body {
+
+    background:
+      #f3f6fa;
+
+  }
+
+
+  /* HEADER */
+
   header {
 
     width:
-      calc(100% - 28px);
+      calc(
+        100% - 28px
+      );
 
     padding:
       22px
@@ -1400,29 +1885,45 @@ td {
 
   .brand {
 
-    font-size: 28px;
+    font-size:
+      28px;
+
+    letter-spacing:
+      2px;
 
   }
 
 
   .subtitle {
 
-    font-size: 8px;
+    margin-top:
+      7px;
 
-    letter-spacing: 2.3px;
+    font-size:
+      8px;
+
+    letter-spacing:
+      2.3px;
 
   }
 
+
+  /* MAIN */
 
   main {
 
     width:
-      calc(100% - 20px);
+      calc(
+        100% - 20px
+      );
 
-    padding-bottom: 45px;
+    padding-bottom:
+      45px;
 
   }
 
+
+  /* PANEL */
 
   .panel {
 
@@ -1430,18 +1931,22 @@ td {
       17px
       16px;
 
-    margin-bottom: 11px;
+    margin-bottom:
+      11px;
 
-    border-radius: 17px;
+    border-radius:
+      17px;
 
   }
 
 
   .panel h2 {
 
-    margin-bottom: 14px;
+    margin-bottom:
+      14px;
 
-    font-size: 19px;
+    font-size:
+      19px;
 
   }
 
@@ -1453,153 +1958,358 @@ td {
       0
       10px;
 
-    font-size: 10px;
+    font-size:
+      10px;
 
   }
 
 
-  /* FLOW */
+  /* =====================================================
+     FLUJO MÓVIL CORREGIDO
+  ===================================================== */
+
+  section.panel.setup-panel {
+
+    padding:
+      16px !important;
+
+  }
+
 
   .setup-header {
 
-    margin-bottom: 12px;
+    display:
+      block !important;
+
+    margin-bottom:
+      13px !important;
+
+  }
+
+
+  .setup-header h2 {
+
+    margin:
+      0 !important;
+
+    font-size:
+      18px !important;
 
   }
 
 
   .setup-helper {
 
-    display: none;
+    display:
+      none !important;
 
   }
 
 
   .setup-flow {
 
-    grid-template-columns:
-      1fr
-      1fr;
+    display:
+      grid !important;
 
-    gap: 7px;
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(
+          0,
+          1fr
+        )
+      ) !important;
+
+    gap:
+      5px !important;
 
   }
 
 
   .setup-step {
 
-    grid-template-columns:
-      27px
-      minmax(0, 1fr);
+    display:
+      flex !important;
 
-    min-height: 64px;
+    flex-direction:
+      column !important;
 
-    padding: 9px;
+    align-items:
+      center !important;
+
+    justify-content:
+      center !important;
+
+    min-width:
+      0 !important;
+
+    min-height:
+      72px !important;
+
+    padding:
+      8px
+      3px !important;
+
+    border-radius:
+      10px !important;
+
+    text-align:
+      center !important;
 
   }
 
 
+  .setup-step .step-number {
+
+    display:
+      flex !important;
+
+    align-items:
+      center !important;
+
+    justify-content:
+      center !important;
+
+    width:
+      27px !important;
+
+    height:
+      27px !important;
+
+    min-width:
+      27px !important;
+
+    min-height:
+      27px !important;
+
+    margin:
+      0
+      0
+      6px
+      0 !important;
+
+    padding:
+      0 !important;
+
+    font-size:
+      11px !important;
+
+    line-height:
+      27px !important;
+
+  }
+
+
+  .setup-step.done
   .step-number {
 
-    width: 25px;
-
-    height: 25px;
-
-  }
-
-
-  .step-status {
-
-    display: none;
+    font-size:
+      0 !important;
 
   }
 
 
-  .step-copy strong {
+  .setup-step.done
+  .step-number::after {
 
-    font-size: 10px;
+    font-size:
+      12px !important;
+
+    line-height:
+      27px !important;
 
   }
 
 
-  .step-copy small {
+  .setup-step .step-copy {
 
-    font-size: 8px;
+    display:
+      block !important;
+
+    width:
+      100% !important;
+
+  }
+
+
+  .setup-step .step-copy strong {
+
+    display:
+      block !important;
+
+    width:
+      100% !important;
+
+    margin:
+      0 !important;
+
+    padding:
+      0 !important;
+
+    font-size:
+      8px !important;
+
+    line-height:
+      1.1 !important;
+
+    font-weight:
+      800 !important;
+
+    text-align:
+      center !important;
+
+    white-space:
+      nowrap !important;
+
+    overflow:
+      hidden !important;
+
+    text-overflow:
+      ellipsis !important;
+
+  }
+
+
+  .setup-step .step-copy small {
+
+    display:
+      none !important;
+
+  }
+
+
+  .setup-step .step-status {
+
+    display:
+      none !important;
 
   }
 
 
   .position-tip {
 
-    margin-top: 9px;
+    margin-top:
+      9px !important;
 
-    font-size: 9px;
+    padding:
+      8px
+      9px !important;
+
+    font-size:
+      9px !important;
 
   }
 
 
-  /* BUTTONS */
+  /* =====================================================
+     BOTONES
+  ===================================================== */
 
   .buttons {
 
-    display: grid;
+    display:
+      grid;
 
     grid-template-columns:
       1fr
       1fr;
 
-    gap: 8px;
+    gap:
+      8px;
+
+    width:
+      100%;
 
   }
 
 
   button {
 
-    width: 100%;
+    width:
+      100%;
 
-    min-height: 43px;
+    min-height:
+      43px;
 
-    padding: 8px;
+    padding:
+      8px;
 
-    font-size: 12px;
+    font-size:
+      12px;
 
   }
 
 
-  /* CAMERA */
+  /* =====================================================
+     CÁMARA
+  ===================================================== */
 
   .camera-section {
 
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
 
-    gap: 9px;
+    gap:
+      9px;
 
-    padding: 9px;
+    padding:
+      9px;
 
-    margin-bottom: 11px;
+    margin-bottom:
+      11px;
 
-    border-radius: 18px;
+    border-radius:
+      18px;
 
   }
 
 
   .camera-wrapper {
 
-    aspect-ratio: 16 / 9;
+    width:
+      100%;
 
-    border-radius: 13px;
+    aspect-ratio:
+      16 / 9;
+
+    min-height:
+      0;
+
+    border-radius:
+      13px;
 
   }
 
 
+  video {
+
+    width:
+      100%;
+
+    height:
+      100%;
+
+    min-height:
+      0;
+
+  }
+
+
+  /* =====================================================
+     LIVE PANEL
+  ===================================================== */
+
   .live-panel {
 
-    display: grid;
+    display:
+      grid;
 
     grid-template-columns:
       1fr
       1fr;
 
-    gap: 6px;
+    gap:
+      6px;
 
   }
 
@@ -1609,17 +2319,25 @@ td {
     grid-column:
       1 / -1;
 
-    font-size: 8px;
+    min-height:
+      22px;
+
+    font-size:
+      8px;
 
   }
 
 
   .metric {
 
-    min-height: 62px;
+    min-height:
+      62px;
 
     padding:
       8px
+      10px;
+
+    border-radius:
       10px;
 
   }
@@ -1627,14 +2345,19 @@ td {
 
   .metric small {
 
-    font-size: 7px;
+    margin-bottom:
+      4px;
+
+    font-size:
+      7px;
 
   }
 
 
   .metric strong {
 
-    font-size: 17px;
+    font-size:
+      17px;
 
   }
 
@@ -1644,21 +2367,32 @@ td {
     grid-column:
       1 / -1;
 
+    padding:
+      8px
+      10px;
+
+    font-size:
+      9px;
+
   }
 
 
-  /* COLLAPSIBLE CONFIG */
+  /* =====================================================
+     CONFIG PLEGABLE
+  ===================================================== */
 
   .config-shell {
 
-    padding: 0;
+    padding:
+      0 !important;
 
   }
 
 
   .config-details summary {
 
-    align-items: center;
+    align-items:
+      center;
 
     padding:
       16px;
@@ -1668,44 +2402,53 @@ td {
 
   .config-summary-copy strong {
 
-    font-size: 16px;
+    font-size:
+      16px;
 
   }
 
 
   .config-summary-copy small {
 
-    max-width: 420px;
-
-    font-size: 9px;
+    font-size:
+      9px;
 
   }
 
 
   .config-toggle {
 
-    font-size: 0;
+    font-size:
+      0;
 
   }
 
 
   .config-chevron {
 
-    display: grid;
+    display:
+      grid;
 
-    place-items: center;
+    place-items:
+      center;
 
-    width: 30px;
+    width:
+      30px;
 
-    height: 30px;
+    height:
+      30px;
 
-    border-radius: 50%;
+    border-radius:
+      50%;
 
-    background: var(--blue-soft);
+    background:
+      var(--blue-soft);
 
-    color: var(--blue);
+    color:
+      var(--blue);
 
-    font-size: 14px;
+    font-size:
+      14px;
 
   }
 
@@ -1720,7 +2463,9 @@ td {
   }
 
 
-  /* SETTINGS */
+  /* =====================================================
+     CONFIGURACIÓN
+  ===================================================== */
 
   .settings-grid {
 
@@ -1737,7 +2482,19 @@ td {
 
   label {
 
-    font-size: 10px;
+    font-size:
+      10px;
+
+  }
+
+
+  label span {
+
+    margin-top:
+      4px;
+
+    font-size:
+      9px;
 
   }
 
@@ -1745,45 +2502,64 @@ td {
   input,
   select {
 
-    min-height: 42px;
+    min-height:
+      42px;
 
-    margin-top: 5px;
+    margin-top:
+      5px;
 
-    font-size: 15px;
+    padding:
+      8px
+      10px;
+
+    font-size:
+      15px;
 
   }
 
 
   .checks {
 
-    display: grid;
+    display:
+      grid;
 
     grid-template-columns:
       1fr
       1fr;
 
-    gap: 7px;
+    gap:
+      7px;
 
   }
 
 
   .checks label {
 
-    width: 100%;
+    width:
+      100%;
 
-    min-height: 40px;
+    min-height:
+      40px;
 
-    font-size: 10px;
+    padding:
+      7px
+      9px;
+
+    font-size:
+      10px;
 
   }
 
 
-  /* RESULT CARDS */
+  /* =====================================================
+     RESULTADOS EN VERTICAL
+  ===================================================== */
 
   #results,
   #cmjResults {
 
-    overflow: visible;
+    overflow:
+      visible;
 
   }
 
@@ -1791,7 +2567,17 @@ td {
   #results table,
   #cmjResults table {
 
-    display: block;
+    display:
+      block;
+
+    width:
+      100%;
+
+    overflow:
+      visible;
+
+    white-space:
+      normal;
 
   }
 
@@ -1799,7 +2585,8 @@ td {
   #results thead,
   #cmjResults thead {
 
-    display: none;
+    display:
+      none;
 
   }
 
@@ -1807,9 +2594,14 @@ td {
   #results tbody,
   #cmjResults tbody {
 
-    display: grid;
+    display:
+      grid;
 
-    gap: 9px;
+    width:
+      100%;
+
+    gap:
+      9px;
 
   }
 
@@ -1817,7 +2609,11 @@ td {
   #results tbody tr,
   #cmjResults tbody tr {
 
-    display: block;
+    display:
+      block;
+
+    width:
+      100%;
 
     padding:
       3px
@@ -1827,9 +2623,11 @@ td {
       1px solid
       #e2e9f0;
 
-    border-radius: 12px;
+    border-radius:
+      12px;
 
-    background: #f8fafc;
+    background:
+      #f8fafc;
 
   }
 
@@ -1837,13 +2635,20 @@ td {
   #results tbody td,
   #cmjResults tbody td {
 
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    justify-content: space-between;
+    justify-content:
+      space-between;
 
-    min-height: 40px;
+    width:
+      100%;
+
+    min-height:
+      40px;
 
     padding:
       9px
@@ -1853,9 +2658,11 @@ td {
       1px solid
       #e8edf3;
 
-    font-size: 12px;
+    font-size:
+      12px;
 
-    text-align: right;
+    text-align:
+      right;
 
   }
 
@@ -1863,7 +2670,8 @@ td {
   #results tbody td:last-child,
   #cmjResults tbody td:last-child {
 
-    border-bottom: none;
+    border-bottom:
+      none;
 
   }
 
@@ -1871,20 +2679,28 @@ td {
   #results tbody td::before,
   #cmjResults tbody td::before {
 
-    margin-right: 14px;
+    margin-right:
+      14px;
 
-    color: #7a899a;
+    color:
+      #7a899a;
 
-    font-size: 8px;
+    font-size:
+      8px;
 
-    font-weight: 800;
+    font-weight:
+      800;
 
-    letter-spacing: 0.6px;
+    letter-spacing:
+      0.6px;
 
-    text-transform: uppercase;
+    text-transform:
+      uppercase;
 
   }
 
+
+  /* SENTADILLA */
 
   #results tbody td:nth-child(1)::before {
     content: "Repetición";
@@ -1906,6 +2722,8 @@ td {
     content: "Estado";
   }
 
+
+  /* CMJ */
 
   #cmjResults tbody td:nth-child(1)::before {
     content: "Salto";
@@ -1939,15 +2757,41 @@ td {
 
 
 /* =========================================================
-   SMALL MOBILE
+   TELÉFONOS MUY PEQUEÑOS
 ========================================================= */
 
 @media
 (max-width: 370px) {
 
+  .brand {
+    font-size: 25px;
+  }
+
+
   .setup-flow {
 
-    grid-template-columns: 1fr;
+    gap:
+      4px !important;
+
+  }
+
+
+  .setup-step {
+
+    min-height:
+      68px !important;
+
+    padding:
+      7px
+      2px !important;
+
+  }
+
+
+  .setup-step .step-copy strong {
+
+    font-size:
+      7px !important;
 
   }
 
@@ -1963,7 +2807,8 @@ td {
 
   .checks {
 
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
 
   }
 
@@ -1971,7 +2816,7 @@ td {
 
 
 /* =========================================================
-   REDUCED MOTION
+   REDUCIR ANIMACIONES
 ========================================================= */
 
 @media
@@ -1979,385 +2824,12 @@ td {
 
   * {
 
-    transition: none !important;
+    transition:
+      none !important;
 
-    scroll-behavior: auto !important;
+    scroll-behavior:
+      auto !important;
 
-  }
-
-}
-/* =========================================================
-   KINEMYX
-   HOTFIX FLOW MOBILE 1.3
-   Pegar al FINAL de styles.css
-========================================================= */
-
-
-/* ---------------------------------------------------------
-   PANEL DE PREPARACIÓN
---------------------------------------------------------- */
-
-.setup-panel {
-  padding: 20px !important;
-}
-
-.setup-header {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  margin-bottom: 18px !important;
-}
-
-.setup-header .section-eyebrow {
-  margin: 0 0 5px 0 !important;
-  color: #1677ff !important;
-  font-size: 9px !important;
-  line-height: 1 !important;
-  font-weight: 800 !important;
-  letter-spacing: 1.5px !important;
-  text-transform: uppercase !important;
-}
-
-.setup-header h2 {
-  margin: 0 !important;
-  font-size: 21px !important;
-  line-height: 1.1 !important;
-}
-
-.setup-helper {
-  padding: 6px 10px !important;
-  border-radius: 999px !important;
-  background: #eaf3ff !important;
-  color: #1677ff !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  white-space: nowrap !important;
-}
-
-
-/* ---------------------------------------------------------
-   LOS CUATRO PASOS
---------------------------------------------------------- */
-
-.setup-flow {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 8px !important;
-  width: 100% !important;
-}
-
-.setup-step {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  min-width: 0 !important;
-  min-height: 90px !important;
-
-  padding: 10px 6px !important;
-
-  border: 1px solid #dde5ed !important;
-  border-radius: 13px !important;
-
-  background: #f7f9fc !important;
-
-  text-align: center !important;
-
-  opacity: 1 !important;
-}
-
-
-/* ---------------------------------------------------------
-   CÍRCULO DEL PASO
---------------------------------------------------------- */
-
-.setup-step .step-number {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  width: 30px !important;
-  height: 30px !important;
-
-  margin: 0 0 8px 0 !important;
-  padding: 0 !important;
-
-  border-radius: 50% !important;
-
-  background: #e6ebf1 !important;
-
-  color: #738194 !important;
-
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
-}
-
-
-/* ---------------------------------------------------------
-   TEXTO
---------------------------------------------------------- */
-
-.setup-step .step-copy {
-  display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-.setup-step .step-copy strong {
-  display: block !important;
-
-  margin: 0 !important;
-
-  overflow: hidden !important;
-
-  color: #182230 !important;
-
-  font-size: 10px !important;
-  line-height: 1.2 !important;
-  font-weight: 750 !important;
-
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
-}
-
-
-/*
-   La explicación detallada desaparece de cada tarjeta.
-   La información importante queda abajo en el tip/status.
-*/
-
-.setup-step .step-copy small {
-  display: none !important;
-}
-
-
-/*
-   Evita el segundo número / ✓ que se estaba viendo.
-*/
-
-.setup-step .step-status {
-  display: none !important;
-}
-
-
-/* ---------------------------------------------------------
-   PASO COMPLETADO
---------------------------------------------------------- */
-
-.setup-step.done {
-  background: #eef9f4 !important;
-  border-color: #bfe8d3 !important;
-}
-
-.setup-step.done .step-number {
-  background: #18a66a !important;
-  color: #ffffff !important;
-}
-
-
-/*
-   Sustituimos visualmente el número por ✓
-*/
-
-.setup-step.done .step-number {
-  font-size: 0 !important;
-}
-
-.setup-step.done .step-number::after {
-  content: "✓";
-  font-size: 14px !important;
-  font-weight: 900 !important;
-}
-
-
-/* ---------------------------------------------------------
-   PASO ACTUAL
---------------------------------------------------------- */
-
-.setup-step.active {
-  background: #edf5ff !important;
-  border-color: #bdd8ff !important;
-}
-
-.setup-step.active .step-number {
-  background: #1677ff !important;
-  color: #ffffff !important;
-}
-
-
-/* ---------------------------------------------------------
-   ADVERTENCIA / POSICIÓN INCORRECTA
---------------------------------------------------------- */
-
-.setup-step.warning-step {
-  background: #fff8ea !important;
-  border-color: #efd69d !important;
-}
-
-.setup-step.warning-step .step-number {
-  background: #d99114 !important;
-  color: #ffffff !important;
-}
-
-
-/* ---------------------------------------------------------
-   PASOS PENDIENTES
---------------------------------------------------------- */
-
-.setup-step.pending {
-  background: #f7f9fc !important;
-  border-color: #e2e8ef !important;
-  opacity: 0.7 !important;
-}
-
-
-/* ---------------------------------------------------------
-   INSTRUCCIÓN GENERAL
---------------------------------------------------------- */
-
-.position-tip {
-  display: flex !important;
-  align-items: flex-start !important;
-
-  gap: 8px !important;
-
-  margin-top: 14px !important;
-  padding: 10px 12px !important;
-
-  border-radius: 10px !important;
-
-  background: #f4f7fb !important;
-
-  color: #657488 !important;
-
-  font-size: 10px !important;
-  line-height: 1.4 !important;
-  font-weight: 600 !important;
-}
-
-.position-tip .tip-icon {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  width: 20px !important;
-  height: 20px !important;
-
-  min-width: 20px !important;
-
-  border-radius: 50% !important;
-
-  background: #eaf3ff !important;
-
-  color: #1677ff !important;
-
-  font-size: 11px !important;
-  font-weight: 800 !important;
-}
-
-
-/* =========================================================
-   MÓVIL
-========================================================= */
-
-@media (max-width: 700px) {
-
-  .setup-panel {
-    padding: 16px !important;
-  }
-
-  .setup-header {
-    margin-bottom: 13px !important;
-  }
-
-  .setup-header h2 {
-    font-size: 18px !important;
-  }
-
-  .setup-helper {
-    display: none !important;
-  }
-
-
-  /*
-     4 pasos en una sola línea.
-  */
-
-  .setup-flow {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 5px !important;
-  }
-
-
-  .setup-step {
-    min-height: 72px !important;
-
-    padding:
-      8px
-      3px !important;
-
-    border-radius: 10px !important;
-  }
-
-
-  .setup-step .step-number {
-    width: 27px !important;
-    height: 27px !important;
-
-    margin-bottom: 6px !important;
-
-    font-size: 11px !important;
-  }
-
-
-  .setup-step.done .step-number {
-    font-size: 0 !important;
-  }
-
-
-  .setup-step.done .step-number::after {
-    font-size: 12px !important;
-  }
-
-
-  .setup-step .step-copy strong {
-    font-size: 8px !important;
-    line-height: 1.1 !important;
-  }
-
-
-  .position-tip {
-    margin-top: 9px !important;
-
-    padding:
-      8px
-      9px !important;
-
-    font-size: 9px !important;
-  }
-
-}
-
-
-/* =========================================================
-   TELÉFONOS MUY ANGOSTOS
-========================================================= */
-
-@media (max-width: 360px) {
-
-  .setup-flow {
-    gap: 4px !important;
-  }
-
-  .setup-step {
-    min-height: 68px !important;
-  }
-
-  .setup-step .step-copy strong {
-    font-size: 7.5px !important;
   }
 
 }
