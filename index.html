@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1118" />
+
+  <meta
+    name="description"
+    content="KINEMYX Beta - análisis de movimiento y evaluación de saltos desde tu teléfono."
+  />
+
   <title>KINEMYX - Human Movement Intelligence</title>
 
   <link rel="stylesheet" href="styles.css" />
@@ -17,11 +23,36 @@
 <body>
 
 <header>
-  <div class="brand">KINEMY<span>X</span></div>
-  <div class="subtitle">Human Movement Intelligence</div>
+
+  <div class="header-row">
+
+    <div>
+
+      <div class="brand">
+        KINEMY<span>X</span>
+      </div>
+
+      <div class="subtitle">
+        Human Movement Intelligence
+      </div>
+
+    </div>
+
+    <div class="beta-badge">
+      BETA 0.5
+    </div>
+
+  </div>
+
 </header>
 
+
 <main>
+
+
+  <!-- =====================================================
+       SELECCIÓN DE ANÁLISIS
+  ====================================================== -->
 
   <section class="panel category-panel">
 
@@ -32,6 +63,7 @@
     <h2>
       ¿Qué quieres evaluar?
     </h2>
+
 
     <div class="category-tabs">
 
@@ -51,6 +83,7 @@
       </button>
 
     </div>
+
 
     <div
       id="movementExerciseSelector"
@@ -81,6 +114,7 @@
       </button>
 
     </div>
+
 
     <div
       id="jumpExerciseSelector"
@@ -116,6 +150,10 @@
   </section>
 
 
+  <!-- =====================================================
+       FLUJO DE 4 PASOS
+  ====================================================== -->
+
   <section class="panel setup-panel">
 
     <div class="setup-header">
@@ -137,6 +175,7 @@
       </div>
 
     </div>
+
 
     <div
       class="setup-flow"
@@ -284,6 +323,10 @@
   </section>
 
 
+  <!-- =====================================================
+       CÁMARA
+  ====================================================== -->
+
   <section class="camera-section">
 
     <div class="camera-wrapper">
@@ -418,6 +461,10 @@
   </section>
 
 
+  <!-- =====================================================
+       CONTROLES
+  ====================================================== -->
+
   <section class="panel control-panel">
 
     <div class="section-eyebrow">
@@ -427,6 +474,7 @@
     <h2>
       Control de análisis
     </h2>
+
 
     <div class="buttons">
 
@@ -466,6 +514,10 @@
   </section>
 
 
+  <!-- =====================================================
+       CONFIGURACIÓN MOVIMIENTOS
+  ====================================================== -->
+
   <section
     id="movementSettingsSection"
     class="panel config-shell"
@@ -489,10 +541,11 @@
           </strong>
 
           <small>
-            Los valores actuales siguen activos aunque la configuración permanezca cerrada.
+            Los valores actuales siguen activos aunque esta sección permanezca cerrada.
           </small>
 
         </div>
+
 
         <div class="config-toggle">
 
@@ -519,6 +572,7 @@
           Objetivos
         </h3>
 
+
         <div class="settings-grid">
 
           <label>
@@ -542,7 +596,7 @@
               id="movementAngleName"
               class="label-title"
             >
-              Flexión rodilla objetivo
+              Flexión de rodilla objetivo
             </span>
 
             <input
@@ -553,7 +607,7 @@
               max="170"
             />
 
-            <span id="movementAngleUnit">
+            <span>
               grados
             </span>
 
@@ -584,6 +638,7 @@
         <h3>
           Tempo
         </h3>
+
 
         <div class="settings-grid">
 
@@ -669,6 +724,7 @@
           Variables a evaluar
         </h3>
 
+
         <div class="checks">
 
           <label>
@@ -680,7 +736,7 @@
             />
 
             <span id="movementCheckAngleText">
-              Flexión rodilla
+              Flexión de rodilla
             </span>
 
           </label>
@@ -717,6 +773,7 @@
         <h3>
           Feedback
         </h3>
+
 
         <div class="settings-grid">
 
@@ -755,6 +812,10 @@
   </section>
 
 
+  <!-- =====================================================
+       CONFIGURACIÓN SALTOS
+  ====================================================== -->
+
   <section
     id="jumpSettingsSection"
     class="panel config-shell hidden"
@@ -778,10 +839,11 @@
           </strong>
 
           <small>
-            Los resultados se centran en protocolo, tiempo de vuelo y altura estimada.
+            Configura el protocolo y las variables que quieres registrar.
           </small>
 
         </div>
+
 
         <div class="config-toggle">
 
@@ -807,6 +869,7 @@
         <h3>
           Test
         </h3>
+
 
         <div class="settings-grid">
 
@@ -892,6 +955,7 @@
           Variables a evaluar
         </h3>
 
+
         <div class="checks">
 
           <label>
@@ -938,6 +1002,7 @@
           Feedback
         </h3>
 
+
         <div class="settings-grid">
 
           <label>
@@ -976,8 +1041,9 @@
           CMJ: inicia de pie, manos en cadera, realiza un countermovement y salta verticalmente.
         </div>
 
+
         <div class="config-note muted-note">
-          La altura se estima mediante tiempo de vuelo con cámara. No equivale a una medición con plataforma de fuerza.
+          La altura es una estimación basada en el tiempo de vuelo detectado por cámara y no sustituye una plataforma de fuerza.
         </div>
 
       </div>
@@ -986,6 +1052,10 @@
 
   </section>
 
+
+  <!-- =====================================================
+       RESULTADOS MOVIMIENTOS
+  ====================================================== -->
 
   <section
     id="movementResults"
@@ -1000,12 +1070,14 @@
       Sentadilla
     </h2>
 
+
     <div
       id="movementSummary"
       class="summary"
     >
       Aún no hay resultados.
     </div>
+
 
     <table>
 
@@ -1037,6 +1109,7 @@
 
       </thead>
 
+
       <tbody id="movementResultsBody">
       </tbody>
 
@@ -1044,6 +1117,10 @@
 
   </section>
 
+
+  <!-- =====================================================
+       RESULTADOS SALTOS
+  ====================================================== -->
 
   <section
     id="jumpResults"
@@ -1058,12 +1135,14 @@
       CMJ
     </h2>
 
+
     <div
       id="jumpSummary"
       class="summary"
     >
       Aún no hay resultados.
     </div>
+
 
     <table>
 
@@ -1103,6 +1182,7 @@
 
       </thead>
 
+
       <tbody id="jumpResultsBody">
       </tbody>
 
@@ -1110,7 +1190,262 @@
 
   </section>
 
+
+  <!-- =====================================================
+       FEEDBACK
+  ====================================================== -->
+
+  <section class="panel feedback-panel">
+
+    <details
+      id="feedbackDetails"
+      class="feedback-details"
+    >
+
+      <summary>
+
+        <div class="feedback-summary-icon">
+          💬
+        </div>
+
+
+        <div class="feedback-summary-copy">
+
+          <div class="section-eyebrow">
+            KINEMYX BETA
+          </div>
+
+          <strong>
+            Enviar feedback
+          </strong>
+
+          <small>
+            ¿Algo no funcionó bien o tienes una idea? Cuéntamela.
+          </small>
+
+        </div>
+
+
+        <div class="feedback-arrow">
+          →
+        </div>
+
+      </summary>
+
+
+      <div class="feedback-content">
+
+
+        <div class="feedback-intro">
+          Tu experiencia ayuda directamente al desarrollo de KINEMYX. El formulario tarda menos de un minuto.
+        </div>
+
+
+        <form id="feedbackForm">
+
+
+          <input
+            type="hidden"
+            name="_subject"
+            value="Nuevo feedback KINEMYX Beta"
+          />
+
+
+          <div class="feedback-grid">
+
+
+            <label>
+
+              Soy
+
+              <select
+                id="feedbackProfile"
+                required
+              >
+
+                <option value="Deportista">
+                  Deportista
+                </option>
+
+                <option value="Entrenador">
+                  Entrenador
+                </option>
+
+                <option value="Kinesiólogo">
+                  Kinesiólogo
+                </option>
+
+                <option value="Otro">
+                  Otro
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              Estoy probando
+
+              <input
+                id="feedbackExercise"
+                type="text"
+                value="Sentadilla"
+                readonly
+              />
+
+            </label>
+
+
+            <label>
+
+              Tipo de feedback
+
+              <select
+                id="feedbackType"
+                required
+              >
+
+                <option value="Error">
+                  Error
+                </option>
+
+                <option value="Medición incorrecta">
+                  Medición incorrecta
+                </option>
+
+                <option value="Usabilidad">
+                  Usabilidad
+                </option>
+
+                <option value="Sugerencia">
+                  Sugerencia
+                </option>
+
+                <option value="Otro">
+                  Otro
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              Experiencia general
+
+              <select
+                id="feedbackExperience"
+                required
+              >
+
+                <option value="5">
+                  5 · Muy buena
+                </option>
+
+                <option value="4">
+                  4 · Buena
+                </option>
+
+                <option value="3">
+                  3 · Regular
+                </option>
+
+                <option value="2">
+                  2 · Mejorable
+                </option>
+
+                <option value="1">
+                  1 · Mala
+                </option>
+
+              </select>
+
+            </label>
+
+
+          </div>
+
+
+          <label class="feedback-message-label">
+
+            ¿Qué pasó o qué mejorarías?
+
+            <textarea
+              id="feedbackMessage"
+              rows="4"
+              maxlength="1200"
+              placeholder="Ej: En CMJ no detectó el aterrizaje del segundo salto..."
+              required
+            ></textarea>
+
+          </label>
+
+
+          <label>
+
+            Nombre o contacto
+            <span class="optional">
+              (opcional)
+            </span>
+
+            <input
+              id="feedbackContact"
+              type="text"
+              maxlength="120"
+              placeholder="Nombre, Instagram o correo"
+            />
+
+          </label>
+
+
+          <div class="feedback-actions">
+
+            <button
+              id="feedbackSubmit"
+              type="submit"
+            >
+              Enviar feedback
+            </button>
+
+
+            <div
+              id="feedbackStatus"
+              class="feedback-status"
+              aria-live="polite"
+            >
+            </div>
+
+          </div>
+
+
+        </form>
+
+
+      </div>
+
+    </details>
+
+  </section>
+
+
+  <footer class="app-footer">
+
+    <strong>
+      KINEMYX Beta 0.5
+    </strong>
+
+    <span>
+      Versión en desarrollo · Las mediciones por cámara son estimaciones y pueden requerir validación.
+    </span>
+
+  </footer>
+
+
 </main>
+
 
 <script src="app.js"></script>
 
