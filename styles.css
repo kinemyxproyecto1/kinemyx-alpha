@@ -1,6 +1,6 @@
 /* =========================================================
-   KINEMYX UI 1.5
-   Movimientos + Saltos + Feedback
+   KINEMYX UI 1.6
+   Movimientos + Saltos + Feedback + Posicionamiento guiado
    ========================================================= */
 
 :root {
@@ -1062,19 +1062,23 @@ video {
 }
 
 
+/*
+  IMPORTANTE:
+  el tamaño visual del canvas se calcula
+  desde app.js para que coincida exactamente
+  con la imagen real del video.
+*/
+
 canvas {
 
   position:
     absolute;
 
-  inset:
+  left:
     0;
 
-  width:
-    100%;
-
-  height:
-    100%;
+  top:
+    0;
 
   pointer-events:
     none;
@@ -1088,13 +1092,13 @@ canvas {
     absolute;
 
   z-index:
-    10;
+    12;
 
   left:
     50%;
 
   bottom:
-    12px;
+    14px;
 
   transform:
     translateX(-50%);
@@ -1114,7 +1118,7 @@ canvas {
       140,
       89,
       10,
-      0.9
+      0.93
     );
 
   color:
@@ -1128,6 +1132,207 @@ canvas {
 
   text-align:
     center;
+
+  box-shadow:
+    0 8px 24px
+    rgba(
+      0,
+      0,
+      0,
+      0.2
+    );
+
+}
+
+
+/* =========================================================
+   POSITION GUIDE
+========================================================= */
+
+.position-guide {
+
+  position:
+    absolute;
+
+  z-index:
+    11;
+
+  left:
+    12px;
+
+  right:
+    12px;
+
+  top:
+    12px;
+
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  gap:
+    9px;
+
+  max-width:
+    460px;
+
+  padding:
+    10px
+    12px;
+
+  border:
+    1px solid
+    rgba(
+      237,
+      177,
+      64,
+      0.32
+    );
+
+  border-radius:
+    12px;
+
+  background:
+    rgba(
+      16,
+      20,
+      26,
+      0.86
+    );
+
+  backdrop-filter:
+    blur(10px);
+
+  -webkit-backdrop-filter:
+    blur(10px);
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 8px 28px
+    rgba(
+      0,
+      0,
+      0,
+      0.22
+    );
+
+}
+
+
+.position-guide-dot {
+
+  flex:
+    0 0 auto;
+
+  width:
+    9px;
+
+  height:
+    9px;
+
+  margin-top:
+    4px;
+
+  border-radius:
+    50%;
+
+  background:
+    #f0a624;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(
+      240,
+      166,
+      36,
+      0.13
+    );
+
+}
+
+
+.position-guide-copy {
+
+  min-width:
+    0;
+
+}
+
+
+.position-guide-copy strong {
+
+  display:
+    block;
+
+  margin-bottom:
+    2px;
+
+  color:
+    #ffffff;
+
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1.25;
+
+}
+
+
+.position-guide-copy span {
+
+  display:
+    block;
+
+  color:
+    #c6d0dc;
+
+  font-size:
+    9px;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.4;
+
+}
+
+
+.position-guide.ready-guide {
+
+  border-color:
+    rgba(
+      53,
+      191,
+      125,
+      0.28
+    );
+
+}
+
+
+.position-guide.ready-guide
+.position-guide-dot {
+
+  background:
+    #31bb78;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(
+      49,
+      187,
+      120,
+      0.13
+    );
 
 }
 
@@ -1987,7 +2192,7 @@ td {
 
 
 /* =========================================================
-   FEEDBACK PANEL
+   FEEDBACK
 ========================================================= */
 
 .feedback-panel {
@@ -2008,7 +2213,10 @@ td {
 
   grid-template-columns:
     42px
-    minmax(0, 1fr)
+    minmax(
+      0,
+      1fr
+    )
     28px;
 
   align-items:
@@ -2515,8 +2723,6 @@ td {
   }
 
 
-  /* CATEGORY */
-
   .category-tabs {
 
     display:
@@ -2586,8 +2792,6 @@ td {
 
   }
 
-
-  /* FLOW */
 
   .setup-panel {
 
@@ -2708,8 +2912,6 @@ td {
   }
 
 
-  /* CAMERA */
-
   .camera-section {
 
     grid-template-columns:
@@ -2741,7 +2943,59 @@ td {
   }
 
 
-  /* LIVE */
+  .position-guide {
+
+    left:
+      8px;
+
+    right:
+      8px;
+
+    top:
+      8px;
+
+    max-width:
+      none;
+
+    padding:
+      8px
+      9px;
+
+    border-radius:
+      10px;
+
+  }
+
+
+  .position-guide-copy strong {
+
+    font-size:
+      10px;
+
+  }
+
+
+  .position-guide-copy span {
+
+    font-size:
+      8px;
+
+  }
+
+
+  .warning {
+
+    bottom:
+      9px;
+
+    max-width:
+      88%;
+
+    font-size:
+      10px;
+
+  }
+
 
   .live-panel {
 
@@ -2815,8 +3069,6 @@ td {
   }
 
 
-  /* BUTTONS */
-
   .buttons {
 
     display:
@@ -2851,8 +3103,6 @@ td {
 
   }
 
-
-  /* CONFIG */
 
   .config-shell {
 
@@ -3029,8 +3279,6 @@ td {
 
   }
 
-
-  /* RESULTS */
 
   #movementResults,
   #jumpResults {
@@ -3296,8 +3544,6 @@ td {
 
   }
 
-
-  /* FEEDBACK */
 
   .feedback-panel {
 
