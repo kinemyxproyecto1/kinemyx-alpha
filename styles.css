@@ -1,63 +1,31 @@
 /* =========================================================
-   KINEMYX UI 1.3
-   Guided Flow + Compact Mobile + Collapsible Settings
+   KINEMYX UI 1.4
+   Movements + Jumps
    ========================================================= */
 
-
-/* =========================================================
-   VARIABLES
-========================================================= */
-
 :root {
-
   --bg-main: #f3f6fa;
-  --bg-soft: #eef3f8;
   --white: #ffffff;
-
   --dark-950: #070b10;
   --dark-900: #0b1118;
   --dark-850: #101822;
-  --dark-800: #17212d;
-
   --text-main: #101720;
   --text-secondary: #667589;
   --text-muted: #96a3b2;
-
   --blue: #1677ff;
   --blue-hover: #0868eb;
   --blue-soft: #eaf3ff;
   --blue-border: #cfe1ff;
-
   --green: #18a66a;
   --green-soft: #eaf8f1;
-
   --amber: #d99114;
   --amber-soft: #fff6e5;
-
-  --red: #d84c4c;
-
   --border: #dde5ed;
   --border-soft: #e9eef3;
-
-  --shadow-sm:
-    0 5px 16px rgba(21, 37, 56, 0.05);
-
-  --shadow-md:
-    0 12px 30px rgba(21, 37, 56, 0.08);
-
-  --shadow-lg:
-    0 20px 55px rgba(9, 22, 38, 0.12);
-
-  --radius-sm: 10px;
-  --radius-md: 15px;
+  --shadow-sm: 0 5px 16px rgba(21, 37, 56, 0.05);
+  --shadow-lg: 0 20px 55px rgba(9, 22, 38, 0.12);
   --radius-lg: 22px;
-
 }
-
-
-/* =========================================================
-   RESET
-========================================================= */
 
 * {
   box-sizing: border-box;
@@ -69,9 +37,7 @@ html {
 }
 
 body {
-
   margin: 0;
-
   min-height: 100vh;
 
   font-family:
@@ -99,7 +65,6 @@ body {
   color: var(--text-main);
 
   -webkit-font-smoothing: antialiased;
-
 }
 
 
@@ -108,9 +73,7 @@ body {
 ========================================================= */
 
 header {
-
   width: 92%;
-
   max-width: 1400px;
 
   margin: 0 auto;
@@ -119,12 +82,10 @@ header {
     28px
     0
     18px;
-
 }
 
 
 .brand {
-
   display: inline-flex;
 
   align-items: center;
@@ -143,7 +104,6 @@ header {
   letter-spacing: 2.5px;
 
   line-height: 1;
-
 }
 
 
@@ -153,7 +113,6 @@ header {
 
 
 .subtitle {
-
   margin-top: 8px;
 
   color: var(--text-secondary);
@@ -165,7 +124,6 @@ header {
   letter-spacing: 2.7px;
 
   text-transform: uppercase;
-
 }
 
 
@@ -174,7 +132,6 @@ header {
 ========================================================= */
 
 main {
-
   width: 92%;
 
   max-width: 1400px;
@@ -182,16 +139,14 @@ main {
   margin: 0 auto;
 
   padding-bottom: 70px;
-
 }
 
 
 /* =========================================================
-   PANELES
+   PANELS
 ========================================================= */
 
 .panel {
-
   position: relative;
 
   padding: 24px;
@@ -220,12 +175,10 @@ main {
 
   box-shadow:
     var(--shadow-sm);
-
 }
 
 
 .panel h2 {
-
   margin:
     0
     0
@@ -247,12 +200,10 @@ main {
     -0.7px;
 
   line-height: 1.15;
-
 }
 
 
 .panel h3 {
-
   margin:
     24px
     0
@@ -261,59 +212,51 @@ main {
   color:
     var(--text-secondary);
 
-  font-size: 12px;
+  font-size:
+    12px;
 
-  font-weight: 800;
+  font-weight:
+    800;
 
   letter-spacing:
     1.5px;
 
   text-transform:
     uppercase;
-
 }
 
 
 .section-eyebrow {
-
-  margin-bottom: 7px;
+  margin-bottom:
+    7px;
 
   color:
     var(--blue);
 
-  font-size: 9px;
+  font-size:
+    9px;
 
-  line-height: 1;
+  line-height:
+    1;
 
-  font-weight: 850;
+  font-weight:
+    850;
 
   letter-spacing:
     1.8px;
 
   text-transform:
     uppercase;
-
 }
 
 
 /* =========================================================
-   BOTONES
+   BUTTONS
 ========================================================= */
 
-.buttons {
-
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 9px;
-
-}
-
-
 button {
-
-  min-height: 43px;
+  min-height:
+    43px;
 
   padding:
     10px
@@ -323,7 +266,8 @@ button {
     1px solid
     transparent;
 
-  border-radius: 11px;
+  border-radius:
+    11px;
 
   background:
     var(--blue);
@@ -334,11 +278,14 @@ button {
   font-family:
     inherit;
 
-  font-size: 14px;
+  font-size:
+    14px;
 
-  font-weight: 750;
+  font-weight:
+    750;
 
-  cursor: pointer;
+  cursor:
+    pointer;
 
   box-shadow:
     0 6px 14px
@@ -354,28 +301,22 @@ button {
     border-color 0.15s ease,
     transform 0.15s ease,
     opacity 0.15s ease;
-
 }
 
 
 button:hover {
-
   background:
     var(--blue-hover);
-
 }
 
 
 button:active {
-
   transform:
     scale(0.99);
-
 }
 
 
 button.secondary {
-
   background:
     #f3f6f9;
 
@@ -387,531 +328,491 @@ button.secondary {
 
   box-shadow:
     none;
-
 }
 
 
 button.secondary:hover {
-
   background:
     #eaf0f5;
-
 }
 
 
 button:disabled {
+  opacity:
+    0.42;
 
-  opacity: 0.42;
+  cursor:
+    default;
 
-  cursor: default;
+  transform:
+    none;
 
-  transform: none;
-
-  box-shadow: none;
-
+  box-shadow:
+    none;
 }
 
 
 /* =========================================================
-   FLUJO GUIADO
+   BUTTON GROUPS
 ========================================================= */
 
-section.panel.setup-panel {
+.buttons,
+.category-tabs,
+.exercise-selector {
+  display:
+    flex;
 
-  padding: 22px !important;
+  flex-wrap:
+    wrap;
 
+  gap:
+    9px;
 }
 
 
+/* =========================================================
+   CATEGORY TABS
+========================================================= */
+
+.category-tabs {
+  padding:
+    5px;
+
+  margin-bottom:
+    14px;
+
+  background:
+    #f2f5f8;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    14px;
+}
+
+
+.category-tabs button {
+  flex:
+    1 1 180px;
+
+  box-shadow:
+    none;
+}
+
+
+/* =========================================================
+   EXERCISE SELECTOR
+========================================================= */
+
+.exercise-selector {
+  padding-top:
+    2px;
+}
+
+
+.exercise-selector button {
+  box-shadow:
+    none;
+}
+
+
+/* =========================================================
+   GUIDED FLOW
+========================================================= */
+
 .setup-header {
+  display:
+    flex;
 
-  display: flex !important;
+  align-items:
+    center;
 
-  align-items: center !important;
+  justify-content:
+    space-between;
 
-  justify-content: space-between !important;
+  gap:
+    16px;
 
-  gap: 16px !important;
-
-  margin-bottom: 17px !important;
-
+  margin-bottom:
+    17px;
 }
 
 
 .setup-header h2 {
-
-  margin: 0 !important;
-
+  margin:
+    0;
 }
 
 
 .setup-helper {
-
-  flex: 0 0 auto !important;
-
   padding:
     7px
-    10px !important;
+    10px;
 
   border-radius:
-    999px !important;
+    999px;
 
   background:
-    var(--blue-soft) !important;
+    var(--blue-soft);
 
   color:
-    var(--blue) !important;
+    var(--blue);
 
   font-size:
-    10px !important;
+    10px;
 
   font-weight:
-    750 !important;
+    750;
 
   white-space:
-    nowrap !important;
-
+    nowrap;
 }
 
 
 /* =========================================================
-   4 PASOS
+   FOUR STEPS
 ========================================================= */
 
 .setup-flow {
-
-  display: grid !important;
+  display:
+    grid;
 
   grid-template-columns:
     repeat(
       4,
-      minmax(0, 1fr)
-    ) !important;
+      minmax(
+        0,
+        1fr
+      )
+    );
 
-  gap: 8px !important;
-
-  width: 100% !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
-
+  gap:
+    8px;
 }
 
 
 .setup-step {
+  display:
+    flex;
 
-  display: flex !important;
+  flex-direction:
+    column;
 
-  flex-direction: column !important;
+  align-items:
+    center;
 
-  align-items: center !important;
+  justify-content:
+    center;
 
-  justify-content: center !important;
+  min-width:
+    0;
 
-  gap: 0 !important;
-
-  min-width: 0 !important;
-
-  min-height: 92px !important;
+  min-height:
+    88px;
 
   padding:
-    11px
-    7px !important;
-
-  margin: 0 !important;
+    10px
+    7px;
 
   border:
     1px solid
-    var(--border) !important;
+    var(--border);
 
   border-radius:
-    13px !important;
+    13px;
 
   background:
-    #f7f9fc !important;
+    #f7f9fc;
 
   text-align:
-    center !important;
+    center;
 
   overflow:
-    hidden !important;
-
+    hidden;
 }
 
 
-/* =========================================================
-   NÚMERO DEL PASO
-========================================================= */
+.step-number {
+  display:
+    flex;
 
-.setup-step .step-number {
+  align-items:
+    center;
 
-  display: flex !important;
+  justify-content:
+    center;
 
-  align-items: center !important;
+  width:
+    30px;
 
-  justify-content: center !important;
+  height:
+    30px;
 
-  flex:
-    0 0 auto !important;
-
-  width: 30px !important;
-
-  height: 30px !important;
-
-  min-width: 30px !important;
-
-  min-height: 30px !important;
-
-  margin:
-    0
-    0
-    8px
-    0 !important;
-
-  padding: 0 !important;
+  margin-bottom:
+    7px;
 
   border-radius:
-    50% !important;
+    50%;
 
   background:
-    #e6ebf1 !important;
+    #e6ebf1;
 
   color:
-    #738194 !important;
+    #738194;
 
   font-size:
-    12px !important;
-
-  line-height:
-    30px !important;
+    12px;
 
   font-weight:
-    850 !important;
-
-  text-align:
-    center !important;
-
+    850;
 }
 
 
-/* =========================================================
-   TEXTO PASO
-========================================================= */
+.step-copy {
+  width:
+    100%;
 
-.setup-step .step-copy {
-
-  display: block !important;
-
-  width: 100% !important;
-
-  min-width: 0 !important;
-
-  padding: 0 !important;
-
-  margin: 0 !important;
-
+  min-width:
+    0;
 }
 
 
-.setup-step .step-copy strong {
+.step-copy strong {
+  display:
+    block;
 
-  display: block !important;
-
-  width: 100% !important;
-
-  margin: 0 !important;
-
-  padding: 0 !important;
+  overflow:
+    hidden;
 
   color:
-    var(--dark-900) !important;
+    var(--dark-900);
 
   font-size:
-    11px !important;
-
-  line-height:
-    1.2 !important;
+    11px;
 
   font-weight:
-    800 !important;
+    800;
 
-  text-align:
-    center !important;
+  line-height:
+    1.2;
 
   white-space:
-    nowrap !important;
-
-  overflow:
-    hidden !important;
+    nowrap;
 
   text-overflow:
-    ellipsis !important;
-
+    ellipsis;
 }
 
 
-/*
-   No mostramos la frase larga dentro
-   de cada paso porque hace que el flujo
-   crezca demasiado.
-*/
-
-.setup-step .step-copy small {
-
+.step-copy small {
   display:
-    none !important;
-
+    none;
 }
 
 
-/*
-   El segundo número / check del HTML
-   queda oculto visualmente.
-*/
-
-.setup-step .step-status {
-
+.step-status {
   display:
-    none !important;
-
+    none;
 }
 
 
 /* =========================================================
-   PASO COMPLETADO
+   STEP STATES
 ========================================================= */
 
 .setup-step.done {
-
   background:
-    var(--green-soft) !important;
+    var(--green-soft);
 
   border-color:
-    #bee7d2 !important;
-
-  opacity:
-    1 !important;
-
+    #bee7d2;
 }
 
 
 .setup-step.done
 .step-number {
-
   background:
-    var(--green) !important;
+    var(--green);
 
   color:
-    white !important;
+    #ffffff;
 
   font-size:
-    0 !important;
-
+    0;
 }
 
 
 .setup-step.done
 .step-number::after {
-
-  content: "✓";
-
-  display: block;
-
-  color: white;
+  content:
+    "✓";
 
   font-size:
-    14px !important;
-
-  line-height:
-    30px;
+    14px;
 
   font-weight:
     900;
-
 }
 
 
-/* =========================================================
-   PASO ACTIVO
-========================================================= */
-
 .setup-step.active {
-
   background:
-    var(--blue-soft) !important;
+    var(--blue-soft);
 
   border-color:
-    var(--blue-border) !important;
-
-  opacity:
-    1 !important;
-
+    var(--blue-border);
 }
 
 
 .setup-step.active
 .step-number {
-
   background:
-    var(--blue) !important;
+    var(--blue);
 
   color:
-    white !important;
-
+    #ffffff;
 }
 
-
-/* =========================================================
-   PASO PENDIENTE
-========================================================= */
 
 .setup-step.pending {
-
-  background:
-    #f7f9fc !important;
-
-  border-color:
-    #e1e7ee !important;
-
   opacity:
-    0.6 !important;
-
+    0.58;
 }
 
 
-/* =========================================================
-   PASO WARNING
-========================================================= */
-
 .setup-step.warning-step {
-
   background:
-    var(--amber-soft) !important;
+    var(--amber-soft);
 
   border-color:
-    #efd69d !important;
+    #efd69d;
 
   opacity:
-    1 !important;
-
+    1;
 }
 
 
 .setup-step.warning-step
 .step-number {
-
   background:
-    var(--amber) !important;
+    var(--amber);
 
   color:
-    white !important;
-
+    #ffffff;
 }
 
 
 /* =========================================================
-   CONSEJO POSICIÓN
+   POSITION TIP
 ========================================================= */
 
 .position-tip {
-
-  display: flex !important;
+  display:
+    flex;
 
   align-items:
-    flex-start !important;
+    flex-start;
 
-  gap: 8px !important;
-
-  width: 100% !important;
+  gap:
+    8px;
 
   margin-top:
-    13px !important;
+    12px;
 
   padding:
     10px
-    12px !important;
+    12px;
 
   border-radius:
-    10px !important;
+    10px;
 
   background:
-    #f4f7fb !important;
+    #f4f7fb;
 
   color:
-    var(--text-secondary) !important;
+    var(--text-secondary);
 
   font-size:
-    10px !important;
+    10px;
 
   line-height:
-    1.4 !important;
+    1.4;
 
   font-weight:
-    600 !important;
-
+    600;
 }
 
 
-.position-tip .tip-icon {
-
+.tip-icon {
   display:
-    flex !important;
+    flex;
 
   align-items:
-    center !important;
+    center;
 
   justify-content:
-    center !important;
+    center;
 
   flex:
-    0 0 auto !important;
+    0 0 auto;
 
   width:
-    20px !important;
+    20px;
 
   height:
-    20px !important;
+    20px;
 
   border-radius:
-    50% !important;
+    50%;
 
   background:
-    var(--blue-soft) !important;
+    var(--blue-soft);
 
   color:
-    var(--blue) !important;
+    var(--blue);
 
   font-size:
-    11px !important;
+    11px;
 
   font-weight:
-    850 !important;
-
+    850;
 }
 
 
 /* =========================================================
-   CÁMARA
+   CAMERA + LIVE
 ========================================================= */
 
 .camera-section {
+  position:
+    relative;
 
-  position: relative;
-
-  display: grid;
+  display:
+    grid;
 
   grid-template-columns:
-    minmax(0, 3fr)
-    minmax(225px, 0.9fr);
+    minmax(
+      0,
+      3fr
+    )
+    minmax(
+      225px,
+      0.9fr
+    );
 
-  gap: 13px;
+  gap:
+    13px;
 
-  padding: 13px;
+  padding:
+    13px;
 
-  margin-bottom: 16px;
+  margin-bottom:
+    16px;
 
-  border-radius: 24px;
+  border-radius:
+    24px;
 
   background:
     linear-gradient(
@@ -923,60 +824,65 @@ section.panel.setup-panel {
   box-shadow:
     var(--shadow-lg);
 
-  overflow: hidden;
-
+  overflow:
+    hidden;
 }
 
 
 .camera-wrapper {
+  position:
+    relative;
 
-  position: relative;
-
-  width: 100%;
+  width:
+    100%;
 
   aspect-ratio:
     16 / 9;
 
-  overflow: hidden;
+  overflow:
+    hidden;
 
   border-radius:
     16px;
 
   background:
     #030609;
-
 }
 
 
 video {
+  display:
+    block;
 
-  display: block;
+  width:
+    100%;
 
-  width: 100%;
-
-  height: 100%;
+  height:
+    100%;
 
   object-fit:
     contain;
 
   background:
     #030609;
-
 }
 
 
 canvas {
+  position:
+    absolute;
 
-  position: absolute;
+  inset:
+    0;
 
-  inset: 0;
+  width:
+    100%;
 
-  width: 100%;
+  height:
+    100%;
 
-  height: 100%;
-
-  pointer-events: none;
-
+  pointer-events:
+    none;
 }
 
 
@@ -985,25 +891,30 @@ canvas {
 ========================================================= */
 
 .warning {
+  position:
+    absolute;
 
-  position: absolute;
+  z-index:
+    10;
 
-  z-index: 10;
+  left:
+    50%;
 
-  left: 50%;
-
-  bottom: 12px;
+  bottom:
+    12px;
 
   transform:
     translateX(-50%);
 
-  max-width: 82%;
+  max-width:
+    82%;
 
   padding:
     8px
     12px;
 
-  border-radius: 9px;
+  border-radius:
+    9px;
 
   background:
     rgba(
@@ -1014,7 +925,7 @@ canvas {
     );
 
   color:
-    white;
+    #ffffff;
 
   font-size:
     11px;
@@ -1022,6 +933,8 @@ canvas {
   font-weight:
     750;
 
+  text-align:
+    center;
 }
 
 
@@ -1030,27 +943,32 @@ canvas {
 ========================================================= */
 
 .live-panel {
+  display:
+    flex;
 
-  display: flex;
+  flex-direction:
+    column;
 
-  flex-direction: column;
+  gap:
+    7px;
 
-  gap: 7px;
-
-  color: white;
-
+  color:
+    #ffffff;
 }
 
 
 .live-label {
+  display:
+    flex;
 
-  display: flex;
+  align-items:
+    center;
 
-  align-items: center;
+  gap:
+    8px;
 
-  gap: 8px;
-
-  min-height: 24px;
+  min-height:
+    24px;
 
   color:
     #58a4ff;
@@ -1066,43 +984,43 @@ canvas {
 
   text-transform:
     uppercase;
-
 }
 
 
 .live-label::before {
+  content:
+    "";
 
-  content: "";
+  width:
+    7px;
 
-  width: 7px;
-
-  height: 7px;
-
-  flex:
-    0 0 auto;
+  height:
+    7px;
 
   border-radius:
     50%;
 
   background:
     var(--blue);
-
 }
 
 
 /* =========================================================
-   MÉTRICAS
+   METRICS
 ========================================================= */
 
 .metric {
+  display:
+    flex;
 
-  display: flex;
+  flex-direction:
+    column;
 
-  flex-direction: column;
+  justify-content:
+    center;
 
-  justify-content: center;
-
-  min-height: 66px;
+  min-height:
+    64px;
 
   padding:
     9px
@@ -1127,15 +1045,15 @@ canvas {
       255,
       0.047
     );
-
 }
 
 
 .metric small {
+  display:
+    block;
 
-  display: block;
-
-  margin-bottom: 4px;
+  margin-bottom:
+    4px;
 
   color:
     #8899ad;
@@ -1147,29 +1065,28 @@ canvas {
     800;
 
   letter-spacing:
-    1.3px;
+    1.2px;
 
   text-transform:
     uppercase;
-
 }
 
 
 .metric strong {
+  display:
+    block;
 
-  display: block;
-
-  color: white;
+  color:
+    #ffffff;
 
   font-size:
-    20px;
+    19px;
 
   line-height:
     1.05;
 
   font-weight:
     800;
-
 }
 
 
@@ -1178,7 +1095,6 @@ canvas {
 ========================================================= */
 
 .status {
-
   padding:
     9px
     11px;
@@ -1214,36 +1130,31 @@ canvas {
 
   font-weight:
     600;
-
 }
 
 
 /* =========================================================
-   CONFIGURACIÓN PLEGABLE
+   COLLAPSIBLE CONFIG
 ========================================================= */
 
 .config-shell {
-
   padding:
-    0 !important;
+    0;
 
   overflow:
     hidden;
-
 }
 
 
 .config-details {
-
   width:
     100%;
-
 }
 
 
 .config-details summary {
-
-  display: flex;
+  display:
+    flex;
 
   align-items:
     center;
@@ -1251,7 +1162,8 @@ canvas {
   justify-content:
     space-between;
 
-  gap: 18px;
+  gap:
+    18px;
 
   padding:
     20px
@@ -1265,36 +1177,22 @@ canvas {
 
   user-select:
     none;
-
 }
 
 
 .config-details summary::-webkit-details-marker {
-
   display:
     none;
-
-}
-
-
-.config-details summary::marker {
-
-  display:
-    none;
-
 }
 
 
 .config-summary-copy {
-
   min-width:
     0;
-
 }
 
 
 .config-summary-copy strong {
-
   display:
     block;
 
@@ -1306,12 +1204,10 @@ canvas {
 
   font-weight:
     800;
-
 }
 
 
 .config-summary-copy small {
-
   display:
     block;
 
@@ -1326,12 +1222,10 @@ canvas {
 
   line-height:
     1.4;
-
 }
 
 
 .config-toggle {
-
   display:
     flex;
 
@@ -1352,56 +1246,44 @@ canvas {
 
   font-weight:
     800;
-
 }
 
 
 .config-hide {
-
   display:
     none;
-
 }
 
 
 .config-details[open]
 .config-show {
-
   display:
     none;
-
 }
 
 
 .config-details[open]
 .config-hide {
-
   display:
     inline;
-
 }
 
 
 .config-chevron {
-
   transition:
     transform
     0.2s ease;
-
 }
 
 
 .config-details[open]
 .config-chevron {
-
   transform:
     rotate(180deg);
-
 }
 
 
 .config-content {
-
   padding:
     2px
     22px
@@ -1410,7 +1292,6 @@ canvas {
   border-top:
     1px solid
     var(--border-soft);
-
 }
 
 
@@ -1419,8 +1300,8 @@ canvas {
 ========================================================= */
 
 .settings-grid {
-
-  display: grid;
+  display:
+    grid;
 
   grid-template-columns:
     repeat(
@@ -1431,14 +1312,14 @@ canvas {
       )
     );
 
-  gap: 14px;
-
+  gap:
+    14px;
 }
 
 
 label {
-
-  display: block;
+  display:
+    block;
 
   color:
     var(--text-secondary);
@@ -1451,13 +1332,27 @@ label {
 
   font-weight:
     650;
+}
 
+
+.label-title {
+  color:
+    inherit;
+
+  font-size:
+    inherit;
+
+  font-weight:
+    inherit;
+
+  margin:
+    0;
 }
 
 
 label span {
-
-  display: block;
+  display:
+    block;
 
   margin-top:
     5px;
@@ -1467,14 +1362,13 @@ label span {
 
   font-size:
     10px;
-
 }
 
 
 input,
 select {
-
-  width: 100%;
+  width:
+    100%;
 
   min-height:
     44px;
@@ -1510,13 +1404,11 @@ select {
 
   outline:
     none;
-
 }
 
 
 input:focus,
 select:focus {
-
   border-color:
     var(--blue);
 
@@ -1528,7 +1420,6 @@ select:focus {
       255,
       0.1
     );
-
 }
 
 
@@ -1537,7 +1428,6 @@ select:focus {
 ========================================================= */
 
 .checks {
-
   display:
     flex;
 
@@ -1546,12 +1436,10 @@ select:focus {
 
   gap:
     8px;
-
 }
 
 
 .checks label {
-
   display:
     inline-flex;
 
@@ -1586,12 +1474,25 @@ select:focus {
 
   font-weight:
     700;
+}
 
+
+.checks label span {
+  display:
+    inline;
+
+  margin:
+    0;
+
+  color:
+    inherit;
+
+  font-size:
+    inherit;
 }
 
 
 .checks input {
-
   width:
     16px;
 
@@ -1609,12 +1510,14 @@ select:focus {
 
   accent-color:
     var(--blue);
-
 }
 
 
-.config-note {
+/* =========================================================
+   CONFIG NOTES
+========================================================= */
 
+.config-note {
   margin-top:
     19px;
 
@@ -1636,24 +1539,29 @@ select:focus {
 
   line-height:
     1.5;
+}
 
+
+.muted-note {
+  margin-top:
+    8px;
+
+  opacity:
+    0.88;
 }
 
 
 /* =========================================================
-   RESULTADOS
+   RESULTS
 ========================================================= */
 
 .results {
-
   overflow:
     hidden;
-
 }
 
 
 .summary {
-
   padding:
     14px
     16px;
@@ -1683,43 +1591,35 @@ select:focus {
 
   line-height:
     1.7;
-
 }
 
 
 .summary strong {
-
   color:
     var(--dark-900);
-
 }
 
 
 /* =========================================================
-   TABLA DESKTOP
+   TABLE DESKTOP
 ========================================================= */
 
 table {
-
   width:
     100%;
 
   border-collapse:
     collapse;
-
 }
 
 
 thead {
-
   background:
     #f7f9fc;
-
 }
 
 
 th {
-
   padding:
     11px
     12px;
@@ -1745,12 +1645,10 @@ th {
 
   text-transform:
     uppercase;
-
 }
 
 
 td {
-
   padding:
     12px;
 
@@ -1769,41 +1667,34 @@ td {
 
   text-align:
     center;
-
 }
 
 
 .pass {
-
   color:
     var(--green);
 
   font-weight:
     850;
-
 }
 
 
 .fail {
-
   color:
     var(--amber);
 
   font-weight:
     850;
-
 }
 
 
 /* =========================================================
-   UTILIDADES
+   UTILITIES
 ========================================================= */
 
 .hidden {
-
   display:
     none !important;
-
 }
 
 
@@ -1815,15 +1706,12 @@ td {
 (max-width: 1000px) {
 
   .camera-section {
-
     grid-template-columns:
       1fr;
-
   }
 
 
   .live-panel {
-
     display:
       grid;
 
@@ -1835,41 +1723,27 @@ td {
           1fr
         )
       );
-
   }
 
 
   .live-label,
   .status {
-
     grid-column:
       1 / -1;
-
   }
 
 }
 
 
 /* =========================================================
-   MÓVIL
+   MOBILE
 ========================================================= */
 
 @media
 (max-width: 700px) {
 
 
-  body {
-
-    background:
-      #f3f6fa;
-
-  }
-
-
-  /* HEADER */
-
   header {
-
     width:
       calc(
         100% - 28px
@@ -1879,23 +1753,19 @@ td {
       22px
       0
       14px;
-
   }
 
 
   .brand {
-
     font-size:
       28px;
 
     letter-spacing:
       2px;
-
   }
 
 
   .subtitle {
-
     margin-top:
       7px;
 
@@ -1904,14 +1774,10 @@ td {
 
     letter-spacing:
       2.3px;
-
   }
 
 
-  /* MAIN */
-
   main {
-
     width:
       calc(
         100% - 20px
@@ -1919,14 +1785,10 @@ td {
 
     padding-bottom:
       45px;
-
   }
 
 
-  /* PANEL */
-
   .panel {
-
     padding:
       17px
       16px;
@@ -1936,23 +1798,19 @@ td {
 
     border-radius:
       17px;
-
   }
 
 
   .panel h2 {
-
     margin-bottom:
       14px;
 
     font-size:
       19px;
-
   }
 
 
   .panel h3 {
-
     margin:
       19px
       0
@@ -1960,253 +1818,14 @@ td {
 
     font-size:
       10px;
-
   }
 
 
   /* =====================================================
-     FLUJO MÓVIL CORREGIDO
+     CATEGORY TABS MOBILE
   ===================================================== */
 
-  section.panel.setup-panel {
-
-    padding:
-      16px !important;
-
-  }
-
-
-  .setup-header {
-
-    display:
-      block !important;
-
-    margin-bottom:
-      13px !important;
-
-  }
-
-
-  .setup-header h2 {
-
-    margin:
-      0 !important;
-
-    font-size:
-      18px !important;
-
-  }
-
-
-  .setup-helper {
-
-    display:
-      none !important;
-
-  }
-
-
-  .setup-flow {
-
-    display:
-      grid !important;
-
-    grid-template-columns:
-      repeat(
-        4,
-        minmax(
-          0,
-          1fr
-        )
-      ) !important;
-
-    gap:
-      5px !important;
-
-  }
-
-
-  .setup-step {
-
-    display:
-      flex !important;
-
-    flex-direction:
-      column !important;
-
-    align-items:
-      center !important;
-
-    justify-content:
-      center !important;
-
-    min-width:
-      0 !important;
-
-    min-height:
-      72px !important;
-
-    padding:
-      8px
-      3px !important;
-
-    border-radius:
-      10px !important;
-
-    text-align:
-      center !important;
-
-  }
-
-
-  .setup-step .step-number {
-
-    display:
-      flex !important;
-
-    align-items:
-      center !important;
-
-    justify-content:
-      center !important;
-
-    width:
-      27px !important;
-
-    height:
-      27px !important;
-
-    min-width:
-      27px !important;
-
-    min-height:
-      27px !important;
-
-    margin:
-      0
-      0
-      6px
-      0 !important;
-
-    padding:
-      0 !important;
-
-    font-size:
-      11px !important;
-
-    line-height:
-      27px !important;
-
-  }
-
-
-  .setup-step.done
-  .step-number {
-
-    font-size:
-      0 !important;
-
-  }
-
-
-  .setup-step.done
-  .step-number::after {
-
-    font-size:
-      12px !important;
-
-    line-height:
-      27px !important;
-
-  }
-
-
-  .setup-step .step-copy {
-
-    display:
-      block !important;
-
-    width:
-      100% !important;
-
-  }
-
-
-  .setup-step .step-copy strong {
-
-    display:
-      block !important;
-
-    width:
-      100% !important;
-
-    margin:
-      0 !important;
-
-    padding:
-      0 !important;
-
-    font-size:
-      8px !important;
-
-    line-height:
-      1.1 !important;
-
-    font-weight:
-      800 !important;
-
-    text-align:
-      center !important;
-
-    white-space:
-      nowrap !important;
-
-    overflow:
-      hidden !important;
-
-    text-overflow:
-      ellipsis !important;
-
-  }
-
-
-  .setup-step .step-copy small {
-
-    display:
-      none !important;
-
-  }
-
-
-  .setup-step .step-status {
-
-    display:
-      none !important;
-
-  }
-
-
-  .position-tip {
-
-    margin-top:
-      9px !important;
-
-    padding:
-      8px
-      9px !important;
-
-    font-size:
-      9px !important;
-
-  }
-
-
-  /* =====================================================
-     BOTONES
-  ===================================================== */
-
-  .buttons {
-
+  .category-tabs {
     display:
       grid;
 
@@ -2215,37 +1834,171 @@ td {
       1fr;
 
     gap:
-      8px;
+      6px;
 
-    width:
-      100%;
-
+    padding:
+      4px;
   }
 
 
-  button {
-
+  .category-tabs button {
     width:
       100%;
 
     min-height:
-      43px;
-
-    padding:
-      8px;
-
-    font-size:
-      12px;
-
+      42px;
   }
 
 
   /* =====================================================
-     CÁMARA
+     EXERCISES MOBILE
+  ===================================================== */
+
+  .exercise-selector {
+    display:
+      grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      6px;
+  }
+
+
+  .exercise-selector button {
+    width:
+      100%;
+
+    min-height:
+      42px;
+
+    padding:
+      7px
+      5px;
+
+    font-size:
+      10px;
+
+    line-height:
+      1.15;
+  }
+
+
+  /* =====================================================
+     GUIDED FLOW MOBILE
+  ===================================================== */
+
+  .setup-panel {
+    padding:
+      16px !important;
+  }
+
+
+  .setup-header {
+    display:
+      block;
+
+    margin-bottom:
+      13px;
+  }
+
+
+  .setup-header h2 {
+    font-size:
+      18px;
+  }
+
+
+  .setup-helper {
+    display:
+      none;
+  }
+
+
+  .setup-flow {
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      5px;
+  }
+
+
+  .setup-step {
+    min-height:
+      70px;
+
+    padding:
+      8px
+      3px;
+
+    border-radius:
+      10px;
+  }
+
+
+  .step-number {
+    width:
+      27px;
+
+    height:
+      27px;
+
+    margin-bottom:
+      6px;
+
+    font-size:
+      11px;
+  }
+
+
+  .setup-step.done
+  .step-number::after {
+    font-size:
+      12px;
+  }
+
+
+  .step-copy strong {
+    font-size:
+      8px;
+
+    line-height:
+      1.1;
+  }
+
+
+  .position-tip {
+    margin-top:
+      9px;
+
+    padding:
+      8px
+      9px;
+
+    font-size:
+      9px;
+  }
+
+
+  /* =====================================================
+     CAMERA MOBILE
   ===================================================== */
 
   .camera-section {
-
     grid-template-columns:
       1fr;
 
@@ -2260,47 +2013,23 @@ td {
 
     border-radius:
       18px;
-
   }
 
 
   .camera-wrapper {
-
-    width:
-      100%;
-
     aspect-ratio:
       16 / 9;
 
-    min-height:
-      0;
-
     border-radius:
       13px;
-
-  }
-
-
-  video {
-
-    width:
-      100%;
-
-    height:
-      100%;
-
-    min-height:
-      0;
-
   }
 
 
   /* =====================================================
-     LIVE PANEL
+     LIVE MOBILE
   ===================================================== */
 
   .live-panel {
-
     display:
       grid;
 
@@ -2310,28 +2039,21 @@ td {
 
     gap:
       6px;
-
   }
 
 
   .live-label {
-
     grid-column:
       1 / -1;
 
-    min-height:
-      22px;
-
     font-size:
       8px;
-
   }
 
 
   .metric {
-
     min-height:
-      62px;
+      61px;
 
     padding:
       8px
@@ -2339,31 +2061,22 @@ td {
 
     border-radius:
       10px;
-
   }
 
 
   .metric small {
-
-    margin-bottom:
-      4px;
-
     font-size:
       7px;
-
   }
 
 
   .metric strong {
-
     font-size:
-      17px;
-
+      16px;
   }
 
 
   .status {
-
     grid-column:
       1 / -1;
 
@@ -2373,59 +2086,82 @@ td {
 
     font-size:
       9px;
-
   }
 
 
   /* =====================================================
-     CONFIG PLEGABLE
+     CONTROL BUTTONS MOBILE
+  ===================================================== */
+
+  .buttons {
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr
+      1fr;
+
+    gap:
+      8px;
+
+    width:
+      100%;
+  }
+
+
+  button {
+    width:
+      100%;
+
+    min-height:
+      43px;
+
+    padding:
+      8px;
+
+    font-size:
+      12px;
+  }
+
+
+  /* =====================================================
+     COLLAPSIBLE SETTINGS MOBILE
   ===================================================== */
 
   .config-shell {
-
     padding:
       0 !important;
-
   }
 
 
   .config-details summary {
-
     align-items:
       center;
 
     padding:
       16px;
-
   }
 
 
   .config-summary-copy strong {
-
     font-size:
       16px;
-
   }
 
 
   .config-summary-copy small {
-
     font-size:
       9px;
-
   }
 
 
   .config-toggle {
-
     font-size:
       0;
-
   }
 
 
   .config-chevron {
-
     display:
       grid;
 
@@ -2449,26 +2185,22 @@ td {
 
     font-size:
       14px;
-
   }
 
 
   .config-content {
-
     padding:
       1px
       16px
       17px;
-
   }
 
 
   /* =====================================================
-     CONFIGURACIÓN
+     SETTINGS MOBILE
   ===================================================== */
 
   .settings-grid {
-
     grid-template-columns:
       1fr
       1fr;
@@ -2476,32 +2208,26 @@ td {
     gap:
       10px
       9px;
-
   }
 
 
   label {
-
     font-size:
       10px;
-
   }
 
 
   label span {
-
     margin-top:
       4px;
 
     font-size:
       9px;
-
   }
 
 
   input,
   select {
-
     min-height:
       42px;
 
@@ -2514,12 +2240,10 @@ td {
 
     font-size:
       15px;
-
   }
 
 
   .checks {
-
     display:
       grid;
 
@@ -2529,12 +2253,10 @@ td {
 
     gap:
       7px;
-
   }
 
 
   .checks label {
-
     width:
       100%;
 
@@ -2547,26 +2269,22 @@ td {
 
     font-size:
       10px;
-
   }
 
 
   /* =====================================================
-     RESULTADOS EN VERTICAL
+     VERTICAL RESULTS MOBILE
   ===================================================== */
 
-  #results,
-  #cmjResults {
-
+  #movementResults,
+  #jumpResults {
     overflow:
       visible;
-
   }
 
 
-  #results table,
-  #cmjResults table {
-
+  #movementResults table,
+  #jumpResults table {
     display:
       block;
 
@@ -2578,22 +2296,18 @@ td {
 
     white-space:
       normal;
-
   }
 
 
-  #results thead,
-  #cmjResults thead {
-
+  #movementResults thead,
+  #jumpResults thead {
     display:
       none;
-
   }
 
 
-  #results tbody,
-  #cmjResults tbody {
-
+  #movementResults tbody,
+  #jumpResults tbody {
     display:
       grid;
 
@@ -2602,13 +2316,11 @@ td {
 
     gap:
       9px;
-
   }
 
 
-  #results tbody tr,
-  #cmjResults tbody tr {
-
+  #movementResults tbody tr,
+  #jumpResults tbody tr {
     display:
       block;
 
@@ -2628,13 +2340,11 @@ td {
 
     background:
       #f8fafc;
-
   }
 
 
-  #results tbody td,
-  #cmjResults tbody td {
-
+  #movementResults tbody td,
+  #jumpResults tbody td {
     display:
       flex;
 
@@ -2663,22 +2373,18 @@ td {
 
     text-align:
       right;
-
   }
 
 
-  #results tbody td:last-child,
-  #cmjResults tbody td:last-child {
-
+  #movementResults tbody td:last-child,
+  #jumpResults tbody td:last-child {
     border-bottom:
       none;
-
   }
 
 
-  #results tbody td::before,
-  #cmjResults tbody td::before {
-
+  #movementResults tbody td::before,
+  #jumpResults tbody td::before {
     margin-right:
       14px;
 
@@ -2696,140 +2402,160 @@ td {
 
     text-transform:
       uppercase;
-
   }
 
 
-  /* SENTADILLA */
+  /* =====================================================
+     MOVEMENT RESULT LABELS
+  ===================================================== */
 
-  #results tbody td:nth-child(1)::before {
-    content: "Repetición";
-  }
-
-  #results tbody td:nth-child(2)::before {
-    content: "Flexión rodilla";
-  }
-
-  #results tbody td:nth-child(3)::before {
-    content: "Excéntrica";
-  }
-
-  #results tbody td:nth-child(4)::before {
-    content: "Concéntrica";
-  }
-
-  #results tbody td:nth-child(5)::before {
-    content: "Estado";
+  #movementResults tbody td:nth-child(1)::before {
+    content:
+      "Repetición";
   }
 
 
-  /* CMJ */
-
-  #cmjResults tbody td:nth-child(1)::before {
-    content: "Salto";
+  #movementResults tbody td:nth-child(2)::before {
+    content:
+      "Ángulo";
   }
 
-  #cmjResults tbody td:nth-child(2)::before {
-    content: "Altura estimada";
+
+  #movementResults tbody td:nth-child(3)::before {
+    content:
+      "Excéntrica";
   }
 
-  #cmjResults tbody td:nth-child(3)::before {
-    content: "Tiempo de vuelo";
+
+  #movementResults tbody td:nth-child(4)::before {
+    content:
+      "Concéntrica";
   }
 
-  #cmjResults tbody td:nth-child(4)::before {
-    content: "Rodilla fondo";
+
+  #movementResults tbody td:nth-child(5)::before {
+    content:
+      "Estado";
   }
 
-  #cmjResults tbody td:nth-child(5)::before {
-    content: "Descenso";
+
+  /* =====================================================
+     JUMP RESULT LABELS
+  ===================================================== */
+
+  #jumpResults tbody td:nth-child(1)::before {
+    content:
+      "Intento";
   }
 
-  #cmjResults tbody td:nth-child(6)::before {
-    content: "Aterrizaje";
+
+  #jumpResults tbody td:nth-child(2)::before {
+    content:
+      "Altura estimada";
   }
 
-  #cmjResults tbody td:nth-child(7)::before {
-    content: "Estado";
+
+  #jumpResults tbody td:nth-child(3)::before {
+    content:
+      "Tiempo de vuelo";
+  }
+
+
+  #jumpResults tbody td:nth-child(4)::before {
+    content:
+      "Flexión rodilla";
+  }
+
+
+  #jumpResults tbody td:nth-child(5)::before {
+    content:
+      "Protocolo";
+  }
+
+
+  #jumpResults tbody td:nth-child(6)::before {
+    content:
+      "Aterrizaje";
+  }
+
+
+  #jumpResults tbody td:nth-child(7)::before {
+    content:
+      "Estado";
   }
 
 }
 
 
 /* =========================================================
-   TELÉFONOS MUY PEQUEÑOS
+   VERY SMALL MOBILE
 ========================================================= */
 
 @media
 (max-width: 370px) {
 
   .brand {
-    font-size: 25px;
+    font-size:
+      25px;
+  }
+
+
+  .exercise-selector button {
+    font-size:
+      9px;
   }
 
 
   .setup-flow {
-
     gap:
-      4px !important;
-
+      4px;
   }
 
 
   .setup-step {
-
     min-height:
-      68px !important;
+      66px;
 
     padding:
       7px
-      2px !important;
-
+      2px;
   }
 
 
-  .setup-step .step-copy strong {
-
+  .step-copy strong {
     font-size:
-      7px !important;
-
+      7px;
   }
 
 
   .settings-grid {
-
     grid-template-columns:
       1fr
       1fr;
-
   }
 
 
   .checks {
-
     grid-template-columns:
       1fr;
-
   }
 
 }
 
 
 /* =========================================================
-   REDUCIR ANIMACIONES
+   REDUCED MOTION
 ========================================================= */
 
 @media
 (prefers-reduced-motion: reduce) {
 
   * {
-
     transition:
       none !important;
 
     scroll-behavior:
       auto !important;
-
   }
 
 }
