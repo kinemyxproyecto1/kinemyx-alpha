@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
   <meta charset="UTF-8" />
 
   <meta
@@ -24,21 +26,23 @@
 
   <link
     rel="stylesheet"
-    href="styles.css"
+    href="styles.css?v=0.7.1"
   />
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+
 </head>
+
 
 <body>
 
 
-<!-- =====================================================
+<!-- ======================================================
      ACCESO PRIVADO
-====================================================== -->
+======================================================= -->
 
 <div
   id="accessGate"
@@ -61,7 +65,7 @@
 
 
     <div class="access-beta-badge">
-      BETA 0.7 · ACCESO PRIVADO
+      BETA 0.7.1 · ACCESO PRIVADO
     </div>
 
 
@@ -147,10 +151,9 @@
 </div>
 
 
-
-<!-- =====================================================
-     APP
-====================================================== -->
+<!-- ======================================================
+     APLICACIÓN
+======================================================= -->
 
 <div
   id="appRoot"
@@ -189,7 +192,7 @@
 
 
       <div class="beta-badge">
-        BETA 0.7
+        BETA 0.7.1
       </div>
 
 
@@ -1274,22 +1277,29 @@
 
         <tr>
 
-          <th>Rep</th>
+          <th>
+            Rep
+          </th>
 
           <th id="movementAngleHeader">
             Flexión rodilla
           </th>
 
-          <th>Exc.</th>
+          <th>
+            Exc.
+          </th>
 
-          <th>Con.</th>
+          <th>
+            Con.
+          </th>
 
-          <th>Estado</th>
+          <th>
+            Estado
+          </th>
 
         </tr>
 
       </thead>
-
 
       <tbody id="movementResultsBody"></tbody>
 
@@ -1331,22 +1341,37 @@
 
         <tr>
 
-          <th>Salto</th>
-          <th>Altura est.</th>
-          <th>Vuelo</th>
-          <th>Rodilla</th>
+          <th>
+            Salto
+          </th>
+
+          <th>
+            Altura est.
+          </th>
+
+          <th>
+            Vuelo
+          </th>
+
+          <th>
+            Rodilla
+          </th>
 
           <th id="jumpProtocolHeader">
             Descenso
           </th>
 
-          <th>Aterrizaje</th>
-          <th>Estado</th>
+          <th>
+            Aterrizaje
+          </th>
+
+          <th>
+            Estado
+          </th>
 
         </tr>
 
       </thead>
-
 
       <tbody id="jumpResultsBody"></tbody>
 
@@ -1538,7 +1563,7 @@
               id="feedbackMessage"
               rows="4"
               maxlength="1200"
-              placeholder="Ej: En CMJ no detectó el aterrizaje del segundo salto..."
+              placeholder="Ej: En peso muerto el tiempo excéntrico no coincidió con el tiempo real..."
               required
             ></textarea>
 
@@ -1548,6 +1573,7 @@
           <label>
 
             Contacto
+
             <span class="optional">
               (opcional)
             </span>
@@ -1593,7 +1619,7 @@
   <footer class="app-footer">
 
     <strong>
-      KINEMYX Beta 0.7
+      KINEMYX Beta 0.7.1
     </strong>
 
     <span>
@@ -1602,12 +1628,15 @@
 
   </footer>
 
+
 </main>
 
 </div>
 
 
-<script src="app.js"></script>
+<script src="app.js?v=0.7.1"></script>
+
 
 </body>
+
 </html>
