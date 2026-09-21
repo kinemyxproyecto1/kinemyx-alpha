@@ -17,7 +17,7 @@
 
   <meta
     name="description"
-    content="KINEMYX Beta - análisis de movimiento y evaluación de saltos desde tu teléfono."
+    content="KINEMYX Beta - Human Movement Intelligence."
   />
 
   <title>
@@ -26,7 +26,7 @@
 
   <link
     rel="stylesheet"
-    href="styles.css?v=0.7.1"
+    href="styles.css?v=0.7.3"
   />
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
@@ -40,9 +40,9 @@
 <body>
 
 
-<!-- ======================================================
+<!-- =====================================================
      ACCESO PRIVADO
-======================================================= -->
+====================================================== -->
 
 <div
   id="accessGate"
@@ -65,7 +65,7 @@
 
 
     <div class="access-beta-badge">
-      BETA 0.7.1 · ACCESO PRIVADO
+      BETA 0.7.3 · ACCESO PRIVADO
     </div>
 
 
@@ -114,7 +114,6 @@
             id="togglePasswordButton"
             type="button"
             class="password-toggle"
-            aria-label="Mostrar contraseña"
           >
             Ver
           </button>
@@ -143,7 +142,7 @@
 
 
     <div class="access-notice">
-      Al ingresar estás accediendo a una versión Beta en desarrollo. Las mediciones realizadas mediante cámara son estimaciones y están sujetas a validación.
+      KINEMYX se encuentra en fase Beta. Las mediciones realizadas mediante cámara son estimaciones y están sujetas a validación.
     </div>
 
   </div>
@@ -151,9 +150,9 @@
 </div>
 
 
-<!-- ======================================================
+<!-- =====================================================
      APLICACIÓN
-======================================================= -->
+====================================================== -->
 
 <div
   id="appRoot"
@@ -192,7 +191,7 @@
 
 
       <div class="beta-badge">
-        BETA 0.7.1
+        BETA 0.7.3
       </div>
 
 
@@ -216,10 +215,10 @@
 
 
   <!-- =====================================================
-       SELECCIÓN
+       ANÁLISIS
   ====================================================== -->
 
-  <section class="panel category-panel">
+  <section class="panel">
 
     <div class="section-eyebrow">
       ANÁLISIS
@@ -331,17 +330,79 @@
         </div>
 
         <h2>
-          Listo para analizar
+          Configura la evaluación
         </h2>
 
       </div>
 
+
       <div class="setup-helper">
-        4 pasos
+        VISTA LATERAL
       </div>
 
     </div>
 
+
+    <!-- LADO -->
+
+    <div class="side-selector-panel">
+
+      <div class="side-selector-heading">
+
+        <strong>
+          Lado de análisis
+        </strong>
+
+        <small>
+          KINEMYX analizará únicamente la cadena anatómica seleccionada.
+        </small>
+
+      </div>
+
+
+      <div class="side-selector-buttons">
+
+        <button
+          id="sideAutoButton"
+          type="button"
+          class="side-choice active"
+          data-side-mode="auto"
+        >
+          AUTO
+        </button>
+
+        <button
+          id="sideLeftButton"
+          type="button"
+          class="side-choice"
+          data-side-mode="left"
+        >
+          IZQUIERDO
+        </button>
+
+        <button
+          id="sideRightButton"
+          type="button"
+          class="side-choice"
+          data-side-mode="right"
+        >
+          DERECHO
+        </button>
+
+      </div>
+
+
+      <div
+        id="sideModeHelp"
+        class="side-mode-help"
+      >
+        AUTO seleccionará el lado con mejor visibilidad antes de iniciar la serie.
+      </div>
+
+    </div>
+
+
+    <!-- FLUJO -->
 
     <div
       class="setup-flow"
@@ -364,7 +425,7 @@
           </strong>
 
           <small id="stepAnalysisText">
-            Sentadilla seleccionada
+            Seleccionado
           </small>
 
         </div>
@@ -395,7 +456,7 @@
           </strong>
 
           <small id="stepCameraText">
-            Activa la cámara
+            Activar
           </small>
 
         </div>
@@ -426,7 +487,7 @@
           </strong>
 
           <small id="stepPositionText">
-            Esperando cámara
+            Esperando
           </small>
 
         </div>
@@ -457,7 +518,7 @@
           </strong>
 
           <small id="stepStartText">
-            Completa los pasos
+            Esperando
           </small>
 
         </div>
@@ -481,7 +542,7 @@
       </span>
 
       <span>
-        Usa una vista lateral, cámara estable y deja visible el segmento corporal que se está analizando.
+        Coloca el teléfono perpendicular al movimiento. Ubícate completamente de perfil y deja visible toda la cadena anatómica analizada.
       </span>
 
     </div>
@@ -491,22 +552,32 @@
 
 
   <!-- =====================================================
-       CÁMARA
+       CÁMARA + LIVE
   ====================================================== -->
 
   <section class="camera-section">
 
-    <div class="camera-wrapper">
 
-      <video
-        id="video"
-        autoplay
-        muted
-        playsinline
-      ></video>
+    <div class="camera-column">
 
-      <canvas id="canvas"></canvas>
 
+      <!-- VIDEO LIMPIO -->
+
+      <div class="camera-wrapper">
+
+        <video
+          id="video"
+          autoplay
+          muted
+          playsinline
+        ></video>
+
+        <canvas id="canvas"></canvas>
+
+      </div>
+
+
+      <!-- POSICIONAMIENTO FUERA DE LA IMAGEN -->
 
       <div
         id="positionGuide"
@@ -516,6 +587,7 @@
 
         <div class="position-guide-dot"></div>
 
+
         <div class="position-guide-copy">
 
           <strong id="positionGuideTitle">
@@ -523,7 +595,7 @@
           </strong>
 
           <span id="positionGuideText">
-            Mantén el segmento visible.
+            Mantén visible el lado seleccionado.
           </span>
 
         </div>
@@ -531,108 +603,142 @@
       </div>
 
 
+      <!-- ALERTAS FUERA DE LA IMAGEN -->
+
       <div
         id="warning"
         class="warning hidden"
+        aria-live="polite"
       ></div>
+
 
     </div>
 
 
+
+    <!-- LIVE COMPACTO -->
+
     <div class="live-panel">
 
-      <div class="live-label">
-        KINEMYX LIVE
-      </div>
+
+      <div class="live-header">
+
+        <div>
+
+          <div class="live-label">
+            KINEMYX LIVE
+          </div>
+
+          <strong id="liveExerciseLabel">
+            SQUAT
+          </strong>
+
+        </div>
 
 
-      <div class="metric">
+        <div class="live-side-pill">
 
-        <small>
-          ANALYSIS
-        </small>
+          <small>
+            LADO
+          </small>
 
-        <strong id="liveExerciseLabel">
-          SQUAT
-        </strong>
+          <strong id="sideDisplay">
+            AUTO
+          </strong>
 
-      </div>
-
-
-      <div class="metric">
-
-        <small id="countLabel">
-          REP
-        </small>
-
-        <strong id="repDisplay">
-          0 / 8
-        </strong>
-
-      </div>
-
-
-      <div class="metric">
-
-        <small id="primaryMetricLabel">
-          KNEE FLEXION
-        </small>
-
-        <strong id="angleDisplay">
-          —°
-        </strong>
+        </div>
 
       </div>
 
 
-      <div class="metric">
 
-        <small>
-          PHASE
-        </small>
+      <div class="live-main-grid">
 
-        <strong id="stateDisplay">
-          READY
-        </strong>
+
+        <div class="metric metric-primary">
+
+          <small id="countLabel">
+            REP
+          </small>
+
+          <strong id="repDisplay">
+            0 / 8
+          </strong>
+
+        </div>
+
+
+        <div class="metric metric-primary">
+
+          <small id="primaryMetricLabel">
+            KNEE FLEXION
+          </small>
+
+          <strong id="angleDisplay">
+            —°
+          </strong>
+
+        </div>
+
+
+        <div class="metric metric-primary">
+
+          <small>
+            PHASE
+          </small>
+
+          <strong id="stateDisplay">
+            READY
+          </strong>
+
+        </div>
+
+
+        <div class="metric metric-primary">
+
+          <small>
+            TRACKING
+          </small>
+
+          <strong id="trackingLiveDisplay">
+            ESPERA
+          </strong>
+
+        </div>
+
 
       </div>
 
 
-      <div class="metric">
 
-        <small id="secondaryMetricLabel">
-          ECCENTRIC
-        </small>
-
-        <strong id="eccDisplay">
-          —
-        </strong>
-
-      </div>
+      <div class="live-secondary-grid">
 
 
-      <div class="metric">
+        <div class="metric metric-secondary">
 
-        <small id="tertiaryMetricLabel">
-          CONCENTRIC
-        </small>
+          <small id="secondaryMetricLabel">
+            ECCENTRIC
+          </small>
 
-        <strong id="conDisplay">
-          —
-        </strong>
+          <strong id="eccDisplay">
+            —
+          </strong>
 
-      </div>
+        </div>
 
 
-      <div class="metric">
+        <div class="metric metric-secondary">
 
-        <small>
-          ACTIVE SIDE
-        </small>
+          <small id="tertiaryMetricLabel">
+            CONCENTRIC
+          </small>
 
-        <strong id="sideDisplay">
-          —
-        </strong>
+          <strong id="conDisplay">
+            —
+          </strong>
+
+        </div>
+
 
       </div>
 
@@ -644,6 +750,7 @@
         Activa la cámara
       </div>
 
+
     </div>
 
   </section>
@@ -651,10 +758,10 @@
 
 
   <!-- =====================================================
-       CONTROLES
+       CONTROL
   ====================================================== -->
 
-  <section class="panel control-panel">
+  <section class="panel">
 
     <div class="section-eyebrow">
       CONTROL
@@ -705,7 +812,7 @@
 
 
   <!-- =====================================================
-       CONFIGURACIÓN MOVIMIENTOS
+       CONFIG MOVIMIENTOS
   ====================================================== -->
 
   <section
@@ -731,7 +838,7 @@
           </strong>
 
           <small>
-            Los valores actuales siguen activos aunque esta sección permanezca cerrada.
+            Los valores continúan activos aunque esta sección esté cerrada.
           </small>
 
         </div>
@@ -740,15 +847,11 @@
         <div class="config-toggle">
 
           <span class="config-show">
-            Mostrar ajustes
+            Mostrar
           </span>
 
           <span class="config-hide">
-            Ocultar ajustes
-          </span>
-
-          <span class="config-chevron">
-            ↓
+            Ocultar
           </span>
 
         </div>
@@ -911,7 +1014,7 @@
 
 
         <h3>
-          Variables a evaluar
+          Variables
         </h3>
 
 
@@ -1004,7 +1107,7 @@
 
 
   <!-- =====================================================
-       CONFIGURACIÓN SALTOS
+       CONFIG SALTOS
   ====================================================== -->
 
   <section
@@ -1030,7 +1133,7 @@
           </strong>
 
           <small>
-            Configura el protocolo y las variables que quieres registrar.
+            Configura el protocolo y las variables de la evaluación.
           </small>
 
         </div>
@@ -1039,15 +1142,11 @@
         <div class="config-toggle">
 
           <span class="config-show">
-            Mostrar ajustes
+            Mostrar
           </span>
 
           <span class="config-hide">
-            Ocultar ajustes
-          </span>
-
-          <span class="config-chevron">
-            ↓
+            Ocultar
           </span>
 
         </div>
@@ -1081,7 +1180,7 @@
 
           <label>
 
-            Flexión de rodilla de referencia
+            Flexión de rodilla referencia
 
             <input
               id="jumpKneeTarget"
@@ -1143,7 +1242,7 @@
 
 
         <h3>
-          Variables a evaluar
+          Variables
         </h3>
 
 
@@ -1234,7 +1333,7 @@
 
 
         <div class="config-note muted-note">
-          La altura es una estimación basada en el tiempo de vuelo detectado por cámara y no sustituye una plataforma de fuerza.
+          La altura se estima mediante el tiempo de vuelo detectado por cámara. No equivale a una plataforma de fuerza.
         </div>
 
       </div>
@@ -1300,6 +1399,7 @@
         </tr>
 
       </thead>
+
 
       <tbody id="movementResultsBody"></tbody>
 
@@ -1373,6 +1473,7 @@
 
       </thead>
 
+
       <tbody id="jumpResultsBody"></tbody>
 
     </table>
@@ -1410,7 +1511,7 @@
           </strong>
 
           <small>
-            ¿Algo no funcionó bien o tienes una idea? Cuéntamela.
+            ¿Algo no funcionó bien? Cuéntamelo.
           </small>
 
         </div>
@@ -1426,20 +1527,15 @@
       <div class="feedback-content">
 
         <div class="feedback-intro">
-          Tu experiencia ayuda directamente al desarrollo de KINEMYX. El formulario tarda menos de un minuto.
+          Tu experiencia ayuda directamente al desarrollo de KINEMYX.
         </div>
 
 
         <form id="feedbackForm">
 
-          <input
-            type="hidden"
-            name="_subject"
-            value="Nuevo feedback KINEMYX Beta"
-          />
-
 
           <div class="feedback-grid">
+
 
             <label>
 
@@ -1487,7 +1583,7 @@
 
             <label>
 
-              Tipo de feedback
+              Tipo
 
               <select
                 id="feedbackType"
@@ -1521,7 +1617,7 @@
 
             <label>
 
-              Experiencia general
+              Experiencia
 
               <select
                 id="feedbackExperience"
@@ -1552,6 +1648,7 @@
 
             </label>
 
+
           </div>
 
 
@@ -1563,7 +1660,7 @@
               id="feedbackMessage"
               rows="4"
               maxlength="1200"
-              placeholder="Ej: En peso muerto el tiempo excéntrico no coincidió con el tiempo real..."
+              placeholder="Describe brevemente lo que observaste..."
               required
             ></textarea>
 
@@ -1606,6 +1703,7 @@
 
           </div>
 
+
         </form>
 
       </div>
@@ -1619,11 +1717,11 @@
   <footer class="app-footer">
 
     <strong>
-      KINEMYX Beta 0.7.1
+      KINEMYX Beta 0.7.3
     </strong>
 
     <span>
-      Versión en desarrollo · Las mediciones por cámara son estimaciones y pueden requerir validación.
+      Versión en desarrollo · Análisis mediante visión 2D.
     </span>
 
   </footer>
@@ -1631,10 +1729,11 @@
 
 </main>
 
+
 </div>
 
 
-<script src="app.js?v=0.7.1"></script>
+<script src="app.js?v=0.7.3"></script>
 
 
 </body>
