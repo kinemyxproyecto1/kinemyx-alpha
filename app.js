@@ -1,24 +1,484 @@
 /* =========================================================
-   KINEMYX Beta 0.6
-   Movimientos + Saltos + Feedback + Posicionamiento guiado
+   KINEMYX Beta 0.7
+   Acceso privado + Movimientos + Saltos + Feedback
    ========================================================= */
 
-const $ = (id) => document.getElementById(id);
+const $ = (id) =>
+  document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.6";
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
+
+const APP_VERSION =
+  "KINEMYX Beta 0.7";
+
+
+const FORMSPREE_ENDPOINT =
+  "https://formspree.io/f/xljdjgbg";
+
+
+/*
+  Clave inicial:
+  KINEMYX-BETA26!
+
+  En el código solo almacenamos el SHA-256.
+*/
+
+const ACCESS_PASSWORD_HASH =
+  "d7e96f2eeab5be2c90a72189cea3b274a1f3f31bdfda583b3969218a13a66f92";
+
+
+const ACCESS_STORAGE_KEY =
+  "kinemyx_beta_access";
+
+
+const TESTER_NAME_STORAGE_KEY =
+  "kinemyx_beta_tester_name";
 
 
 /* =========================================================
-   DOM
+   ACCESS DOM
 ========================================================= */
 
-const video = $("video");
-const canvas = $("canvas");
-const ctx = canvas.getContext("2d");
+const accessGate =
+  $("accessGate");
+
+const appRoot =
+  $("appRoot");
+
+const accessForm =
+  $("accessForm");
+
+const accessName =
+  $("accessName");
+
+const accessPassword =
+  $("accessPassword");
+
+const accessSubmitButton =
+  $("accessSubmitButton");
+
+const accessStatus =
+  $("accessStatus");
+
+const togglePasswordButton =
+  $("togglePasswordButton");
+
+const logoutButton =
+  $("logoutButton");
+
+const testerNameDisplay =
+  $("testerNameDisplay");
+
+
+/* =========================================================
+   ACCESS FUNCTIONS
+========================================================= */
+
+async function sha256(
+  text
+) {
+
+  const data =
+    new TextEncoder()
+      .encode(
+        text
+      );
+
+
+  const digest =
+    await crypto.subtle.digest(
+      "SHA-256",
+      data
+    );
+
+
+  return Array
+    .from(
+      new Uint8Array(
+        digest
+      )
+    )
+    .map(
+      byte =>
+        byte
+          .toString(16)
+          .padStart(
+            2,
+            "0"
+          )
+    )
+    .join("");
+
+}
+
+
+function getTesterName() {
+
+  return (
+    localStorage.getItem(
+      TESTER_NAME_STORAGE_KEY
+    )
+    ||
+    "Tester no identificado"
+  );
+
+}
+
+
+function showApplication() {
+
+  const testerName =
+    getTesterName();
+
+
+  accessGate
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  appRoot
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  testerNameDisplay.textContent =
+    testerName;
+
+}
+
+
+function showAccessGate() {
+
+  appRoot
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  accessGate
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  accessPassword.value =
+    "";
+
+
+  setTimeout(
+    () => {
+
+      accessName.focus();
+
+    },
+    100
+  );
+
+}
+
+
+function initializeAccessGate() {
+
+  const accessGranted =
+    localStorage.getItem(
+      ACCESS_STORAGE_KEY
+    );
+
+
+  const testerName =
+    localStorage.getItem(
+      TESTER_NAME_STORAGE_KEY
+    );
+
+
+  if (
+    accessGranted === "granted"
+    &&
+    testerName
+  ) {
+
+    showApplication();
+
+  }
+
+  else {
+
+    showAccessGate();
+
+  }
+
+}
+
+
+async function submitAccess(
+  event
+) {
+
+  event.preventDefault();
+
+
+  const name =
+    accessName
+      .value
+      .trim();
+
+
+  const password =
+    accessPassword.value;
+
+
+  if (!name) {
+
+    accessStatus.textContent =
+      "Escribe tu nombre para continuar.";
+
+
+    accessStatus.className =
+      "access-status error";
+
+
+    accessName.focus();
+
+
+    return;
+
+  }
+
+
+  if (!password) {
+
+    accessStatus.textContent =
+      "Ingresa la clave de acceso.";
+
+
+    accessStatus.className =
+      "access-status error";
+
+
+    accessPassword.focus();
+
+
+    return;
+
+  }
+
+
+  accessSubmitButton.disabled =
+    true;
+
+
+  accessSubmitButton.textContent =
+    "Verificando...";
+
+
+  accessStatus.textContent =
+    "";
+
+
+  try {
+
+    const enteredHash =
+      await sha256(
+        password
+      );
+
+
+    if (
+      enteredHash
+      !==
+      ACCESS_PASSWORD_HASH
+    ) {
+
+      accessStatus.textContent =
+        "Clave incorrecta. Revisa la clave entregada para esta Beta.";
+
+
+      accessStatus.className =
+        "access-status error";
+
+
+      accessPassword.value =
+        "";
+
+
+      accessPassword.focus();
+
+
+      return;
+
+    }
+
+
+    localStorage.setItem(
+      ACCESS_STORAGE_KEY,
+      "granted"
+    );
+
+
+    localStorage.setItem(
+      TESTER_NAME_STORAGE_KEY,
+      name
+    );
+
+
+    accessStatus.textContent =
+      "✓ Acceso autorizado";
+
+
+    accessStatus.className =
+      "access-status success";
+
+
+    setTimeout(
+      showApplication,
+      250
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Error verificando acceso:",
+      error
+    );
+
+
+    accessStatus.textContent =
+      "No fue posible verificar el acceso. Inténtalo nuevamente.";
+
+
+    accessStatus.className =
+      "access-status error";
+
+  }
+
+  finally {
+
+    accessSubmitButton.disabled =
+      false;
+
+
+    accessSubmitButton.textContent =
+      "Ingresar a KINEMYX";
+
+  }
+
+}
+
+
+function logout() {
+
+  localStorage.removeItem(
+    ACCESS_STORAGE_KEY
+  );
+
+
+  localStorage.removeItem(
+    TESTER_NAME_STORAGE_KEY
+  );
+
+
+  if (
+    currentStream
+  ) {
+
+    currentStream
+      .getTracks()
+      .forEach(
+        track =>
+          track.stop()
+      );
+
+
+    currentStream =
+      null;
+
+
+    cameraReady =
+      false;
+
+  }
+
+
+  accessName.value =
+    "";
+
+
+  showAccessGate();
+
+}
+
+
+function togglePasswordVisibility() {
+
+  const isPassword =
+    accessPassword.type
+    ===
+    "password";
+
+
+  accessPassword.type =
+    isPassword
+      ? "text"
+      : "password";
+
+
+  togglePasswordButton.textContent =
+    isPassword
+      ? "Ocultar"
+      : "Ver";
+
+}
+
+
+/* =========================================================
+   ACCESS EVENTS
+========================================================= */
+
+accessForm.addEventListener(
+  "submit",
+  submitAccess
+);
+
+
+togglePasswordButton.addEventListener(
+  "click",
+  togglePasswordVisibility
+);
+
+
+logoutButton.addEventListener(
+  "click",
+  logout
+);
+
+
+
+/* =========================================================
+   APP DOM
+========================================================= */
+
+const video =
+  $("video");
+
+const canvas =
+  $("canvas");
+
+const ctx =
+  canvas.getContext(
+    "2d"
+  );
+
 
 const cameraWrapper =
   video.parentElement;
+
 
 const movementCategoryButton =
   $("movementCategoryButton");
@@ -271,15 +731,26 @@ const feedbackStatus =
    GENERAL STATE
 ========================================================= */
 
-let detector = null;
+let detector =
+  null;
 
-let cameraReady = false;
-let trackingReady = false;
-let analysisActive = false;
-let detectionLoopStarted = false;
+let cameraReady =
+  false;
 
-let lastGoodTrackingAt = 0;
-let lastPositionAssessment = null;
+let trackingReady =
+  false;
+
+let analysisActive =
+  false;
+
+let detectionLoopStarted =
+  false;
+
+let lastGoodTrackingAt =
+  0;
+
+let lastPositionAssessment =
+  null;
 
 let activeCategory =
   "movement";
@@ -343,10 +814,6 @@ const FRAME_MARGIN_X =
 const FRAME_MARGIN_Y =
   0.045;
 
-/*
-  Heurística 2D para detectar cuando
-  la persona está demasiado frontal.
-*/
 const FRONTAL_RATIO_THRESHOLD =
   0.58;
 
@@ -770,11 +1237,14 @@ function getJumpSettings() {
 
 function getActiveFeedbackMode() {
 
-  return activeCategory === "movement"
+  return activeCategory ===
+    "movement"
 
-    ? getMovementSettings().feedbackMode
+    ? getMovementSettings()
+        .feedbackMode
 
-    : getJumpSettings().feedbackMode;
+    : getJumpSettings()
+        .feedbackMode;
 
 }
 
@@ -799,12 +1269,15 @@ function setStep(
     "warning-step"
   );
 
+
   element.classList.add(
     state
   );
 
+
   textElement.textContent =
     text;
+
 
   statusElement.textContent =
     status;
@@ -848,6 +1321,7 @@ function updateSetupFlow() {
       "2"
     );
 
+
     setStep(
       stepPosition,
       stepPositionText,
@@ -856,6 +1330,7 @@ function updateSetupFlow() {
       "Esperando cámara",
       "3"
     );
+
 
     setStep(
       stepStart,
@@ -866,8 +1341,10 @@ function updateSetupFlow() {
       "4"
     );
 
+
     startButton.disabled =
       true;
+
 
     return;
 
@@ -884,8 +1361,11 @@ function updateSetupFlow() {
 
     "done",
 
-    currentFacingMode === "user"
+    currentFacingMode ===
+      "user"
+
       ? "Cámara frontal activa"
+
       : "Cámara trasera activa",
 
     "✓"
@@ -896,7 +1376,8 @@ function updateSetupFlow() {
   if (!trackingReady) {
 
     const shortText =
-      lastPositionAssessment?.short
+      lastPositionAssessment
+        ?.short
       ||
       "Ajusta posición";
 
@@ -950,6 +1431,7 @@ function updateSetupFlow() {
 
     }
 
+
     return;
 
   }
@@ -983,6 +1465,7 @@ function updateSetupFlow() {
       "●"
     );
 
+
     startButton.disabled =
       true;
 
@@ -999,6 +1482,7 @@ function updateSetupFlow() {
       "4"
     );
 
+
     startButton.disabled =
       false;
 
@@ -1008,7 +1492,7 @@ function updateSetupFlow() {
 
 
 /* =========================================================
-   EVENT LISTENERS
+   EVENTS
 ========================================================= */
 
 movementCategoryButton
@@ -1036,7 +1520,7 @@ document
     "[data-exercise]"
   )
   .forEach(
-    (button) => {
+    button => {
 
       button.addEventListener(
         "click",
@@ -1050,35 +1534,31 @@ document
   );
 
 
-cameraButton
-  .addEventListener(
-    "click",
-    initializeCamera
-  );
+cameraButton.addEventListener(
+  "click",
+  initializeCamera
+);
 
 
-switchCameraButton
-  .addEventListener(
-    "click",
-    switchCamera
-  );
+switchCameraButton.addEventListener(
+  "click",
+  switchCamera
+);
 
 
-startButton
-  .addEventListener(
-    "click",
-    startAnalysis
-  );
+startButton.addEventListener(
+  "click",
+  startAnalysis
+);
 
 
-stopButton
-  .addEventListener(
-    "click",
-    () =>
-      stopAnalysis(
-        false
-      )
-  );
+stopButton.addEventListener(
+  "click",
+  () =>
+    stopAnalysis(
+      false
+    )
+);
 
 
 window.addEventListener(
@@ -1128,6 +1608,7 @@ function selectCategory(
 
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de categoría.";
+
 
     return;
 
@@ -1199,6 +1680,7 @@ function selectExercise(
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de análisis.";
 
+
     return;
 
   }
@@ -1231,6 +1713,8 @@ function selectExercise(
 
 
   hideWarning();
+
+
   hidePositionGuide();
 
 
@@ -1247,17 +1731,19 @@ function selectExercise(
       "[data-exercise]"
     )
     .forEach(
-      (button) => {
+      button => {
 
-        button.classList.toggle(
+        button
+          .classList
+          .toggle(
 
-          "secondary",
+            "secondary",
 
-          button.dataset.exercise
-          !==
-          exercise
+            button.dataset.exercise
+            !==
+            exercise
 
-        );
+          );
 
       }
     );
@@ -1413,7 +1899,7 @@ function configureMovementUI(
 
   stateDisplay.textContent =
     activeExercise ===
-    "deadlift"
+      "deadlift"
 
       ? "WAIT_FLOOR"
 
@@ -1492,7 +1978,8 @@ function configureJumpUI(
 
 
   stateDisplay.textContent =
-    exercise === "sj"
+    exercise ===
+      "sj"
 
       ? "START POSITION"
 
@@ -1511,12 +1998,14 @@ function configureJumpUI(
     .classList
     .toggle(
       "hidden",
-      exercise !== "sj"
+      exercise !==
+      "sj"
     );
 
 
   jumpCheckKnee.checked =
-    exercise === "sj";
+    exercise ===
+    "sj";
 
 
   if (
@@ -1649,7 +2138,7 @@ async function getCameraStream() {
 
 
 /* =========================================================
-   CANVAS / VIDEO ALIGNMENT
+   CANVAS ALIGNMENT
 ========================================================= */
 
 function syncCanvasToVideoFrame() {
@@ -1701,13 +2190,6 @@ function syncCanvasToVideoFrame() {
   let drawWidth;
   let drawHeight;
 
-
-  /*
-    El video usa object-fit: contain.
-
-    Por eso calculamos la zona REAL
-    donde se está mostrando la imagen.
-  */
 
   if (
     videoRatio >
@@ -1779,14 +2261,6 @@ function syncCanvasToVideoFrame() {
 
   canvas.style.height =
     `${drawHeight}px`;
-
-
-  canvas.style.right =
-    "auto";
-
-
-  canvas.style.bottom =
-    "auto";
 
 }
 
@@ -1862,7 +2336,7 @@ async function initializeCamera() {
       currentStream
         .getTracks()
         .forEach(
-          (track) =>
+          track =>
             track.stop()
         );
 
@@ -1900,7 +2374,7 @@ async function initializeCamera() {
 
 
     await new Promise(
-      (resolve) => {
+      resolve => {
 
         video.onloadedmetadata =
           async () => {
@@ -2010,6 +2484,7 @@ async function switchCamera() {
     statusBox.textContent =
       "Finaliza la serie antes de cambiar de cámara.";
 
+
     return;
 
   }
@@ -2019,6 +2494,7 @@ async function switchCamera() {
 
     statusBox.textContent =
       "Primero activa la cámara.";
+
 
     return;
 
@@ -2030,7 +2506,8 @@ async function switchCamera() {
 
 
   currentFacingMode =
-    currentFacingMode === "user"
+    currentFacingMode ===
+      "user"
 
       ? "environment"
 
@@ -2160,7 +2637,8 @@ function sideData(
 
 
   if (
-    side === "left"
+    side ===
+    "left"
   ) {
 
     return {
@@ -2425,7 +2903,7 @@ function hasEnoughTracking(
 
     required.every(
 
-      (point) =>
+      point =>
         point.score
         >=
         MIN_POINT_CONFIDENCE
@@ -2446,7 +2924,7 @@ function hasEnoughTracking(
 
 
 /* =========================================================
-   GEOMETRY HELPERS
+   GEOMETRY
 ========================================================= */
 
 function distance(
@@ -2471,15 +2949,13 @@ function capitalize(
   text
 ) {
 
-  return text
-    .charAt(
-      0
-    )
-    .toUpperCase()
+  return (
+    text
+      .charAt(0)
+      .toUpperCase()
     +
-    text.slice(
-      1
-    );
+    text.slice(1)
+  );
 
 }
 
@@ -2499,14 +2975,11 @@ function isLikelyFrontal(
   const leftShoulder =
     kp[5];
 
-
   const rightShoulder =
     kp[6];
 
-
   const leftHip =
     kp[11];
-
 
   const rightHip =
     kp[12];
@@ -2521,11 +2994,10 @@ function isLikelyFrontal(
 
   ].every(
 
-    (point) =>
+    point =>
       point
       &&
-      point.score
-      >=
+      point.score >=
       0.35
 
   );
@@ -2568,8 +3040,7 @@ function isLikelyFrontal(
 
   const torsoHeight =
     (
-      leftTorso
-      +
+      leftTorso +
       rightTorso
     )
     /
@@ -2585,8 +3056,7 @@ function isLikelyFrontal(
 
   const bodyWidth =
     (
-      shoulderWidth
-      +
+      shoulderWidth +
       hipWidth
     )
     /
@@ -2594,22 +3064,18 @@ function isLikelyFrontal(
 
 
   return (
-
     bodyWidth
     /
     torsoHeight
-
     >
-
     FRONTAL_RATIO_THRESHOLD
-
   );
 
 }
 
 
 /* =========================================================
-   MISSING POINT DETECTION
+   MISSING POINT
 ========================================================= */
 
 function buildMissingPointAssessment(
@@ -2660,9 +3126,11 @@ function buildMissingPointAssessment(
 
 
   if (
-    main === "tobillo"
+    main ===
+    "tobillo"
     ||
-    main === "rodilla"
+    main ===
+    "rodilla"
   ) {
 
     correction =
@@ -2671,11 +3139,14 @@ function buildMissingPointAssessment(
   }
 
   else if (
-    main === "hombro"
+    main ===
+    "hombro"
     ||
-    main === "codo"
+    main ===
+    "codo"
     ||
-    main === "muñeca"
+    main ===
+    "muñeca"
   ) {
 
     correction =
@@ -2684,7 +3155,8 @@ function buildMissingPointAssessment(
   }
 
   else if (
-    main === "cadera"
+    main ===
+    "cadera"
   ) {
 
     correction =
@@ -2716,7 +3188,7 @@ function buildMissingPointAssessment(
 
 
 /* =========================================================
-   EDGE DETECTION
+   EDGE POSITION
 ========================================================= */
 
 function buildEdgeAssessment(
@@ -2767,7 +3239,6 @@ function buildEdgeAssessment(
     ]
     of entries
   ) {
-
 
     if (
       point.y
@@ -2871,7 +3342,7 @@ function buildEdgeAssessment(
 
 
 /* =========================================================
-   COMPLETE POSITION ASSESSMENT
+   ASSESS POSITION
 ========================================================= */
 
 function assessPosition(
@@ -3004,8 +3475,6 @@ function showPositionGuide(
 
   if (
     !assessment
-    ||
-    !positionGuide
   ) {
 
     return;
@@ -3041,15 +3510,6 @@ function showPositionGuide(
 
 
 function hidePositionGuide() {
-
-  if (
-    !positionGuide
-  ) {
-
-    return;
-
-  }
-
 
   positionGuide
     .classList
@@ -3289,8 +3749,7 @@ function smoothAngle(
       sum,
       value
     ) =>
-      sum
-      +
+      sum +
       value,
 
     0
@@ -3440,17 +3899,6 @@ function processPose(
     false;
 
 
-  if (
-    warningBox.dataset.positionWarning
-    ===
-    "true"
-  ) {
-
-    hideWarning();
-
-  }
-
-
   const primaryAngle =
     smoothAngle(
 
@@ -3573,7 +4021,8 @@ function updateStandardMovement(
 
       &&
 
-      movementPreviousAngle !==
+      movementPreviousAngle
+      !==
       null
 
       &&
@@ -3625,8 +4074,7 @@ function updateStandardMovement(
 
     if (
 
-      movementMaxAngle
-      -
+      movementMaxAngle -
       angle
 
       >=
@@ -3678,16 +4126,14 @@ function updateStandardMovement(
       completeMovementRep(
 
         (
-          movementBottomTime
-          -
+          movementBottomTime -
           movementRepStartTime
         )
         /
         1000,
 
         (
-          timestamp
-          -
+          timestamp -
           movementAscentStartTime
         )
         /
@@ -3830,8 +4276,7 @@ function updateDeadlift(
 
       const concentric =
         (
-          timestamp
-          -
+          timestamp -
           movementAscentStartTime
         )
         /
@@ -3899,8 +4344,7 @@ function updateDeadlift(
 
       deadliftEccentricForNextRep =
         (
-          timestamp
-          -
+          timestamp -
           deadliftDescentStartTime
         )
         /
@@ -3934,7 +4378,7 @@ function updateDeadlift(
 
 
 /* =========================================================
-   COMPLETE MOVEMENT REP
+   MOVEMENT REP
 ========================================================= */
 
 function completeMovementRep(
@@ -3977,8 +4421,7 @@ function completeMovementRep(
     ||
 
     Math.abs(
-      eccentric
-      -
+      eccentric -
       settings.eccTarget
     )
 
@@ -3989,8 +4432,7 @@ function completeMovementRep(
   const conPassed =
 
     Math.abs(
-      concentric
-      -
+      concentric -
       settings.conTarget
     )
 
@@ -4038,9 +4480,7 @@ function completeMovementRep(
   }
 
 
-  if (
-    passed
-  ) {
+  if (passed) {
 
     movementSuccessfulReps++;
 
@@ -4052,18 +4492,14 @@ function completeMovementRep(
   else {
 
     showWarning(
-
       buildMovementWarning(
-
         settings,
         anglePassed,
         eccPassed,
         conPassed,
         eccentric,
         concentric
-
       )
-
     );
 
 
@@ -4124,8 +4560,7 @@ function completeMovementRep(
 
 
   if (
-    movementRepCount
-    >=
+    movementRepCount >=
     settings.targetReps
   ) {
 
@@ -4137,10 +4572,6 @@ function completeMovementRep(
 
 }
 
-
-/* =========================================================
-   MOVEMENT WARNING
-========================================================= */
 
 function buildMovementWarning(
   settings,
@@ -4172,8 +4603,7 @@ function buildMovementWarning(
     )
   ) {
 
-    return eccentric
-      <
+    return eccentric <
       settings.eccTarget
 
       ? "Fase excéntrica más lenta"
@@ -4189,8 +4619,7 @@ function buildMovementWarning(
     !conPassed
   ) {
 
-    return concentric
-      <
+    return concentric <
       settings.conTarget
 
       ? "Fase concéntrica más lenta"
@@ -4206,7 +4635,7 @@ function buildMovementWarning(
 
 
 /* =========================================================
-   RESET JUMP
+   JUMPS
 ========================================================= */
 
 function resetJumpState() {
@@ -4262,10 +4691,6 @@ function resetJumpState() {
 }
 
 
-/* =========================================================
-   UPDATE JUMP
-========================================================= */
-
 function updateJump(
   flexion,
   points,
@@ -4277,8 +4702,7 @@ function updateJump(
 
 
   if (
-    jumpBaselineAnkleY
-    ===
+    jumpBaselineAnkleY ===
     null
   ) {
 
@@ -4312,8 +4736,7 @@ function updateJump(
             sum,
             value
           ) =>
-            sum
-            +
+            sum +
             value,
 
           0
@@ -4326,7 +4749,8 @@ function updateJump(
 
 
       jumpState =
-        activeExercise === "sj"
+        activeExercise ===
+        "sj"
 
           ? "START POSITION"
 
@@ -4365,15 +4789,10 @@ function updateJump(
   ) {
 
     updateSquatJump(
-
       flexion,
-
       points,
-
       timestamp,
-
       settings
-
     );
 
   }
@@ -4381,15 +4800,10 @@ function updateJump(
   else {
 
     updateCountermovementJump(
-
       flexion,
-
       points,
-
       timestamp,
-
       settings
-
     );
 
   }
@@ -4414,7 +4828,7 @@ function updateJump(
 
 
 /* =========================================================
-   SQUAT JUMP
+   SJ
 ========================================================= */
 
 function updateSquatJump(
@@ -4437,14 +4851,9 @@ function updateSquatJump(
 
 
   const inStartPosition =
-
-    flexion >=
-    lower
-
+    flexion >= lower
     &&
-
-    flexion <=
-    upper;
+    flexion <= upper;
 
 
   if (
@@ -4516,8 +4925,7 @@ function updateSquatJump(
     if (
 
       (
-        timestamp
-        -
+        timestamp -
         sjHoldStartTime
       )
 
@@ -4558,9 +4966,7 @@ function updateSquatJump(
     if (
 
       flexion
-
       >
-
       sjHeldFlexion
       +
       SJ_COUNTERMOVEMENT_ALLOWANCE
@@ -4590,8 +4996,7 @@ function updateSquatJump(
 
     if (
 
-      sjHeldFlexion
-      -
+      sjHeldFlexion -
       flexion
 
       >=
@@ -4639,13 +5044,9 @@ function updateSquatJump(
   ) {
 
     detectJumpTakeoff(
-
       flexion,
-
       points,
-
       timestamp
-
     );
 
   }
@@ -4657,13 +5058,9 @@ function updateSquatJump(
   ) {
 
     detectJumpLanding(
-
       flexion,
-
       points,
-
       timestamp
-
     );
 
   }
@@ -4675,15 +5072,10 @@ function updateSquatJump(
   ) {
 
     captureLanding(
-
       flexion,
-
       timestamp,
-
       settings,
-
       settings.holdTarget
-
     );
 
   }
@@ -4692,7 +5084,7 @@ function updateSquatJump(
 
 
 /* =========================================================
-   CMJ + ABALAKOV
+   CMJ / ABALAKOV
 ========================================================= */
 
 function updateCountermovementJump(
@@ -4714,8 +5106,7 @@ function updateCountermovementJump(
 
       &&
 
-      jumpPreviousFlexion
-      !==
+      jumpPreviousFlexion !==
       null
 
       &&
@@ -4767,8 +5158,7 @@ function updateCountermovementJump(
 
     if (
 
-      jumpMaxFlexion
-      -
+      jumpMaxFlexion -
       flexion
 
       >=
@@ -4779,9 +5169,7 @@ function updateCountermovementJump(
       if (
 
         jumpMaxFlexion
-
         >=
-
         CMJ_MIN_COUNTERMOVEMENT
 
       ) {
@@ -4817,13 +5205,9 @@ function updateCountermovementJump(
   ) {
 
     detectJumpTakeoff(
-
       flexion,
-
       points,
-
       timestamp
-
     );
 
   }
@@ -4835,13 +5219,9 @@ function updateCountermovementJump(
   ) {
 
     detectJumpLanding(
-
       flexion,
-
       points,
-
       timestamp
-
     );
 
   }
@@ -4853,15 +5233,10 @@ function updateCountermovementJump(
   ) {
 
     captureLanding(
-
       flexion,
-
       timestamp,
-
       settings,
-
       null
-
     );
 
   }
@@ -4876,13 +5251,9 @@ function updateCountermovementJump(
 function getTakeoffThreshold() {
 
   return Math.max(
-
     8,
-
-    canvas.height
-    *
+    canvas.height *
     0.012
-
   );
 
 }
@@ -4891,13 +5262,9 @@ function getTakeoffThreshold() {
 function getLandingTolerance() {
 
   return Math.max(
-
     10,
-
-    canvas.height
-    *
+    canvas.height *
     0.02
-
   );
 
 }
@@ -4910,18 +5277,13 @@ function detectJumpTakeoff(
 ) {
 
   const propulsionMs =
-
-    timestamp
-    -
+    timestamp -
     jumpPropulsionStartTime;
 
 
   const ankleLift =
-
     jumpBaselineAnkleY
-
     -
-
     points.ankle.y;
 
 
@@ -4961,39 +5323,25 @@ function detectJumpLanding(
 ) {
 
   const flightMs =
-
-    timestamp
-    -
+    timestamp -
     jumpTakeoffTime;
 
 
   const nearBaseline =
-
     Math.abs(
-
       points.ankle.y
-
       -
-
       jumpBaselineAnkleY
-
     )
-
     <=
-
     getLandingTolerance();
 
 
   const ankleReturning =
-
-    jumpPreviousAnkleY
-    !==
+    jumpPreviousAnkleY !==
     null
-
     &&
-
-    points.ankle.y
-    >
+    points.ankle.y >
     jumpPreviousAnkleY;
 
 
@@ -5073,8 +5421,7 @@ function captureLanding(
 
   if (
 
-    timestamp
-    -
+    timestamp -
     jumpLandingStartTime
 
     >=
@@ -5084,11 +5431,8 @@ function captureLanding(
   ) {
 
     completeJump(
-
       settings,
-
       sjHold
-
     );
 
 
@@ -5118,50 +5462,37 @@ function completeJump(
 
 
   const flightTime =
-
     (
-      jumpLandingTime
-      -
+      jumpLandingTime -
       jumpTakeoffTime
     )
-
     /
-
     1000;
 
 
   const estimatedHeightCm =
-
     (
       GRAVITY
-
       *
-
       Math.pow(
         flightTime,
         2
       )
-
       /
-
       8
     )
-
     *
-
     100;
 
 
   const descentTime =
-
     activeExercise ===
     "sj"
 
       ? null
 
       : (
-          jumpBottomTime
-          -
+          jumpBottomTime -
           jumpStartTime
         )
         /
@@ -5169,44 +5500,30 @@ function completeJump(
 
 
   const kneePassed =
-
     jumpMaxFlexion
-
     >=
-
-    settings.kneeTarget
-    -
+    settings.kneeTarget -
     settings.kneeTolerance
 
     &&
 
     jumpMaxFlexion
-
     <=
-
-    settings.kneeTarget
-    +
+    settings.kneeTarget +
     settings.kneeTolerance;
 
 
   const flightValid =
-
     flightTime
-
     >=
-
-    JUMP_MIN_FLIGHT_MS
-    /
+    JUMP_MIN_FLIGHT_MS /
     1000
 
     &&
 
     flightTime
-
     <=
-
-    JUMP_MAX_FLIGHT_MS
-    /
+    JUMP_MAX_FLIGHT_MS /
     1000;
 
 
@@ -5256,9 +5573,7 @@ function completeJump(
   }
 
 
-  if (
-    valid
-  ) {
+  if (valid) {
 
     jumpValidCount++;
 
@@ -5270,7 +5585,6 @@ function completeJump(
   else {
 
     showWarning(
-
       activeExercise ===
       "sj"
 
@@ -5281,7 +5595,6 @@ function completeJump(
         ? "Salto no válido"
 
         : "Revisa protocolo"
-
     );
 
 
@@ -5293,21 +5606,17 @@ function completeJump(
   const result = {
 
     number:
-      jumpResults.length
-      +
+      jumpResults.length +
       1,
 
-    estimatedHeightCm:
-      estimatedHeightCm,
+    estimatedHeightCm,
 
-    flightTime:
-      flightTime,
+    flightTime,
 
     maxFlexion:
       jumpMaxFlexion,
 
-    descentTime:
-      descentTime,
+    descentTime,
 
     holdTime:
       activeExercise ===
@@ -5320,14 +5629,11 @@ function completeJump(
     landingFlexion:
       jumpMaxLandingFlexion,
 
-    valid:
-      valid,
+    valid,
 
     reason:
       valid
-
         ? "Válido"
-
         : "Revisar"
 
   };
@@ -5359,8 +5665,7 @@ function completeJump(
 
 
   if (
-    jumpCount
-    >=
+    jumpCount >=
     settings.targetJumps
   ) {
 
@@ -5373,10 +5678,6 @@ function completeJump(
 }
 
 
-/* =========================================================
-   INVALID SJ
-========================================================= */
-
 function addInvalidJumpResult(
   reason
 ) {
@@ -5384,8 +5685,7 @@ function addInvalidJumpResult(
   const result = {
 
     number:
-      jumpResults.length
-      +
+      jumpResults.length +
       1,
 
     estimatedHeightCm:
@@ -5410,8 +5710,7 @@ function addInvalidJumpResult(
     valid:
       false,
 
-    reason:
-      reason
+    reason
 
   };
 
@@ -5430,10 +5729,6 @@ function addInvalidJumpResult(
 
 }
 
-
-/* =========================================================
-   PREPARE NEXT JUMP
-========================================================= */
 
 function prepareNextJump() {
 
@@ -5489,12 +5784,11 @@ function prepareNextJump() {
 
 
 /* =========================================================
-   LIVE FEEDBACK
+   FEEDBACK
 ========================================================= */
 
 function showWarning(
-  message,
-  positionWarning = false
+  message
 ) {
 
   const mode =
@@ -5502,9 +5796,11 @@ function showWarning(
 
 
   if (
-    mode !== "visual"
+    mode !==
+    "visual"
     &&
-    mode !== "both"
+    mode !==
+    "both"
   ) {
 
     return;
@@ -5514,14 +5810,6 @@ function showWarning(
 
   warningBox.textContent =
     message;
-
-
-  warningBox.dataset.positionWarning =
-    positionWarning
-
-      ? "true"
-
-      : "false";
 
 
   warningBox
@@ -5544,23 +5832,19 @@ function showWarning(
 
   warningHideTimer =
     setTimeout(
-
-      () => {
-
-        if (
-          warningBox.dataset.positionWarning
-          !==
-          "true"
-        ) {
-
-          hideWarning();
-
-        }
-
-      },
-
+      hideWarning,
       1500
+    );
 
+}
+
+
+function hideWarning() {
+
+  warningBox
+    .classList
+    .add(
+      "hidden"
     );
 
 }
@@ -5573,9 +5857,11 @@ function showSuccess() {
 
 
   if (
-    mode === "audio"
+    mode ===
+    "audio"
     ||
-    mode === "off"
+    mode ===
+    "off"
   ) {
 
     return;
@@ -5589,23 +5875,8 @@ function showSuccess() {
 }
 
 
-function hideWarning() {
-
-  warningBox
-    .classList
-    .add(
-      "hidden"
-    );
-
-
-  warningBox.dataset.positionWarning =
-    "false";
-
-}
-
-
 function trackingWarning(
-  shortMessage =
+  message =
     "Ajusta posición"
 ) {
 
@@ -5625,19 +5896,16 @@ function trackingWarning(
 
 
   showWarning(
-    shortMessage,
-    true
+    message
   );
 
 
   if (
 
-    now
-    -
+    now -
     trackingLostSince
 
     >
-
     1000
 
     &&
@@ -5664,9 +5932,11 @@ function beepWarning() {
 
 
   if (
-    mode !== "audio"
+    mode !==
+    "audio"
     &&
-    mode !== "both"
+    mode !==
+    "both"
   ) {
 
     return;
@@ -5679,15 +5949,10 @@ function beepWarning() {
   ) {
 
     audioContext =
-
       new (
-
         window.AudioContext
-
         ||
-
         window.webkitAudioContext
-
       )();
 
   }
@@ -5735,18 +6000,16 @@ function beepWarning() {
 
 
   oscillator.stop(
-
     audioContext.currentTime
     +
     0.12
-
   );
 
 }
 
 
 /* =========================================================
-   DRAW SKELETON
+   SKELETON
 ========================================================= */
 
 function drawSkeleton(
@@ -5760,27 +6023,16 @@ function drawSkeleton(
   const connections = [
 
     [5, 6],
-
     [5, 7],
-
     [7, 9],
-
     [6, 8],
-
     [8, 10],
-
     [5, 11],
-
     [6, 12],
-
     [11, 12],
-
     [11, 13],
-
     [13, 15],
-
     [12, 14],
-
     [14, 16]
 
   ];
@@ -5795,13 +6047,11 @@ function drawSkeleton(
 
 
   connections.forEach(
-
     (
       [a, b]
     ) => {
 
       if (
-
         kp[a].score >
         0.35
 
@@ -5809,27 +6059,20 @@ function drawSkeleton(
 
         kp[b].score >
         0.35
-
       ) {
 
         ctx.beginPath();
 
 
         ctx.moveTo(
-
           kp[a].x,
-
           kp[a].y
-
         );
 
 
         ctx.lineTo(
-
           kp[b].x,
-
           kp[b].y
-
         );
 
 
@@ -5838,15 +6081,11 @@ function drawSkeleton(
       }
 
     }
-
   );
 
 
   kp.forEach(
-
-    (
-      point
-    ) => {
+    point => {
 
       if (
         point.score >
@@ -5857,19 +6096,11 @@ function drawSkeleton(
 
 
         ctx.arc(
-
           point.x,
-
           point.y,
-
           5,
-
           0,
-
-          Math.PI
-          *
-          2
-
+          Math.PI * 2
         );
 
 
@@ -5882,14 +6113,13 @@ function drawSkeleton(
       }
 
     }
-
   );
 
 }
 
 
 /* =========================================================
-   MOVEMENT RESULT ROW
+   RESULTS
 ========================================================= */
 
 function addMovementResultRow(
@@ -5904,9 +6134,7 @@ function addMovementResultRow(
 
   row.innerHTML = `
 
-    <td>
-      ${rep.number}
-    </td>
+    <td>${rep.number}</td>
 
     <td>
       ${rep.angle.toFixed(0)}°
@@ -5952,10 +6180,6 @@ function addMovementResultRow(
 }
 
 
-/* =========================================================
-   MOVEMENT SUMMARY
-========================================================= */
-
 function updateMovementSummary() {
 
   if (
@@ -5965,115 +6189,80 @@ function updateMovementSummary() {
     movementSummary.textContent =
       "Aún no hay resultados.";
 
+
     return;
 
   }
 
 
   const avgAngle =
-
     movementResults.reduce(
-
       (
         sum,
         rep
       ) =>
-        sum
-        +
+        sum +
         rep.angle,
-
       0
-
     )
-
     /
-
     movementResults.length;
 
 
   const eccValues =
-
     movementResults
 
       .filter(
-        (
-          rep
-        ) =>
-          rep.eccentric
-          !==
+        rep =>
+          rep.eccentric !==
           null
       )
 
       .map(
-        (
-          rep
-        ) =>
+        rep =>
           rep.eccentric
       );
 
 
   const avgEcc =
-
     eccValues.length
 
-      ?
+      ? eccValues.reduce(
+          (
+            sum,
+            value
+          ) =>
+            sum +
+            value,
+          0
+        )
+        /
+        eccValues.length
 
-      eccValues.reduce(
-
-        (
-          sum,
-          value
-        ) =>
-          sum
-          +
-          value,
-
-        0
-
-      )
-
-      /
-
-      eccValues.length
-
-      :
-
-      null;
+      : null;
 
 
   const avgCon =
-
     movementResults.reduce(
-
       (
         sum,
         rep
       ) =>
-        sum
-        +
+        sum +
         rep.concentric,
-
       0
-
     )
-
     /
-
     movementResults.length;
 
 
   const compliance =
-
     (
       movementSuccessfulReps
-
       /
-
       movementResults.length
     )
-
     *
-
     100;
 
 
@@ -6097,9 +6286,7 @@ function updateMovementSummary() {
       exerciseMeta[
         activeExercise
       ].angleName
-    }
-
-    media:
+    } media:
 
     <strong>
       ${avgAngle.toFixed(0)}°
@@ -6129,10 +6316,6 @@ function updateMovementSummary() {
 }
 
 
-/* =========================================================
-   JUMP RESULT ROW
-========================================================= */
-
 function addJumpResultRow(
   result
 ) {
@@ -6144,31 +6327,26 @@ function addJumpResultRow(
 
 
   const protocolValue =
-
     activeExercise ===
     "sj"
 
-      ?
+      ? (
+          result.holdTime ===
+          null
 
-      (
-        result.holdTime ===
-        null
+            ? result.reason
 
-          ? result.reason
+            : `${result.holdTime.toFixed(2)} s`
+        )
 
-          : `${result.holdTime.toFixed(2)} s`
-      )
+      : (
+          result.descentTime ===
+          null
 
-      :
+            ? "—"
 
-      (
-        result.descentTime ===
-        null
-
-          ? "—"
-
-          : `${result.descentTime.toFixed(2)} s`
-      );
+            : `${result.descentTime.toFixed(2)} s`
+        );
 
 
   row.innerHTML = `
@@ -6243,10 +6421,6 @@ function addJumpResultRow(
 }
 
 
-/* =========================================================
-   JUMP SUMMARY
-========================================================= */
-
 function updateJumpSummary() {
 
   if (
@@ -6256,36 +6430,25 @@ function updateJumpSummary() {
     jumpSummary.textContent =
       "Aún no hay resultados.";
 
+
     return;
 
   }
 
 
   const valid =
-
     jumpResults.filter(
-
-      (
-        result
-      ) =>
-
+      result =>
         result.valid
-
         &&
-
-        result.estimatedHeightCm
-        !==
+        result.estimatedHeightCm !==
         null
-
     );
 
 
   const invalidCount =
-
     jumpResults.length
-
     -
-
     valid.length;
 
 
@@ -6316,75 +6479,50 @@ function updateJumpSummary() {
 
 
   const heights =
-
     valid.map(
-
-      (
-        result
-      ) =>
+      result =>
         result.estimatedHeightCm
-
     );
 
 
   const flights =
-
     valid.map(
-
-      (
-        result
-      ) =>
+      result =>
         result.flightTime
-
     );
 
 
   const best =
-
     Math.max(
       ...heights
     );
 
 
   const avgHeight =
-
     heights.reduce(
-
       (
         sum,
         value
       ) =>
-        sum
-        +
+        sum +
         value,
-
       0
-
     )
-
     /
-
     heights.length;
 
 
   const avgFlight =
-
     flights.reduce(
-
       (
         sum,
         value
       ) =>
-        sum
-        +
+        sum +
         value,
-
       0
-
     )
-
     /
-
     flights.length;
 
 
@@ -6440,6 +6578,7 @@ function startAnalysis() {
     statusBox.textContent =
       "Activa la cámara primero.";
 
+
     return;
 
   }
@@ -6450,26 +6589,14 @@ function startAnalysis() {
   ) {
 
     statusBox.textContent =
-
-      lastPositionAssessment?.text
-
+      lastPositionAssessment
+        ?.text
       ||
-
       "Ajusta tu posición antes de iniciar.";
 
 
-    if (
-      lastPositionAssessment
-    ) {
-
-      showPositionGuide(
-        lastPositionAssessment
-      );
-
-    }
-
-
     updateSetupFlow();
+
 
     return;
 
@@ -6545,7 +6672,6 @@ function startAnalysis() {
 
 
     movementState =
-
       activeExercise ===
       "deadlift"
 
@@ -6555,7 +6681,6 @@ function startAnalysis() {
 
 
     repDisplay.textContent =
-
       `0 / ${
         getMovementSettings()
           .targetReps
@@ -6601,7 +6726,6 @@ function startAnalysis() {
 
 
     repDisplay.textContent =
-
       `0 / ${
         getJumpSettings()
           .targetJumps
@@ -6629,52 +6753,8 @@ function startAnalysis() {
   updateSetupFlow();
 
 
-  if (
-    activeExercise ===
-    "sj"
-  ) {
-
-    statusBox.textContent =
-      "Squat Jump activo · adopta la posición objetivo y mantén la pausa antes de saltar.";
-
-  }
-
-  else if (
-    activeExercise ===
-    "cmj"
-  ) {
-
-    statusBox.textContent =
-      "CMJ activo · inicia de pie y realiza el countermovement cuando estés listo.";
-
-  }
-
-  else if (
-    activeExercise ===
-    "abalakov"
-  ) {
-
-    statusBox.textContent =
-      "Abalakov activo · puedes utilizar libremente los brazos.";
-
-  }
-
-  else if (
-    activeExercise ===
-    "deadlift"
-  ) {
-
-    statusBox.textContent =
-      "Peso muerto activo · adopta la posición inicial en el suelo para comenzar.";
-
-  }
-
-  else {
-
-    statusBox.textContent =
-      `${exerciseMeta[activeExercise].name} activo`;
-
-  }
+  statusBox.textContent =
+    `${exerciseMeta[activeExercise].name} activo`;
 
 
   if (
@@ -6682,26 +6762,11 @@ function startAnalysis() {
   ) {
 
     audioContext =
-
       new (
-
         window.AudioContext
-
         ||
-
         window.webkitAudioContext
-
       )();
-
-  }
-
-
-  if (
-    audioContext.state ===
-    "suspended"
-  ) {
-
-    audioContext.resume();
 
   }
 
@@ -6713,7 +6778,8 @@ function startAnalysis() {
 ========================================================= */
 
 function stopAnalysis(
-  automatic = false
+  automatic =
+    false
 ) {
 
   if (
@@ -6722,6 +6788,7 @@ function stopAnalysis(
 
     statusBox.textContent =
       "No hay una serie activa.";
+
 
     return;
 
@@ -6749,7 +6816,6 @@ function stopAnalysis(
 
 
     statusBox.textContent =
-
       automatic
 
         ? `Serie completada · ${movementRepCount} repeticiones`
@@ -6768,7 +6834,6 @@ function stopAnalysis(
 
 
     statusBox.textContent =
-
       automatic
 
         ? `Serie completada · ${jumpCount} saltos`
@@ -6797,9 +6862,7 @@ function detectBrowser() {
 
 
   if (
-    /CriOS/i.test(
-      ua
-    )
+    /CriOS/i.test(ua)
   ) {
 
     return "Chrome iOS";
@@ -6808,9 +6871,7 @@ function detectBrowser() {
 
 
   if (
-    /FxiOS/i.test(
-      ua
-    )
+    /FxiOS/i.test(ua)
   ) {
 
     return "Firefox iOS";
@@ -6819,9 +6880,7 @@ function detectBrowser() {
 
 
   if (
-    /EdgiOS/i.test(
-      ua
-    )
+    /EdgiOS/i.test(ua)
   ) {
 
     return "Edge iOS";
@@ -6830,17 +6889,11 @@ function detectBrowser() {
 
 
   if (
-
-    /Safari/i.test(
-      ua
-    )
-
+    /Safari/i.test(ua)
     &&
-
     !/Chrome|CriOS|Android/i.test(
       ua
     )
-
   ) {
 
     return "Safari";
@@ -6849,9 +6902,7 @@ function detectBrowser() {
 
 
   if (
-    /Chrome/i.test(
-      ua
-    )
+    /Chrome/i.test(ua)
   ) {
 
     return "Chrome";
@@ -6860,9 +6911,7 @@ function detectBrowser() {
 
 
   if (
-    /Firefox/i.test(
-      ua
-    )
+    /Firefox/i.test(ua)
   ) {
 
     return "Firefox";
@@ -6882,9 +6931,7 @@ function detectDevice() {
 
 
   if (
-    /iPhone/i.test(
-      ua
-    )
+    /iPhone/i.test(ua)
   ) {
 
     return "iPhone";
@@ -6893,9 +6940,7 @@ function detectDevice() {
 
 
   if (
-    /iPad/i.test(
-      ua
-    )
+    /iPad/i.test(ua)
   ) {
 
     return "iPad";
@@ -6904,9 +6949,7 @@ function detectDevice() {
 
 
   if (
-    /Android/i.test(
-      ua
-    )
+    /Android/i.test(ua)
   ) {
 
     return "Android";
@@ -6915,9 +6958,7 @@ function detectDevice() {
 
 
   if (
-    /Macintosh/i.test(
-      ua
-    )
+    /Macintosh/i.test(ua)
   ) {
 
     return "Mac";
@@ -6926,9 +6967,7 @@ function detectDevice() {
 
 
   if (
-    /Windows/i.test(
-      ua
-    )
+    /Windows/i.test(ua)
   ) {
 
     return "Windows";
@@ -6944,15 +6983,6 @@ function detectDevice() {
 
 
 function updateFeedbackContext() {
-
-  if (
-    !feedbackExercise
-  ) {
-
-    return;
-
-  }
-
 
   feedbackExercise.value =
     exerciseMeta[
@@ -6975,9 +7005,7 @@ async function submitFeedback(
       .trim();
 
 
-  if (
-    !message
-  ) {
+  if (!message) {
 
     feedbackStatus.textContent =
       "Cuéntame brevemente qué ocurrió o qué mejorarías.";
@@ -6985,9 +7013,6 @@ async function submitFeedback(
 
     feedbackStatus.className =
       "feedback-status error";
-
-
-    feedbackMessage.focus();
 
 
     return;
@@ -7003,14 +7028,6 @@ async function submitFeedback(
     "Enviando...";
 
 
-  feedbackStatus.textContent =
-    "";
-
-
-  feedbackStatus.className =
-    "feedback-status";
-
-
   const payload =
     new FormData();
 
@@ -7018,6 +7035,17 @@ async function submitFeedback(
   payload.append(
     "_subject",
     `Nuevo feedback ${APP_VERSION}`
+  );
+
+
+  /*
+    Nombre tomado automáticamente
+    desde la pantalla de acceso.
+  */
+
+  payload.append(
+    "tester",
+    getTesterName()
   );
 
 
@@ -7036,16 +7064,13 @@ async function submitFeedback(
 
 
   payload.append(
-
     "categoria",
-
     activeCategory ===
-    "movement"
+      "movement"
 
       ? "Movimiento"
 
       : "Salto"
-
   );
 
 
@@ -7068,17 +7093,12 @@ async function submitFeedback(
 
 
   payload.append(
-
     "contacto",
-
     feedbackContact
       .value
       .trim()
-
     ||
-
     "No indicado"
-
   );
 
 
@@ -7101,34 +7121,22 @@ async function submitFeedback(
 
 
   payload.append(
-    "user_agent",
-    navigator.userAgent
-  );
-
-
-  payload.append(
-
     "camara",
-
     currentFacingMode ===
-    "user"
+      "user"
 
       ? "Frontal"
 
       : "Trasera"
-
   );
 
 
   payload.append(
-
     "fecha_hora",
-
     new Date()
       .toLocaleString(
         "es-CL"
       )
-
   );
 
 
@@ -7136,9 +7144,7 @@ async function submitFeedback(
 
     const response =
       await fetch(
-
         FORMSPREE_ENDPOINT,
-
         {
 
           method:
@@ -7155,7 +7161,6 @@ async function submitFeedback(
           }
 
         }
-
       );
 
 
@@ -7164,14 +7169,14 @@ async function submitFeedback(
     ) {
 
       throw new Error(
-        "Formspree respondió con error"
+        "Formspree error"
       );
 
     }
 
 
     feedbackStatus.textContent =
-      "✓ ¡Gracias! Tu feedback fue enviado y nos ayuda a mejorar KINEMYX.";
+      "✓ ¡Gracias! Tu feedback fue enviado.";
 
 
     feedbackStatus.className =
@@ -7198,7 +7203,7 @@ async function submitFeedback(
 
 
     feedbackStatus.textContent =
-      "No se pudo enviar el feedback. Revisa tu conexión e inténtalo nuevamente.";
+      "No se pudo enviar. Revisa tu conexión e inténtalo nuevamente.";
 
 
     feedbackStatus.className =
@@ -7220,24 +7225,18 @@ async function submitFeedback(
 }
 
 
-if (
-  feedbackForm
-) {
-
-  feedbackForm.addEventListener(
-
-    "submit",
-
-    submitFeedback
-
-  );
-
-}
+feedbackForm.addEventListener(
+  "submit",
+  submitFeedback
+);
 
 
 /* =========================================================
    INITIAL STATE
 ========================================================= */
+
+initializeAccessGate();
+
 
 selectCategory(
   "movement"
