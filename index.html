@@ -2,17 +2,30 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b1118" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <meta
+    name="theme-color"
+    content="#0b1118"
+  />
 
   <meta
     name="description"
     content="KINEMYX Beta - análisis de movimiento y evaluación de saltos desde tu teléfono."
   />
 
-  <title>KINEMYX - Human Movement Intelligence</title>
+  <title>
+    KINEMYX - Human Movement Intelligence
+  </title>
 
-  <link rel="stylesheet" href="styles.css" />
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  />
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
@@ -22,11 +35,135 @@
 
 <body>
 
+
+<!-- =====================================================
+     ACCESO PRIVADO
+====================================================== -->
+
+<div
+  id="accessGate"
+  class="access-gate"
+>
+
+  <div class="access-background-glow access-glow-one"></div>
+  <div class="access-background-glow access-glow-two"></div>
+
+
+  <div class="access-card">
+
+    <div class="access-brand">
+      KINEMY<span>X</span>
+    </div>
+
+    <div class="access-brand-subtitle">
+      Human Movement Intelligence
+    </div>
+
+
+    <div class="access-beta-badge">
+      BETA 0.7 · ACCESO PRIVADO
+    </div>
+
+
+    <h1>
+      Bienvenido a KINEMYX
+    </h1>
+
+    <p class="access-description">
+      Esta versión está disponible exclusivamente para usuarios autorizados durante la etapa de desarrollo y pruebas.
+    </p>
+
+
+    <form id="accessForm">
+
+      <label class="access-label">
+
+        Tu nombre
+
+        <input
+          id="accessName"
+          type="text"
+          maxlength="60"
+          autocomplete="name"
+          placeholder="Ej: Nicolás"
+          required
+        />
+
+      </label>
+
+
+      <label class="access-label">
+
+        Clave de acceso
+
+        <div class="password-wrapper">
+
+          <input
+            id="accessPassword"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Ingresa la clave KINEMYX"
+            required
+          />
+
+          <button
+            id="togglePasswordButton"
+            type="button"
+            class="password-toggle"
+            aria-label="Mostrar contraseña"
+          >
+            Ver
+          </button>
+
+        </div>
+
+      </label>
+
+
+      <button
+        id="accessSubmitButton"
+        type="submit"
+        class="access-submit"
+      >
+        Ingresar a KINEMYX
+      </button>
+
+
+      <div
+        id="accessStatus"
+        class="access-status"
+        aria-live="polite"
+      ></div>
+
+    </form>
+
+
+    <div class="access-notice">
+      Al ingresar estás accediendo a una versión Beta en desarrollo. Las mediciones realizadas mediante cámara son estimaciones y están sujetas a validación.
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     APP
+====================================================== -->
+
+<div
+  id="appRoot"
+  class="app-root hidden"
+>
+
+
 <header>
 
   <div class="header-row">
 
     <div>
+
       <div class="brand">
         KINEMY<span>X</span>
       </div>
@@ -34,10 +171,36 @@
       <div class="subtitle">
         Human Movement Intelligence
       </div>
+
     </div>
 
-    <div class="beta-badge">
-      BETA 0.6
+
+    <div class="header-actions">
+
+      <div class="tester-chip">
+
+        <span class="tester-dot"></span>
+
+        <span id="testerNameDisplay">
+          Tester
+        </span>
+
+      </div>
+
+
+      <div class="beta-badge">
+        BETA 0.7
+      </div>
+
+
+      <button
+        id="logoutButton"
+        type="button"
+        class="logout-button"
+      >
+        Salir
+      </button>
+
     </div>
 
   </div>
@@ -45,7 +208,13 @@
 </header>
 
 
+
 <main>
+
+
+  <!-- =====================================================
+       SELECCIÓN
+  ====================================================== -->
 
   <section class="panel category-panel">
 
@@ -142,6 +311,11 @@
 
   </section>
 
+
+
+  <!-- =====================================================
+       PREPARACIÓN
+  ====================================================== -->
 
   <section class="panel setup-panel">
 
@@ -312,6 +486,11 @@
   </section>
 
 
+
+  <!-- =====================================================
+       CÁMARA
+  ====================================================== -->
+
   <section class="camera-section">
 
     <div class="camera-wrapper">
@@ -467,6 +646,11 @@
   </section>
 
 
+
+  <!-- =====================================================
+       CONTROLES
+  ====================================================== -->
+
   <section class="panel control-panel">
 
     <div class="section-eyebrow">
@@ -515,6 +699,11 @@
 
   </section>
 
+
+
+  <!-- =====================================================
+       CONFIGURACIÓN MOVIMIENTOS
+  ====================================================== -->
 
   <section
     id="movementSettingsSection"
@@ -810,6 +999,11 @@
   </section>
 
 
+
+  <!-- =====================================================
+       CONFIGURACIÓN SALTOS
+  ====================================================== -->
+
   <section
     id="jumpSettingsSection"
     class="panel config-shell hidden"
@@ -1047,6 +1241,11 @@
   </section>
 
 
+
+  <!-- =====================================================
+       RESULTADOS MOVIMIENTOS
+  ====================================================== -->
+
   <section
     id="movementResults"
     class="panel results"
@@ -1075,29 +1274,22 @@
 
         <tr>
 
-          <th>
-            Rep
-          </th>
+          <th>Rep</th>
 
           <th id="movementAngleHeader">
             Flexión rodilla
           </th>
 
-          <th>
-            Exc.
-          </th>
+          <th>Exc.</th>
 
-          <th>
-            Con.
-          </th>
+          <th>Con.</th>
 
-          <th>
-            Estado
-          </th>
+          <th>Estado</th>
 
         </tr>
 
       </thead>
+
 
       <tbody id="movementResultsBody"></tbody>
 
@@ -1105,6 +1297,11 @@
 
   </section>
 
+
+
+  <!-- =====================================================
+       RESULTADOS SALTOS
+  ====================================================== -->
 
   <section
     id="jumpResults"
@@ -1134,37 +1331,22 @@
 
         <tr>
 
-          <th>
-            Salto
-          </th>
-
-          <th>
-            Altura est.
-          </th>
-
-          <th>
-            Vuelo
-          </th>
-
-          <th>
-            Rodilla
-          </th>
+          <th>Salto</th>
+          <th>Altura est.</th>
+          <th>Vuelo</th>
+          <th>Rodilla</th>
 
           <th id="jumpProtocolHeader">
             Descenso
           </th>
 
-          <th>
-            Aterrizaje
-          </th>
-
-          <th>
-            Estado
-          </th>
+          <th>Aterrizaje</th>
+          <th>Estado</th>
 
         </tr>
 
       </thead>
+
 
       <tbody id="jumpResultsBody"></tbody>
 
@@ -1172,6 +1354,11 @@
 
   </section>
 
+
+
+  <!-- =====================================================
+       FEEDBACK
+  ====================================================== -->
 
   <section class="panel feedback-panel">
 
@@ -1360,8 +1547,7 @@
 
           <label>
 
-            Nombre o contacto
-
+            Contacto
             <span class="optional">
               (opcional)
             </span>
@@ -1370,7 +1556,7 @@
               id="feedbackContact"
               type="text"
               maxlength="120"
-              placeholder="Nombre, Instagram o correo"
+              placeholder="Instagram o correo"
             />
 
           </label>
@@ -1403,10 +1589,11 @@
   </section>
 
 
+
   <footer class="app-footer">
 
     <strong>
-      KINEMYX Beta 0.6
+      KINEMYX Beta 0.7
     </strong>
 
     <span>
@@ -1416,6 +1603,8 @@
   </footer>
 
 </main>
+
+</div>
 
 
 <script src="app.js"></script>
