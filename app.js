@@ -1,14 +1,29 @@
 /* =========================================================
-   KINEMYX Beta 0.7
-   Acceso privado + Movimientos + Saltos + Feedback
-   ========================================================= */
+   KINEMYX Beta 0.7.1
+
+   - Acceso privado
+   - Timing dinámico:
+       Sentadilla
+       Peso muerto
+       Press banca
+   - Saltos:
+       SJ
+       CMJ
+       Abalakov
+   - Feedback Formspree
+========================================================= */
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 const $ = (id) =>
   document.getElementById(id);
 
 
 const APP_VERSION =
-  "KINEMYX Beta 0.7";
+  "KINEMYX Beta 0.7.1";
 
 
 const FORMSPREE_ENDPOINT =
@@ -16,10 +31,11 @@ const FORMSPREE_ENDPOINT =
 
 
 /*
-  Clave inicial:
+  Clave actual:
+
   KINEMYX-BETA26!
 
-  En el código solo almacenamos el SHA-256.
+  Solo almacenamos el SHA-256.
 */
 
 const ACCESS_PASSWORD_HASH =
@@ -70,7 +86,7 @@ const testerNameDisplay =
 
 
 /* =========================================================
-   ACCESS FUNCTIONS
+   ACCESS
 ========================================================= */
 
 async function sha256(
@@ -289,8 +305,7 @@ async function submitAccess(
 
 
     if (
-      enteredHash
-      !==
+      enteredHash !==
       ACCESS_PASSWORD_HASH
     ) {
 
@@ -336,7 +351,7 @@ async function submitAccess(
 
     setTimeout(
       showApplication,
-      250
+      200
     );
 
   }
@@ -372,6 +387,27 @@ async function submitAccess(
 }
 
 
+function togglePasswordVisibility() {
+
+  const hidden =
+    accessPassword.type ===
+    "password";
+
+
+  accessPassword.type =
+    hidden
+      ? "text"
+      : "password";
+
+
+  togglePasswordButton.textContent =
+    hidden
+      ? "Ocultar"
+      : "Ver";
+
+}
+
+
 function logout() {
 
   localStorage.removeItem(
@@ -384,26 +420,7 @@ function logout() {
   );
 
 
-  if (
-    currentStream
-  ) {
-
-    currentStream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
-      );
-
-
-    currentStream =
-      null;
-
-
-    cameraReady =
-      false;
-
-  }
+  stopCamera();
 
 
   accessName.value =
@@ -411,28 +428,6 @@ function logout() {
 
 
   showAccessGate();
-
-}
-
-
-function togglePasswordVisibility() {
-
-  const isPassword =
-    accessPassword.type
-    ===
-    "password";
-
-
-  accessPassword.type =
-    isPassword
-      ? "text"
-      : "password";
-
-
-  togglePasswordButton.textContent =
-    isPassword
-      ? "Ocultar"
-      : "Ver";
 
 }
 
@@ -459,7 +454,6 @@ logoutButton.addEventListener(
 );
 
 
-
 /* =========================================================
    APP DOM
 ========================================================= */
@@ -467,8 +461,10 @@ logoutButton.addEventListener(
 const video =
   $("video");
 
+
 const canvas =
   $("canvas");
+
 
 const ctx =
   canvas.getContext(
@@ -483,245 +479,326 @@ const cameraWrapper =
 const movementCategoryButton =
   $("movementCategoryButton");
 
+
 const jumpCategoryButton =
   $("jumpCategoryButton");
+
 
 const movementExerciseSelector =
   $("movementExerciseSelector");
 
+
 const jumpExerciseSelector =
   $("jumpExerciseSelector");
+
 
 const movementSettingsSection =
   $("movementSettingsSection");
 
+
 const jumpSettingsSection =
   $("jumpSettingsSection");
+
 
 const movementConfigDetails =
   $("movementConfigDetails");
 
+
 const jumpConfigDetails =
   $("jumpConfigDetails");
+
 
 const cameraButton =
   $("cameraButton");
 
+
 const switchCameraButton =
   $("switchCameraButton");
+
 
 const startButton =
   $("startButton");
 
+
 const stopButton =
   $("stopButton");
+
 
 const liveExerciseLabel =
   $("liveExerciseLabel");
 
+
 const countLabel =
   $("countLabel");
+
 
 const primaryMetricLabel =
   $("primaryMetricLabel");
 
+
 const secondaryMetricLabel =
   $("secondaryMetricLabel");
+
 
 const tertiaryMetricLabel =
   $("tertiaryMetricLabel");
 
+
 const repDisplay =
   $("repDisplay");
+
 
 const angleDisplay =
   $("angleDisplay");
 
+
 const stateDisplay =
   $("stateDisplay");
+
 
 const eccDisplay =
   $("eccDisplay");
 
+
 const conDisplay =
   $("conDisplay");
+
 
 const sideDisplay =
   $("sideDisplay");
 
+
 const statusBox =
   $("status");
+
 
 const warningBox =
   $("warning");
 
+
 const positionGuide =
   $("positionGuide");
+
 
 const positionGuideTitle =
   $("positionGuideTitle");
 
+
 const positionGuideText =
   $("positionGuideText");
+
 
 const movementResultsSection =
   $("movementResults");
 
+
 const movementResultsTitle =
   $("movementResultsTitle");
+
 
 const movementSummary =
   $("movementSummary");
 
+
 const movementResultsBody =
   $("movementResultsBody");
+
 
 const movementAngleHeader =
   $("movementAngleHeader");
 
+
 const jumpResultsSection =
   $("jumpResults");
+
 
 const jumpResultsTitle =
   $("jumpResultsTitle");
 
+
 const jumpSummary =
   $("jumpSummary");
+
 
 const jumpResultsBody =
   $("jumpResultsBody");
 
+
 const jumpProtocolHeader =
   $("jumpProtocolHeader");
+
 
 const stepAnalysis =
   $("stepAnalysis");
 
+
 const stepCamera =
   $("stepCamera");
+
 
 const stepPosition =
   $("stepPosition");
 
+
 const stepStart =
   $("stepStart");
+
 
 const stepAnalysisText =
   $("stepAnalysisText");
 
+
 const stepCameraText =
   $("stepCameraText");
+
 
 const stepPositionText =
   $("stepPositionText");
 
+
 const stepStartText =
   $("stepStartText");
+
 
 const stepAnalysisStatus =
   $("stepAnalysisStatus");
 
+
 const stepCameraStatus =
   $("stepCameraStatus");
+
 
 const stepPositionStatus =
   $("stepPositionStatus");
 
+
 const stepStartStatus =
   $("stepStartStatus");
+
 
 const movementAngleName =
   $("movementAngleName");
 
+
 const movementTargetReps =
   $("movementTargetReps");
+
 
 const movementAngleTarget =
   $("movementAngleTarget");
 
+
 const movementAngleTolerance =
   $("movementAngleTolerance");
+
 
 const movementEccTarget =
   $("movementEccTarget");
 
+
 const movementEccTolerance =
   $("movementEccTolerance");
+
 
 const movementConTarget =
   $("movementConTarget");
 
+
 const movementConTolerance =
   $("movementConTolerance");
+
 
 const movementFeedbackMode =
   $("movementFeedbackMode");
 
+
 const movementCheckAngle =
   $("movementCheckAngle");
+
 
 const movementCheckEcc =
   $("movementCheckEcc");
 
+
 const movementCheckCon =
   $("movementCheckCon");
+
 
 const movementCheckAngleText =
   $("movementCheckAngleText");
 
+
 const jumpTargetJumps =
   $("jumpTargetJumps");
+
 
 const jumpKneeTarget =
   $("jumpKneeTarget");
 
+
 const jumpKneeTolerance =
   $("jumpKneeTolerance");
+
 
 const sjHoldWrap =
   $("sjHoldWrap");
 
+
 const sjHoldTarget =
   $("sjHoldTarget");
+
 
 const jumpFeedbackMode =
   $("jumpFeedbackMode");
 
+
 const jumpCheckFlight =
   $("jumpCheckFlight");
+
 
 const jumpCheckKnee =
   $("jumpCheckKnee");
 
+
 const jumpCheckLanding =
   $("jumpCheckLanding");
+
 
 const jumpProtocolNote =
   $("jumpProtocolNote");
 
+
 const feedbackForm =
   $("feedbackForm");
+
 
 const feedbackExercise =
   $("feedbackExercise");
 
+
 const feedbackProfile =
   $("feedbackProfile");
+
 
 const feedbackType =
   $("feedbackType");
 
+
 const feedbackExperience =
   $("feedbackExperience");
+
 
 const feedbackMessage =
   $("feedbackMessage");
 
+
 const feedbackContact =
   $("feedbackContact");
 
+
 const feedbackSubmit =
   $("feedbackSubmit");
+
 
 const feedbackStatus =
   $("feedbackStatus");
@@ -734,88 +811,195 @@ const feedbackStatus =
 let detector =
   null;
 
+
 let cameraReady =
   false;
+
 
 let trackingReady =
   false;
 
+
 let analysisActive =
   false;
+
 
 let detectionLoopStarted =
   false;
 
+
 let lastGoodTrackingAt =
   0;
+
 
 let lastPositionAssessment =
   null;
 
+
 let activeCategory =
   "movement";
+
 
 let activeExercise =
   "squat";
 
+
 let currentFacingMode =
   "user";
+
 
 let currentStream =
   null;
 
+
 let candidateSide =
   "left";
+
 
 let activeSide =
   "left";
 
+
 let audioContext =
   null;
+
 
 let trackingLostSince =
   null;
 
+
 let trackingAlertPlayed =
   false;
 
+
 let warningHideTimer =
   null;
+
 
 let angleBuffer =
   [];
 
 
 /* =========================================================
-   CONSTANTS
+   TRACKING CONSTANTS
 ========================================================= */
 
 const MIN_CONFIDENCE =
   0.58;
 
+
 const MIN_POINT_CONFIDENCE =
   0.42;
+
 
 const TRACKING_HOLD_MS =
   450;
 
+
 const SMOOTHING_FRAMES =
   5;
 
-const TURNAROUND_DELTA =
-  4;
 
 const GRAVITY =
   9.81;
 
+
 const FRAME_MARGIN_X =
   0.035;
+
 
 const FRAME_MARGIN_Y =
   0.045;
 
+
 const FRONTAL_RATIO_THRESHOLD =
   0.58;
+
+
+/* =========================================================
+   MOVEMENT TIMING CONSTANTS
+========================================================= */
+
+/*
+  Aproximadamente 0.3-0.5 s
+  de posición estable antes de comenzar.
+*/
+
+const DYN_CALIBRATION_FRAMES =
+  12;
+
+
+const DYN_CALIBRATION_RANGE =
+  3.5;
+
+
+/*
+  Primer indicio de movimiento.
+*/
+
+const DYN_START_CANDIDATE_DELTA =
+  1.0;
+
+
+/*
+  Confirmación de que realmente
+  comenzó una repetición.
+*/
+
+const DYN_START_DELTA =
+  4.0;
+
+
+/*
+  Detectamos el inicio del
+  cambio de dirección.
+*/
+
+const DYN_REVERSAL_CANDIDATE_DELTA =
+  0.8;
+
+
+/*
+  Confirmación del cambio
+  de dirección.
+*/
+
+const DYN_REVERSAL_DELTA =
+  3.0;
+
+
+/*
+  Tolerancia para considerar
+  que regresó a la posición inicial.
+*/
+
+const DYN_RETURN_TOLERANCE =
+  4.0;
+
+
+/*
+  Evita contar movimientos
+  extremadamente breves por ruido.
+*/
+
+const DYN_MIN_PHASE_MS =
+  180;
+
+
+const DYN_SIGNAL_EPS =
+  0.20;
+
+
+const DYN_TURNAROUND_STABLE_MS =
+  160;
+
+
+const DYN_TURNAROUND_TOLERANCE =
+  1.0;
+
+
+const DYN_BASELINE_ADAPTATION =
+  0.20;
 
 
 /* =========================================================
@@ -854,10 +1038,7 @@ const exerciseMeta = {
       2,
 
     defaultCon:
-      1,
-
-    minDepth:
-      45
+      1
 
   },
 
@@ -892,10 +1073,7 @@ const exerciseMeta = {
       2,
 
     defaultCon:
-      1,
-
-    floorFlexion:
-      45
+      1
 
   },
 
@@ -930,10 +1108,7 @@ const exerciseMeta = {
       2,
 
     defaultCon:
-      1,
-
-    minDepth:
-      55
+      1
 
   },
 
@@ -983,41 +1158,97 @@ const exerciseMeta = {
 
 
 /* =========================================================
-   MOVEMENT STATE
+   MOVEMENT RESULT STATE
 ========================================================= */
 
 let movementRepCount =
   0;
 
+
 let movementSuccessfulReps =
   0;
 
-let movementState =
-  "READY";
-
-let movementMaxAngle =
-  0;
-
-let movementRepStartTime =
-  0;
-
-let movementBottomTime =
-  0;
-
-let movementAscentStartTime =
-  0;
-
-let movementPreviousAngle =
-  null;
 
 let movementResults =
   [];
 
-let deadliftEccentricForNextRep =
+
+/* =========================================================
+   DYNAMIC MOVEMENT STATE
+========================================================= */
+
+let dynState =
+  "CALIBRATING";
+
+
+let dynCalibrationSamples =
+  [];
+
+
+let dynBaselineSignal =
   null;
 
-let deadliftDescentStartTime =
+
+let dynBaselinePrimary =
+  null;
+
+
+let dynPotentialStartTime =
+  null;
+
+
+let dynPhase1StartTime =
+  null;
+
+
+let dynExtremeSignal =
+  null;
+
+
+let dynExtremeTime =
+  null;
+
+
+let dynReversalCandidateTime =
+  null;
+
+
+let dynPhase2StartTime =
+  null;
+
+
+let dynEccentricDuration =
+  null;
+
+
+let dynConcentricDuration =
+  null;
+
+
+let dynPrimaryMax =
   0;
+
+
+let dynTrackingPauseStartedAt =
+  null;
+
+
+let dynBufferExercise =
+  null;
+
+
+let dynBuffers = {
+
+  primary:
+    [],
+
+  secondary:
+    [],
+
+  signal:
+    []
+
+};
 
 
 /* =========================================================
@@ -1027,56 +1258,74 @@ let deadliftDescentStartTime =
 let jumpCount =
   0;
 
+
 let jumpValidCount =
   0;
+
 
 let jumpState =
   "CALIBRATING";
 
+
 let jumpPreviousFlexion =
   null;
+
 
 let jumpPreviousAnkleY =
   null;
 
+
 let jumpMaxFlexion =
   0;
+
 
 let jumpStartTime =
   0;
 
+
 let jumpBottomTime =
   0;
+
 
 let jumpPropulsionStartTime =
   0;
 
+
 let jumpTakeoffTime =
   0;
+
 
 let jumpLandingTime =
   0;
 
+
 let jumpLandingStartTime =
   0;
+
 
 let jumpMaxLandingFlexion =
   0;
 
+
 let jumpResults =
   [];
+
 
 let jumpBaselineAnkleY =
   null;
 
+
 let jumpBaselineSamples =
   [];
+
 
 let sjHoldStartTime =
   0;
 
+
 let sjHeldFlexion =
   null;
+
 
 let sjProtocolInvalid =
   false;
@@ -1085,23 +1334,30 @@ let sjProtocolInvalid =
 const JUMP_READY_FLEXION =
   20;
 
+
 const JUMP_DESCENT_TRIGGER =
   25;
+
 
 const CMJ_MIN_COUNTERMOVEMENT =
   35;
 
+
 const JUMP_TAKEOFF_MIN_MS =
   70;
+
 
 const JUMP_MIN_FLIGHT_MS =
   120;
 
+
 const JUMP_MAX_FLIGHT_MS =
   1300;
 
+
 const JUMP_LANDING_CAPTURE_MS =
   420;
+
 
 const SJ_COUNTERMOVEMENT_ALLOWANCE =
   6;
@@ -1296,9 +1552,7 @@ function updateSetupFlow() {
   setStep(
 
     stepAnalysis,
-
     stepAnalysisText,
-
     stepAnalysisStatus,
 
     "done",
@@ -1313,32 +1567,47 @@ function updateSetupFlow() {
   if (!cameraReady) {
 
     setStep(
+
       stepCamera,
       stepCameraText,
       stepCameraStatus,
+
       "active",
+
       "Activa la cámara",
+
       "2"
+
     );
 
 
     setStep(
+
       stepPosition,
       stepPositionText,
       stepPositionStatus,
+
       "pending",
+
       "Esperando cámara",
+
       "3"
+
     );
 
 
     setStep(
+
       stepStart,
       stepStartText,
       stepStartStatus,
+
       "pending",
+
       "Completa los pasos",
+
       "4"
+
     );
 
 
@@ -1354,9 +1623,7 @@ function updateSetupFlow() {
   setStep(
 
     stepCamera,
-
     stepCameraText,
-
     stepCameraStatus,
 
     "done",
@@ -1385,9 +1652,7 @@ function updateSetupFlow() {
     setStep(
 
       stepPosition,
-
       stepPositionText,
-
       stepPositionStatus,
 
       analysisActive
@@ -1404,9 +1669,7 @@ function updateSetupFlow() {
     setStep(
 
       stepStart,
-
       stepStartText,
-
       stepStartStatus,
 
       analysisActive
@@ -1440,9 +1703,7 @@ function updateSetupFlow() {
   setStep(
 
     stepPosition,
-
     stepPositionText,
-
     stepPositionStatus,
 
     "done",
@@ -1457,12 +1718,17 @@ function updateSetupFlow() {
   if (analysisActive) {
 
     setStep(
+
       stepStart,
       stepStartText,
       stepStartStatus,
+
       "done",
+
       "Serie en curso",
+
       "●"
+
     );
 
 
@@ -1474,12 +1740,17 @@ function updateSetupFlow() {
   else {
 
     setStep(
+
       stepStart,
       stepStartText,
       stepStartStatus,
+
       "active",
+
       "Listo para iniciar",
+
       "4"
+
     );
 
 
@@ -1492,27 +1763,31 @@ function updateSetupFlow() {
 
 
 /* =========================================================
-   EVENTS
+   APP EVENTS
 ========================================================= */
 
-movementCategoryButton
-  .addEventListener(
-    "click",
-    () =>
-      selectCategory(
-        "movement"
-      )
-  );
+movementCategoryButton.addEventListener(
+
+  "click",
+
+  () =>
+    selectCategory(
+      "movement"
+    )
+
+);
 
 
-jumpCategoryButton
-  .addEventListener(
-    "click",
-    () =>
-      selectCategory(
-        "jump"
-      )
-  );
+jumpCategoryButton.addEventListener(
+
+  "click",
+
+  () =>
+    selectCategory(
+      "jump"
+    )
+
+);
 
 
 document
@@ -1523,11 +1798,14 @@ document
     button => {
 
       button.addEventListener(
+
         "click",
+
         () =>
           selectExercise(
             button.dataset.exercise
           )
+
       );
 
     }
@@ -1553,11 +1831,14 @@ startButton.addEventListener(
 
 
 stopButton.addEventListener(
+
   "click",
+
   () =>
     stopAnalysis(
       false
     )
+
 );
 
 
@@ -1568,12 +1849,15 @@ window.addEventListener(
 
 
 window.addEventListener(
+
   "orientationchange",
+
   () =>
     setTimeout(
       syncCanvasToVideoFrame,
       250
     )
+
 );
 
 
@@ -1584,8 +1868,10 @@ if (
 
   const resizeObserver =
     new ResizeObserver(
+
       () =>
         syncCanvasToVideoFrame()
+
     );
 
 
@@ -1718,6 +2004,9 @@ function selectExercise(
   hidePositionGuide();
 
 
+  resetDynamicMovementTiming();
+
+
   movementConfigDetails.open =
     false;
 
@@ -1739,8 +2028,7 @@ function selectExercise(
 
             "secondary",
 
-            button.dataset.exercise
-            !==
+            button.dataset.exercise !==
             exercise
 
           );
@@ -1898,12 +2186,7 @@ function configureMovementUI(
 
 
   stateDisplay.textContent =
-    activeExercise ===
-      "deadlift"
-
-      ? "WAIT_FLOOR"
-
-      : "READY";
+    "READY";
 
 
   eccDisplay.textContent =
@@ -1979,7 +2262,7 @@ function configureJumpUI(
 
   stateDisplay.textContent =
     exercise ===
-      "sj"
+    "sj"
 
       ? "START POSITION"
 
@@ -2022,6 +2305,7 @@ function configureJumpUI(
 
   }
 
+
   else if (
     exercise ===
     "cmj"
@@ -2035,6 +2319,7 @@ function configureJumpUI(
       "CMJ: inicia de pie, manos en cadera, realiza un countermovement y salta verticalmente.";
 
   }
+
 
   else {
 
@@ -2104,7 +2389,7 @@ async function getCameraStream() {
     );
 
 
-    return navigator
+    return await navigator
       .mediaDevices
       .getUserMedia({
 
@@ -2131,6 +2416,58 @@ async function getCameraStream() {
           false
 
       });
+
+  }
+
+}
+
+
+function stopCamera() {
+
+  if (currentStream) {
+
+    currentStream
+      .getTracks()
+      .forEach(
+        track =>
+          track.stop()
+      );
+
+
+    currentStream =
+      null;
+
+  }
+
+
+  cameraReady =
+    false;
+
+
+  trackingReady =
+    false;
+
+
+  analysisActive =
+    false;
+
+
+  if (video) {
+
+    video.srcObject =
+      null;
+
+  }
+
+
+  if (ctx) {
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
   }
 
@@ -2201,8 +2538,7 @@ function syncCanvasToVideoFrame() {
 
 
     drawHeight =
-      boxWidth
-      /
+      boxWidth /
       videoRatio;
 
   }
@@ -2214,8 +2550,7 @@ function syncCanvasToVideoFrame() {
 
 
     drawWidth =
-      boxHeight
-      *
+      boxHeight *
       videoRatio;
 
   }
@@ -2507,7 +2842,7 @@ async function switchCamera() {
 
   currentFacingMode =
     currentFacingMode ===
-      "user"
+    "user"
 
       ? "environment"
 
@@ -2749,32 +3084,15 @@ function requiredPointEntries(
   }
 
 
-  if (
-    activeExercise ===
-    "deadlift"
-  ) {
+  /*
+    Sentadilla y peso muerto:
 
-    return [
+    necesitamos hombro, cadera,
+    rodilla y tobillo.
 
-      [
-        "shoulder",
-        points.shoulder
-      ],
-
-      [
-        "hip",
-        points.hip
-      ],
-
-      [
-        "knee",
-        points.knee
-      ]
-
-    ];
-
-  }
-
+    Esto permite medir tanto cadera
+    como rodilla.
+  */
 
   return [
 
@@ -2904,8 +3222,7 @@ function hasEnoughTracking(
     required.every(
 
       point =>
-        point.score
-        >=
+        point.score >=
         MIN_POINT_CONFIDENCE
 
     )
@@ -2951,10 +3268,14 @@ function capitalize(
 
   return (
     text
-      .charAt(0)
+      .charAt(
+        0
+      )
       .toUpperCase()
     +
-    text.slice(1)
+    text.slice(
+      1
+    )
   );
 
 }
@@ -2975,11 +3296,14 @@ function isLikelyFrontal(
   const leftShoulder =
     kp[5];
 
+
   const rightShoulder =
     kp[6];
 
+
   const leftHip =
     kp[11];
+
 
   const rightHip =
     kp[12];
@@ -3064,8 +3388,7 @@ function isLikelyFrontal(
 
 
   return (
-    bodyWidth
-    /
+    bodyWidth /
     torsoHeight
     >
     FRONTAL_RATIO_THRESHOLD
@@ -3075,7 +3398,7 @@ function isLikelyFrontal(
 
 
 /* =========================================================
-   MISSING POINT
+   POSITION ASSESSMENT
 ========================================================= */
 
 function buildMissingPointAssessment(
@@ -3093,8 +3416,7 @@ function buildMissingPointAssessment(
         ) =>
           !point
           ||
-          point.score
-          <
+          point.score <
           MIN_POINT_CONFIDENCE
       )
 
@@ -3138,6 +3460,7 @@ function buildMissingPointAssessment(
 
   }
 
+
   else if (
     main ===
     "hombro"
@@ -3153,6 +3476,7 @@ function buildMissingPointAssessment(
       "Ajusta el encuadre para que todo el brazo del lado analizado quede visible.";
 
   }
+
 
   else if (
     main ===
@@ -3187,10 +3511,6 @@ function buildMissingPointAssessment(
 }
 
 
-/* =========================================================
-   EDGE POSITION
-========================================================= */
-
 function buildEdgeAssessment(
   points
 ) {
@@ -3207,14 +3527,12 @@ function buildEdgeAssessment(
 
 
   const marginX =
-    video.videoWidth
-    *
+    video.videoWidth *
     FRAME_MARGIN_X;
 
 
   const marginY =
-    video.videoHeight
-    *
+    video.videoHeight *
     FRAME_MARGIN_Y;
 
 
@@ -3226,8 +3544,7 @@ function buildEdgeAssessment(
         (
           [, point]
         ) =>
-          point.score
-          >=
+          point.score >=
           MIN_POINT_CONFIDENCE
       );
 
@@ -3241,10 +3558,8 @@ function buildEdgeAssessment(
   ) {
 
     if (
-      point.y
-      >
-      video.videoHeight
-      -
+      point.y >
+      video.videoHeight -
       marginY
     ) {
 
@@ -3271,8 +3586,7 @@ function buildEdgeAssessment(
 
 
     if (
-      point.y
-      <
+      point.y <
       marginY
     ) {
 
@@ -3299,16 +3613,11 @@ function buildEdgeAssessment(
 
 
     if (
-      point.x
-      <
+      point.x <
       marginX
-
       ||
-
-      point.x
-      >
-      video.videoWidth
-      -
+      point.x >
+      video.videoWidth -
       marginX
     ) {
 
@@ -3340,10 +3649,6 @@ function buildEdgeAssessment(
 
 }
 
-
-/* =========================================================
-   ASSESS POSITION
-========================================================= */
 
 function assessPosition(
   pose,
@@ -3473,9 +3778,7 @@ function showPositionGuide(
   assessment
 ) {
 
-  if (
-    !assessment
-  ) {
+  if (!assessment) {
 
     return;
 
@@ -3490,19 +3793,23 @@ function showPositionGuide(
     assessment.text;
 
 
-  positionGuide.classList.remove(
-    "hidden",
-    "ready-guide"
-  );
+  positionGuide
+    .classList
+    .remove(
+      "hidden",
+      "ready-guide"
+    );
 
 
   if (
     assessment.ready
   ) {
 
-    positionGuide.classList.add(
-      "ready-guide"
-    );
+    positionGuide
+      .classList
+      .add(
+        "ready-guide"
+      );
 
   }
 
@@ -3528,7 +3835,7 @@ function hidePositionGuide() {
 
 
 /* =========================================================
-   TRACKING
+   TRACKING STATE
 ========================================================= */
 
 function updateTrackingState(
@@ -3630,6 +3937,18 @@ function handleMissingPose() {
     analysisActive
   ) {
 
+    if (
+      activeCategory ===
+      "movement"
+    ) {
+
+      pauseDynamicMovementTiming(
+        performance.now()
+      );
+
+    }
+
+
     trackingWarning(
       lastPositionAssessment.short
     );
@@ -3668,10 +3987,8 @@ function calculateAngle(
 
     Math.abs(
 
-      radians
-      *
-      180
-      /
+      radians *
+      180 /
       Math.PI
 
     );
@@ -3708,8 +4025,7 @@ function flexionFromAngle(
 
       170,
 
-      180
-      -
+      180 -
       calculateAngle(
         a,
         b,
@@ -3733,8 +4049,7 @@ function smoothAngle(
 
 
   if (
-    angleBuffer.length
-    >
+    angleBuffer.length >
     SMOOTHING_FRAMES
   ) {
 
@@ -3763,32 +4078,110 @@ function smoothAngle(
 }
 
 
-function getPrimaryAngle(
+/* =========================================================
+   DYNAMIC MOVEMENT METRICS
+========================================================= */
+
+function dynSmooth(
+  buffer,
+  value
+) {
+
+  buffer.push(
+    value
+  );
+
+
+  if (
+    buffer.length >
+    SMOOTHING_FRAMES
+  ) {
+
+    buffer.shift();
+
+  }
+
+
+  return buffer.reduce(
+
+    (
+      sum,
+      item
+    ) =>
+      sum +
+      item,
+
+    0
+
+  )
+
+  /
+
+  buffer.length;
+
+}
+
+
+function getDynamicMovementMetrics(
   points
 ) {
+
+  /*
+    PRESS BANCA
+
+    Principal:
+    flexión de codo.
+  */
 
   if (
     activeExercise ===
     "bench"
   ) {
 
-    return flexionFromAngle(
+    const elbowFlexion =
+      flexionFromAngle(
 
-      points.shoulder,
-      points.elbow,
-      points.wrist
+        points.shoulder,
+        points.elbow,
+        points.wrist
 
-    );
+      );
+
+
+    return {
+
+      primary:
+        elbowFlexion,
+
+      secondary:
+        null,
+
+      signal:
+        elbowFlexion
+
+    };
 
   }
 
 
-  if (
-    activeExercise ===
-    "deadlift"
-  ) {
+  /*
+    SENTADILLA + PESO MUERTO
 
-    return flexionFromAngle(
+    Calculamos rodilla y cadera.
+  */
+
+  const kneeFlexion =
+    flexionFromAngle(
+
+      points.hip,
+      points.knee,
+      points.ankle
+
+    );
+
+
+  const hipFlexion =
+    flexionFromAngle(
 
       points.shoulder,
       points.hip,
@@ -3796,16 +4189,1228 @@ function getPrimaryAngle(
 
     );
 
+
+  /*
+    PESO MUERTO:
+
+    cadera tiene mayor ponderación,
+    pero rodilla también participa.
+  */
+
+  if (
+    activeExercise ===
+    "deadlift"
+  ) {
+
+    return {
+
+      primary:
+        hipFlexion,
+
+      secondary:
+        kneeFlexion,
+
+      signal:
+
+        (
+          hipFlexion *
+          0.70
+        )
+
+        +
+
+        (
+          kneeFlexion *
+          0.30
+        )
+
+    };
+
   }
 
 
-  return flexionFromAngle(
+  /*
+    SENTADILLA:
 
-    points.hip,
-    points.knee,
-    points.ankle
+    rodilla tiene mayor ponderación,
+    acompañada por la cadera.
+  */
+
+  return {
+
+    primary:
+      kneeFlexion,
+
+    secondary:
+      hipFlexion,
+
+    signal:
+
+      (
+        kneeFlexion *
+        0.65
+      )
+
+      +
+
+      (
+        hipFlexion *
+        0.35
+      )
+
+  };
+
+}
+
+
+function smoothDynamicMovementMetrics(
+  metrics
+) {
+
+  if (
+    dynBufferExercise !==
+    activeExercise
+  ) {
+
+    dynBufferExercise =
+      activeExercise;
+
+
+    dynBuffers = {
+
+      primary:
+        [],
+
+      secondary:
+        [],
+
+      signal:
+        []
+
+    };
+
+  }
+
+
+  const primary =
+    dynSmooth(
+
+      dynBuffers.primary,
+
+      metrics.primary
+
+    );
+
+
+  const secondary =
+
+    metrics.secondary ===
+    null
+
+      ? null
+
+      : dynSmooth(
+
+          dynBuffers.secondary,
+
+          metrics.secondary
+
+        );
+
+
+  const signal =
+    dynSmooth(
+
+      dynBuffers.signal,
+
+      metrics.signal
+
+    );
+
+
+  return {
+
+    primary,
+    secondary,
+    signal
+
+  };
+
+}
+
+
+/* =========================================================
+   MOVEMENT PROFILE
+========================================================= */
+
+function getDynamicMovementProfile() {
+
+  /*
+    PESO MUERTO
+
+    Piso
+    → concéntrica / extensión
+    → arriba
+    → excéntrica / flexión
+    → piso
+  */
+
+  if (
+    activeExercise ===
+    "deadlift"
+  ) {
+
+    return {
+
+      phase1Direction:
+        -1,
+
+      readyLabel:
+        "PISO / LISTO",
+
+      phase1Label:
+        "CONCÉNTRICA ↑",
+
+      turnaroundLabel:
+        "ARRIBA",
+
+      phase2Label:
+        "EXCÉNTRICA ↓",
+
+      phase1Name:
+        "concentric",
+
+      phase2Name:
+        "eccentric"
+
+    };
+
+  }
+
+
+  /*
+    SENTADILLA Y PRESS BANCA
+
+    Arriba
+    → excéntrica
+    → fondo
+    → concéntrica
+    → arriba
+  */
+
+  return {
+
+    phase1Direction:
+      1,
+
+    readyLabel:
+      "ARRIBA / LISTO",
+
+    phase1Label:
+      "EXCÉNTRICA ↓",
+
+    turnaroundLabel:
+
+      activeExercise ===
+      "bench"
+
+        ? "ABAJO"
+
+        : "FONDO",
+
+    phase2Label:
+      "CONCÉNTRICA ↑",
+
+    phase1Name:
+      "eccentric",
+
+    phase2Name:
+      "concentric"
+
+  };
+
+}
+
+
+/* =========================================================
+   RESET DYNAMIC MOVEMENT
+========================================================= */
+
+function resetDynamicMovementTiming() {
+
+  dynState =
+    "CALIBRATING";
+
+
+  dynCalibrationSamples =
+    [];
+
+
+  dynBaselineSignal =
+    null;
+
+
+  dynBaselinePrimary =
+    null;
+
+
+  dynPotentialStartTime =
+    null;
+
+
+  dynPhase1StartTime =
+    null;
+
+
+  dynExtremeSignal =
+    null;
+
+
+  dynExtremeTime =
+    null;
+
+
+  dynReversalCandidateTime =
+    null;
+
+
+  dynPhase2StartTime =
+    null;
+
+
+  dynEccentricDuration =
+    null;
+
+
+  dynConcentricDuration =
+    null;
+
+
+  dynPrimaryMax =
+    0;
+
+
+  dynTrackingPauseStartedAt =
+    null;
+
+
+  dynBufferExercise =
+    activeExercise;
+
+
+  dynBuffers = {
+
+    primary:
+      [],
+
+    secondary:
+      [],
+
+    signal:
+      []
+
+  };
+
+}
+
+
+/* =========================================================
+   TRACKING PAUSE
+========================================================= */
+
+function pauseDynamicMovementTiming(
+  timestamp
+) {
+
+  if (
+    !analysisActive
+    ||
+    activeCategory !==
+    "movement"
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    dynTrackingPauseStartedAt ===
+    null
+  ) {
+
+    dynTrackingPauseStartedAt =
+      timestamp;
+
+  }
+
+}
+
+
+function resumeDynamicMovementTiming(
+  timestamp
+) {
+
+  if (
+    dynTrackingPauseStartedAt ===
+    null
+  ) {
+
+    return;
+
+  }
+
+
+  const gap =
+    timestamp -
+    dynTrackingPauseStartedAt;
+
+
+  dynTrackingPauseStartedAt =
+    null;
+
+
+  const shift =
+    value => {
+
+      if (
+        value ===
+        null
+      ) {
+
+        return null;
+
+      }
+
+
+      return value +
+        gap;
+
+    };
+
+
+  dynPotentialStartTime =
+    shift(
+      dynPotentialStartTime
+    );
+
+
+  dynPhase1StartTime =
+    shift(
+      dynPhase1StartTime
+    );
+
+
+  dynExtremeTime =
+    shift(
+      dynExtremeTime
+    );
+
+
+  dynReversalCandidateTime =
+    shift(
+      dynReversalCandidateTime
+    );
+
+
+  dynPhase2StartTime =
+    shift(
+      dynPhase2StartTime
+    );
+
+}
+
+
+/* =========================================================
+   CALIBRATION
+========================================================= */
+
+function calibrateDynamicMovement(
+  metrics,
+  timestamp
+) {
+
+  dynCalibrationSamples.push({
+
+    signal:
+      metrics.signal,
+
+    primary:
+      metrics.primary,
+
+    timestamp:
+      timestamp
+
+  });
+
+
+  if (
+    dynCalibrationSamples.length >
+    DYN_CALIBRATION_FRAMES
+  ) {
+
+    dynCalibrationSamples.shift();
+
+  }
+
+
+  stateDisplay.textContent =
+    "CALIBRANDO";
+
+
+  if (
+    activeExercise ===
+    "deadlift"
+  ) {
+
+    statusBox.textContent =
+      "Mantén la posición inicial en el piso un instante.";
+
+  }
+
+
+  else if (
+    activeExercise ===
+    "bench"
+  ) {
+
+    statusBox.textContent =
+      "Mantén los brazos extendidos un instante.";
+
+  }
+
+
+  else {
+
+    statusBox.textContent =
+      "Mantente de pie en la posición inicial un instante.";
+
+  }
+
+
+  if (
+    dynCalibrationSamples.length <
+    DYN_CALIBRATION_FRAMES
+  ) {
+
+    return false;
+
+  }
+
+
+  const signals =
+    dynCalibrationSamples.map(
+
+      sample =>
+        sample.signal
+
+    );
+
+
+  const range =
+
+    Math.max(
+      ...signals
+    )
+
+    -
+
+    Math.min(
+      ...signals
+    );
+
+
+  /*
+    Si se está moviendo,
+    seguimos esperando una postura estable.
+  */
+
+  if (
+    range >
+    DYN_CALIBRATION_RANGE
+  ) {
+
+    return false;
+
+  }
+
+
+  dynBaselineSignal =
+
+    signals.reduce(
+
+      (
+        sum,
+        value
+      ) =>
+        sum +
+        value,
+
+      0
+
+    )
+
+    /
+
+    signals.length;
+
+
+  dynBaselinePrimary =
+
+    dynCalibrationSamples.reduce(
+
+      (
+        sum,
+        sample
+      ) =>
+        sum +
+        sample.primary,
+
+      0
+
+    )
+
+    /
+
+    dynCalibrationSamples.length;
+
+
+  dynPrimaryMax =
+    dynBaselinePrimary;
+
+
+  dynState =
+    "READY";
+
+
+  const profile =
+    getDynamicMovementProfile();
+
+
+  stateDisplay.textContent =
+    profile.readyLabel;
+
+
+  if (
+    activeExercise ===
+    "deadlift"
+  ) {
+
+    statusBox.textContent =
+      "Piso calibrado · comienza la subida cuando estés listo.";
+
+  }
+
+  else {
+
+    statusBox.textContent =
+      "Posición inicial calibrada · comienza la repetición cuando estés listo.";
+
+  }
+
+
+  return true;
+
+}
+
+
+/* =========================================================
+   DYNAMIC EXTREME
+========================================================= */
+
+function dynIsMoreExtreme(
+  current,
+  extreme,
+  direction
+) {
+
+  return (
+
+    direction *
+
+    (
+      current -
+      extreme
+    )
+
+    >
+
+    DYN_SIGNAL_EPS
 
   );
+
+}
+
+
+/* =========================================================
+   DYNAMIC MOVEMENT ENGINE
+========================================================= */
+
+function updateDynamicMovement(
+  metrics,
+  timestamp
+) {
+
+  const settings =
+    getMovementSettings();
+
+
+  const profile =
+    getDynamicMovementProfile();
+
+
+  const signal =
+    metrics.signal;
+
+
+  const direction =
+    profile.phase1Direction;
+
+
+  dynPrimaryMax =
+    Math.max(
+
+      dynPrimaryMax ||
+      metrics.primary,
+
+      metrics.primary
+
+    );
+
+
+  /*
+    CALIBRACIÓN
+  */
+
+  if (
+    dynState ===
+    "CALIBRATING"
+  ) {
+
+    calibrateDynamicMovement(
+      metrics,
+      timestamp
+    );
+
+
+    repDisplay.textContent =
+      `${movementRepCount} / ${settings.targetReps}`;
+
+
+    return;
+
+  }
+
+
+  /*
+    POSICIÓN INICIAL
+  */
+
+  if (
+    dynState ===
+    "READY"
+  ) {
+
+    stateDisplay.textContent =
+      profile.readyLabel;
+
+
+    const departure =
+
+      direction *
+
+      (
+        signal -
+        dynBaselineSignal
+      );
+
+
+    if (
+
+      departure >=
+      DYN_START_CANDIDATE_DELTA
+
+      &&
+
+      dynPotentialStartTime ===
+      null
+
+    ) {
+
+      dynPotentialStartTime =
+        timestamp;
+
+    }
+
+
+    if (
+      departure <
+      0.5
+    ) {
+
+      dynPotentialStartTime =
+        null;
+
+    }
+
+
+    if (
+      departure >=
+      DYN_START_DELTA
+    ) {
+
+      dynState =
+        "PHASE1";
+
+
+      dynPhase1StartTime =
+
+        dynPotentialStartTime
+        ??
+        timestamp;
+
+
+      dynExtremeSignal =
+        signal;
+
+
+      dynExtremeTime =
+        timestamp;
+
+
+      dynReversalCandidateTime =
+        null;
+
+
+      dynEccentricDuration =
+        null;
+
+
+      dynConcentricDuration =
+        null;
+
+
+      dynPrimaryMax =
+        Math.max(
+
+          dynBaselinePrimary
+          ??
+          metrics.primary,
+
+          metrics.primary
+
+        );
+
+
+      stateDisplay.textContent =
+        profile.phase1Label;
+
+    }
+
+  }
+
+
+  /*
+    PRIMERA FASE
+  */
+
+  else if (
+    dynState ===
+    "PHASE1"
+  ) {
+
+    dynPrimaryMax =
+      Math.max(
+
+        dynPrimaryMax,
+
+        metrics.primary
+
+      );
+
+
+    /*
+      Guardamos continuamente
+      el punto extremo real.
+    */
+
+    if (
+      dynIsMoreExtreme(
+
+        signal,
+        dynExtremeSignal,
+        direction
+
+      )
+    ) {
+
+      dynExtremeSignal =
+        signal;
+
+
+      dynExtremeTime =
+        timestamp;
+
+
+      dynReversalCandidateTime =
+        null;
+
+    }
+
+
+    const reversal =
+
+      direction *
+
+      (
+        dynExtremeSignal -
+        signal
+      );
+
+
+    /*
+      Si se mantiene estable
+      en el punto extremo,
+      mostramos el estado correspondiente.
+
+      La pausa no se suma
+      a la fase.
+    */
+
+    const stableAtTurnaround =
+
+      (
+        timestamp -
+        dynExtremeTime
+      )
+
+      >=
+      DYN_TURNAROUND_STABLE_MS
+
+      &&
+
+      Math.abs(
+
+        signal -
+        dynExtremeSignal
+
+      )
+
+      <=
+      DYN_TURNAROUND_TOLERANCE;
+
+
+    stateDisplay.textContent =
+
+      stableAtTurnaround
+
+        ? profile.turnaroundLabel
+
+        : profile.phase1Label;
+
+
+    /*
+      Primer instante detectado
+      de cambio de dirección.
+    */
+
+    if (
+
+      reversal >=
+      DYN_REVERSAL_CANDIDATE_DELTA
+
+      &&
+
+      dynReversalCandidateTime ===
+      null
+
+    ) {
+
+      dynReversalCandidateTime =
+        timestamp;
+
+    }
+
+
+    if (
+      reversal <
+      0.3
+    ) {
+
+      dynReversalCandidateTime =
+        null;
+
+    }
+
+
+    const phase1ElapsedMs =
+
+      dynExtremeTime -
+      dynPhase1StartTime;
+
+
+    /*
+      Confirmamos el cambio
+      de dirección.
+    */
+
+    if (
+
+      reversal >=
+      DYN_REVERSAL_DELTA
+
+      &&
+
+      phase1ElapsedMs >=
+      DYN_MIN_PHASE_MS
+
+    ) {
+
+      const phase1Duration =
+
+        phase1ElapsedMs /
+        1000;
+
+
+      if (
+        profile.phase1Name ===
+        "eccentric"
+      ) {
+
+        dynEccentricDuration =
+          phase1Duration;
+
+      }
+
+      else {
+
+        dynConcentricDuration =
+          phase1Duration;
+
+      }
+
+
+      dynState =
+        "PHASE2";
+
+
+      dynPhase2StartTime =
+
+        dynReversalCandidateTime
+        ??
+        timestamp;
+
+
+      stateDisplay.textContent =
+        profile.phase2Label;
+
+    }
+
+  }
+
+
+  /*
+    SEGUNDA FASE
+  */
+
+  else if (
+    dynState ===
+    "PHASE2"
+  ) {
+
+    stateDisplay.textContent =
+      profile.phase2Label;
+
+
+    dynPrimaryMax =
+      Math.max(
+
+        dynPrimaryMax,
+
+        metrics.primary
+
+      );
+
+
+    const phase2ElapsedMs =
+
+      timestamp -
+      dynPhase2StartTime;
+
+
+    /*
+      Vuelta a posición inicial
+      calibrada.
+
+      No utilizamos grados fijos.
+  */
+
+    const returnedToBaseline =
+
+      direction >
+      0
+
+        ? signal <=
+          dynBaselineSignal +
+          DYN_RETURN_TOLERANCE
+
+        : signal >=
+          dynBaselineSignal -
+          DYN_RETURN_TOLERANCE;
+
+
+    if (
+
+      returnedToBaseline
+
+      &&
+
+      phase2ElapsedMs >=
+      DYN_MIN_PHASE_MS
+
+    ) {
+
+      const phase2Duration =
+
+        phase2ElapsedMs /
+        1000;
+
+
+      if (
+        profile.phase2Name ===
+        "eccentric"
+      ) {
+
+        dynEccentricDuration =
+          phase2Duration;
+
+      }
+
+      else {
+
+        dynConcentricDuration =
+          phase2Duration;
+
+      }
+
+
+      completeDynamicMovementRep(
+
+        dynEccentricDuration,
+
+        dynConcentricDuration,
+
+        dynPrimaryMax
+
+      );
+
+
+      if (
+        analysisActive
+      ) {
+
+        /*
+          Pequeña adaptación entre reps.
+        */
+
+        dynBaselineSignal =
+
+          (
+            dynBaselineSignal *
+
+            (
+              1 -
+              DYN_BASELINE_ADAPTATION
+            )
+          )
+
+          +
+
+          (
+            signal *
+
+            DYN_BASELINE_ADAPTATION
+          );
+
+
+        dynBaselinePrimary =
+
+          (
+            (
+              dynBaselinePrimary
+              ??
+              metrics.primary
+            )
+
+            *
+
+            (
+              1 -
+              DYN_BASELINE_ADAPTATION
+            )
+          )
+
+          +
+
+          (
+            metrics.primary *
+
+            DYN_BASELINE_ADAPTATION
+          );
+
+
+        dynState =
+          "READY";
+
+
+        dynPotentialStartTime =
+          null;
+
+
+        dynPhase1StartTime =
+          null;
+
+
+        dynExtremeSignal =
+          null;
+
+
+        dynExtremeTime =
+          null;
+
+
+        dynReversalCandidateTime =
+          null;
+
+
+        dynPhase2StartTime =
+          null;
+
+
+        dynEccentricDuration =
+          null;
+
+
+        dynConcentricDuration =
+          null;
+
+
+        dynPrimaryMax =
+          metrics.primary;
+
+
+        stateDisplay.textContent =
+          profile.readyLabel;
+
+      }
+
+    }
+
+  }
+
+
+  repDisplay.textContent =
+    `${movementRepCount} / ${settings.targetReps}`;
 
 }
 
@@ -3825,6 +5430,7 @@ function processPose(
 
 
   const side =
+
     analysisActive
 
       ? activeSide
@@ -3867,6 +5473,10 @@ function processPose(
   updateSetupFlow();
 
 
+  const now =
+    performance.now();
+
+
   if (
     !assessment.ready
   ) {
@@ -3878,6 +5488,18 @@ function processPose(
     if (
       analysisActive
     ) {
+
+      if (
+        activeCategory ===
+        "movement"
+      ) {
+
+        pauseDynamicMovementTiming(
+          now
+        );
+
+      }
+
 
       trackingWarning(
         assessment.short
@@ -3899,28 +5521,9 @@ function processPose(
     false;
 
 
-  const primaryAngle =
-    smoothAngle(
-
-      getPrimaryAngle(
-        points
-      )
-
-    );
-
-
-  angleDisplay.textContent =
-    `${primaryAngle.toFixed(0)}°`;
-
-
-  if (
-    !analysisActive
-  ) {
-
-    return;
-
-  }
-
+  /*
+    MOVIMIENTOS
+  */
 
   if (
     activeCategory ===
@@ -3928,43 +5531,80 @@ function processPose(
   ) {
 
     if (
-      activeExercise ===
-      "deadlift"
+      analysisActive
     ) {
 
-      updateDeadlift(
-
-        primaryAngle,
-
-        performance.now()
-
+      resumeDynamicMovementTiming(
+        now
       );
 
     }
 
-    else {
 
-      updateStandardMovement(
+    const rawMetrics =
+      getDynamicMovementMetrics(
+        points
+      );
 
-        primaryAngle,
 
-        performance.now()
+    const metrics =
+      smoothDynamicMovementMetrics(
+        rawMetrics
+      );
 
+
+    angleDisplay.textContent =
+      `${metrics.primary.toFixed(0)}°`;
+
+
+    if (
+      analysisActive
+    ) {
+
+      updateDynamicMovement(
+        metrics,
+        now
       );
 
     }
+
+
+    return;
 
   }
 
-  else {
+
+  /*
+    SALTOS
+  */
+
+  const kneeFlexion =
+    smoothAngle(
+
+      flexionFromAngle(
+
+        points.hip,
+        points.knee,
+        points.ankle
+
+      )
+
+    );
+
+
+  angleDisplay.textContent =
+    `${kneeFlexion.toFixed(0)}°`;
+
+
+  if (
+    analysisActive
+  ) {
 
     updateJump(
 
-      primaryAngle,
-
+      kneeFlexion,
       points,
-
-      performance.now()
+      now
 
     );
 
@@ -3974,416 +5614,13 @@ function processPose(
 
 
 /* =========================================================
-   STANDARD MOVEMENT
+   COMPLETE MOVEMENT REP
 ========================================================= */
 
-function updateStandardMovement(
-  angle,
-  timestamp
-) {
-
-  const settings =
-    getMovementSettings();
-
-
-  const isBench =
-    activeExercise ===
-    "bench";
-
-
-  const readyAngle =
-    isBench
-      ? 25
-      : 20;
-
-
-  const triggerAngle =
-    isBench
-      ? 30
-      : 25;
-
-
-  const minDepth =
-    exerciseMeta[
-      activeExercise
-    ].minDepth;
-
-
-  if (
-    movementState ===
-    "READY"
-  ) {
-
-    if (
-
-      angle >
-      triggerAngle
-
-      &&
-
-      movementPreviousAngle
-      !==
-      null
-
-      &&
-
-      angle >
-      movementPreviousAngle
-
-    ) {
-
-      movementState =
-        "DESCENDING";
-
-
-      movementRepStartTime =
-        timestamp;
-
-
-      movementMaxAngle =
-        angle;
-
-
-      movementBottomTime =
-        timestamp;
-
-    }
-
-  }
-
-
-  else if (
-    movementState ===
-    "DESCENDING"
-  ) {
-
-    if (
-      angle >
-      movementMaxAngle
-    ) {
-
-      movementMaxAngle =
-        angle;
-
-
-      movementBottomTime =
-        timestamp;
-
-    }
-
-
-    if (
-
-      movementMaxAngle -
-      angle
-
-      >=
-      TURNAROUND_DELTA
-
-    ) {
-
-      if (
-        movementMaxAngle
-        >=
-        minDepth
-      ) {
-
-        movementState =
-          "ASCENDING";
-
-
-        movementAscentStartTime =
-          timestamp;
-
-      }
-
-      else {
-
-        movementState =
-          "READY";
-
-
-        movementMaxAngle =
-          0;
-
-      }
-
-    }
-
-  }
-
-
-  else if (
-    movementState ===
-    "ASCENDING"
-  ) {
-
-    if (
-      angle <=
-      readyAngle
-    ) {
-
-      completeMovementRep(
-
-        (
-          movementBottomTime -
-          movementRepStartTime
-        )
-        /
-        1000,
-
-        (
-          timestamp -
-          movementAscentStartTime
-        )
-        /
-        1000
-
-      );
-
-
-      if (
-        analysisActive
-      ) {
-
-        movementState =
-          "READY";
-
-
-        movementMaxAngle =
-          0;
-
-      }
-
-    }
-
-  }
-
-
-  movementPreviousAngle =
-    angle;
-
-
-  stateDisplay.textContent =
-    movementState;
-
-
-  repDisplay.textContent =
-    `${movementRepCount} / ${settings.targetReps}`;
-
-}
-
-
-/* =========================================================
-   DEADLIFT
-========================================================= */
-
-function updateDeadlift(
-  angle,
-  timestamp
-) {
-
-  const settings =
-    getMovementSettings();
-
-
-  const floorFlexion =
-    exerciseMeta
-      .deadlift
-      .floorFlexion;
-
-
-  if (
-    movementState ===
-    "WAIT_FLOOR"
-  ) {
-
-    if (
-      angle >=
-      floorFlexion
-    ) {
-
-      movementState =
-        "FLOOR READY";
-
-
-      movementMaxAngle =
-        angle;
-
-
-      movementPreviousAngle =
-        angle;
-
-    }
-
-  }
-
-
-  else if (
-    movementState ===
-    "FLOOR READY"
-  ) {
-
-    if (
-      angle >
-      movementMaxAngle
-    ) {
-
-      movementMaxAngle =
-        angle;
-
-    }
-
-
-    if (
-
-      movementPreviousAngle
-      !==
-      null
-
-      &&
-
-      movementPreviousAngle
-      -
-      angle
-
-      >=
-      2.5
-
-    ) {
-
-      movementState =
-        "ASCENDING";
-
-
-      movementAscentStartTime =
-        timestamp;
-
-    }
-
-  }
-
-
-  else if (
-    movementState ===
-    "ASCENDING"
-  ) {
-
-    if (
-      angle <=
-      20
-    ) {
-
-      const concentric =
-        (
-          timestamp -
-          movementAscentStartTime
-        )
-        /
-        1000;
-
-
-      completeMovementRep(
-
-        deadliftEccentricForNextRep,
-
-        concentric
-
-      );
-
-
-      if (
-        analysisActive
-      ) {
-
-        movementState =
-          "TOP";
-
-
-        movementMaxAngle =
-          0;
-
-      }
-
-    }
-
-  }
-
-
-  else if (
-    movementState ===
-    "TOP"
-  ) {
-
-    if (
-      angle >
-      25
-    ) {
-
-      movementState =
-        "DESCENDING";
-
-
-      deadliftDescentStartTime =
-        timestamp;
-
-    }
-
-  }
-
-
-  else if (
-    movementState ===
-    "DESCENDING"
-  ) {
-
-    if (
-      angle >=
-      floorFlexion
-    ) {
-
-      deadliftEccentricForNextRep =
-        (
-          timestamp -
-          deadliftDescentStartTime
-        )
-        /
-        1000;
-
-
-      movementState =
-        "FLOOR READY";
-
-
-      movementMaxAngle =
-        angle;
-
-    }
-
-  }
-
-
-  movementPreviousAngle =
-    angle;
-
-
-  stateDisplay.textContent =
-    movementState;
-
-
-  repDisplay.textContent =
-    `${movementRepCount} / ${settings.targetReps}`;
-
-}
-
-
-/* =========================================================
-   MOVEMENT REP
-========================================================= */
-
-function completeMovementRep(
+function completeDynamicMovementRep(
   eccentric,
-  concentric
+  concentric,
+  angleValue
 ) {
 
   const settings =
@@ -4393,8 +5630,16 @@ function completeMovementRep(
   movementRepCount++;
 
 
-  const angleValue =
-    movementMaxAngle;
+  const eccAvailable =
+    Number.isFinite(
+      eccentric
+    );
+
+
+  const conAvailable =
+    Number.isFinite(
+      concentric
+    );
 
 
   const anglePassed =
@@ -4403,15 +5648,8 @@ function completeMovementRep(
 
     >=
 
-    settings.angleTarget
-    -
+    settings.angleTarget -
     settings.angleTolerance;
-
-
-  const eccAvailable =
-    Number.isFinite(
-      eccentric
-    );
 
 
   const eccPassed =
@@ -4421,22 +5659,32 @@ function completeMovementRep(
     ||
 
     Math.abs(
+
       eccentric -
       settings.eccTarget
+
     )
 
     <=
+
     settings.eccTolerance;
 
 
   const conPassed =
 
+    !conAvailable
+
+    ||
+
     Math.abs(
+
       concentric -
       settings.conTarget
+
     )
 
     <=
+
     settings.conTolerance;
 
 
@@ -4459,7 +5707,11 @@ function completeMovementRep(
   if (
     settings.checkEcc
     &&
-    !eccPassed
+    (
+      !eccAvailable
+      ||
+      !eccPassed
+    )
   ) {
 
     passed =
@@ -4471,7 +5723,11 @@ function completeMovementRep(
   if (
     settings.checkCon
     &&
-    !conPassed
+    (
+      !conAvailable
+      ||
+      !conPassed
+    )
   ) {
 
     passed =
@@ -4492,14 +5748,18 @@ function completeMovementRep(
   else {
 
     showWarning(
-      buildMovementWarning(
+
+      buildDynamicMovementWarning(
+
         settings,
         anglePassed,
         eccPassed,
         conPassed,
         eccentric,
         concentric
+
       )
+
     );
 
 
@@ -4522,7 +5782,9 @@ function completeMovementRep(
         : null,
 
     concentric:
-      concentric,
+      conAvailable
+        ? concentric
+        : null,
 
     passed:
       passed
@@ -4544,6 +5806,7 @@ function completeMovementRep(
 
 
   eccDisplay.textContent =
+
     eccAvailable
 
       ? `${eccentric.toFixed(2)} s`
@@ -4552,7 +5815,12 @@ function completeMovementRep(
 
 
   conDisplay.textContent =
-    `${concentric.toFixed(2)} s`;
+
+    conAvailable
+
+      ? `${concentric.toFixed(2)} s`
+
+      : "—";
 
 
   repDisplay.textContent =
@@ -4573,7 +5841,11 @@ function completeMovementRep(
 }
 
 
-function buildMovementWarning(
+/* =========================================================
+   MOVEMENT WARNING
+========================================================= */
+
+function buildDynamicMovementWarning(
   settings,
   anglePassed,
   eccPassed,
@@ -4596,19 +5868,19 @@ function buildMovementWarning(
   if (
     settings.checkEcc
     &&
-    !eccPassed
-    &&
     Number.isFinite(
       eccentric
     )
+    &&
+    !eccPassed
   ) {
 
     return eccentric <
       settings.eccTarget
 
-      ? "Fase excéntrica más lenta"
+      ? "Excéntrica más rápida"
 
-      : "Fase excéntrica más rápida";
+      : "Excéntrica más lenta";
 
   }
 
@@ -4616,15 +5888,19 @@ function buildMovementWarning(
   if (
     settings.checkCon
     &&
+    Number.isFinite(
+      concentric
+    )
+    &&
     !conPassed
   ) {
 
     return concentric <
       settings.conTarget
 
-      ? "Fase concéntrica más lenta"
+      ? "Concéntrica más rápida"
 
-      : "Fase concéntrica más rápida";
+      : "Concéntrica más lenta";
 
   }
 
@@ -4635,7 +5911,7 @@ function buildMovementWarning(
 
 
 /* =========================================================
-   JUMPS
+   JUMP RESET
 ========================================================= */
 
 function resetJumpState() {
@@ -4643,53 +5919,72 @@ function resetJumpState() {
   jumpState =
     "CALIBRATING";
 
+
   jumpPreviousFlexion =
     null;
+
 
   jumpPreviousAnkleY =
     null;
 
+
   jumpMaxFlexion =
     0;
+
 
   jumpStartTime =
     0;
 
+
   jumpBottomTime =
     0;
+
 
   jumpPropulsionStartTime =
     0;
 
+
   jumpTakeoffTime =
     0;
+
 
   jumpLandingTime =
     0;
 
+
   jumpLandingStartTime =
     0;
+
 
   jumpMaxLandingFlexion =
     0;
 
+
   jumpBaselineAnkleY =
     null;
+
 
   jumpBaselineSamples =
     [];
 
+
   sjHoldStartTime =
     0;
 
+
   sjHeldFlexion =
     null;
+
 
   sjProtocolInvalid =
     false;
 
 }
 
+
+/* =========================================================
+   JUMP UPDATE
+========================================================= */
 
 function updateJump(
   flexion,
@@ -4712,8 +6007,7 @@ function updateJump(
 
 
     if (
-      jumpBaselineSamples.length
-      >
+      jumpBaselineSamples.length >
       12
     ) {
 
@@ -4723,8 +6017,7 @@ function updateJump(
 
 
     if (
-      jumpBaselineSamples.length
-      >=
+      jumpBaselineSamples.length >=
       8
     ) {
 
@@ -4789,10 +6082,12 @@ function updateJump(
   ) {
 
     updateSquatJump(
+
       flexion,
       points,
       timestamp,
       settings
+
     );
 
   }
@@ -4800,10 +6095,12 @@ function updateJump(
   else {
 
     updateCountermovementJump(
+
       flexion,
       points,
       timestamp,
       settings
+
     );
 
   }
@@ -4828,7 +6125,7 @@ function updateJump(
 
 
 /* =========================================================
-   SJ
+   SQUAT JUMP
 ========================================================= */
 
 function updateSquatJump(
@@ -4839,21 +6136,24 @@ function updateSquatJump(
 ) {
 
   const lower =
-    settings.kneeTarget
-    -
+    settings.kneeTarget -
     settings.kneeTolerance;
 
 
   const upper =
-    settings.kneeTarget
-    +
+    settings.kneeTarget +
     settings.kneeTolerance;
 
 
   const inStartPosition =
-    flexion >= lower
+
+    flexion >=
+    lower
+
     &&
-    flexion <= upper;
+
+    flexion <=
+    upper;
 
 
   if (
@@ -4966,9 +6266,10 @@ function updateSquatJump(
     if (
 
       flexion
+
       >
-      sjHeldFlexion
-      +
+
+      sjHeldFlexion +
       SJ_COUNTERMOVEMENT_ALLOWANCE
 
     ) {
@@ -5044,9 +6345,11 @@ function updateSquatJump(
   ) {
 
     detectJumpTakeoff(
+
       flexion,
       points,
       timestamp
+
     );
 
   }
@@ -5058,9 +6361,11 @@ function updateSquatJump(
   ) {
 
     detectJumpLanding(
+
       flexion,
       points,
       timestamp
+
     );
 
   }
@@ -5072,10 +6377,12 @@ function updateSquatJump(
   ) {
 
     captureLanding(
+
       flexion,
       timestamp,
       settings,
       settings.holdTarget
+
     );
 
   }
@@ -5162,14 +6469,13 @@ function updateCountermovementJump(
       flexion
 
       >=
-      TURNAROUND_DELTA
+      4
 
     ) {
 
       if (
 
-        jumpMaxFlexion
-        >=
+        jumpMaxFlexion >=
         CMJ_MIN_COUNTERMOVEMENT
 
       ) {
@@ -5205,9 +6511,11 @@ function updateCountermovementJump(
   ) {
 
     detectJumpTakeoff(
+
       flexion,
       points,
       timestamp
+
     );
 
   }
@@ -5219,9 +6527,11 @@ function updateCountermovementJump(
   ) {
 
     detectJumpLanding(
+
       flexion,
       points,
       timestamp
+
     );
 
   }
@@ -5233,10 +6543,12 @@ function updateCountermovementJump(
   ) {
 
     captureLanding(
+
       flexion,
       timestamp,
       settings,
       null
+
     );
 
   }
@@ -5251,9 +6563,12 @@ function updateCountermovementJump(
 function getTakeoffThreshold() {
 
   return Math.max(
+
     8,
+
     canvas.height *
     0.012
+
   );
 
 }
@@ -5262,9 +6577,12 @@ function getTakeoffThreshold() {
 function getLandingTolerance() {
 
   return Math.max(
+
     10,
+
     canvas.height *
     0.02
+
   );
 
 }
@@ -5277,13 +6595,14 @@ function detectJumpTakeoff(
 ) {
 
   const propulsionMs =
+
     timestamp -
     jumpPropulsionStartTime;
 
 
   const ankleLift =
-    jumpBaselineAnkleY
-    -
+
+    jumpBaselineAnkleY -
     points.ankle.y;
 
 
@@ -5323,24 +6642,31 @@ function detectJumpLanding(
 ) {
 
   const flightMs =
+
     timestamp -
     jumpTakeoffTime;
 
 
   const nearBaseline =
+
     Math.abs(
-      points.ankle.y
-      -
+
+      points.ankle.y -
       jumpBaselineAnkleY
+
     )
+
     <=
     getLandingTolerance();
 
 
   const ankleReturning =
+
     jumpPreviousAnkleY !==
     null
+
     &&
+
     points.ankle.y >
     jumpPreviousAnkleY;
 
@@ -5431,8 +6757,10 @@ function captureLanding(
   ) {
 
     completeJump(
+
       settings,
       sjHold
+
     );
 
 
@@ -5462,30 +6790,39 @@ function completeJump(
 
 
   const flightTime =
+
     (
       jumpLandingTime -
       jumpTakeoffTime
     )
+
     /
+
     1000;
 
 
   const estimatedHeightCm =
+
     (
-      GRAVITY
-      *
+      GRAVITY *
+
       Math.pow(
         flightTime,
         2
       )
+
       /
+
       8
     )
+
     *
+
     100;
 
 
   const descentTime =
+
     activeExercise ===
     "sj"
 
@@ -5500,29 +6837,27 @@ function completeJump(
 
 
   const kneePassed =
-    jumpMaxFlexion
-    >=
+
+    jumpMaxFlexion >=
     settings.kneeTarget -
     settings.kneeTolerance
 
     &&
 
-    jumpMaxFlexion
-    <=
+    jumpMaxFlexion <=
     settings.kneeTarget +
     settings.kneeTolerance;
 
 
   const flightValid =
-    flightTime
-    >=
+
+    flightTime >=
     JUMP_MIN_FLIGHT_MS /
     1000
 
     &&
 
-    flightTime
-    <=
+    flightTime <=
     JUMP_MAX_FLIGHT_MS /
     1000;
 
@@ -5585,6 +6920,7 @@ function completeJump(
   else {
 
     showWarning(
+
       activeExercise ===
       "sj"
 
@@ -5595,6 +6931,7 @@ function completeJump(
         ? "Salto no válido"
 
         : "Revisa protocolo"
+
     );
 
 
@@ -5609,16 +6946,20 @@ function completeJump(
       jumpResults.length +
       1,
 
-    estimatedHeightCm,
+    estimatedHeightCm:
+      estimatedHeightCm,
 
-    flightTime,
+    flightTime:
+      flightTime,
 
     maxFlexion:
       jumpMaxFlexion,
 
-    descentTime,
+    descentTime:
+      descentTime,
 
     holdTime:
+
       activeExercise ===
       "sj"
 
@@ -5629,7 +6970,8 @@ function completeJump(
     landingFlexion:
       jumpMaxLandingFlexion,
 
-    valid,
+    valid:
+      valid,
 
     reason:
       valid
@@ -5710,7 +7052,8 @@ function addInvalidJumpResult(
     valid:
       false,
 
-    reason
+    reason:
+      reason
 
   };
 
@@ -5735,47 +7078,62 @@ function prepareNextJump() {
   jumpState =
     "CALIBRATING";
 
+
   jumpPreviousFlexion =
     null;
+
 
   jumpPreviousAnkleY =
     null;
 
+
   jumpMaxFlexion =
     0;
+
 
   jumpStartTime =
     0;
 
+
   jumpBottomTime =
     0;
+
 
   jumpPropulsionStartTime =
     0;
 
+
   jumpTakeoffTime =
     0;
+
 
   jumpLandingTime =
     0;
 
+
   jumpLandingStartTime =
     0;
+
 
   jumpMaxLandingFlexion =
     0;
 
+
   jumpBaselineAnkleY =
     null;
+
 
   jumpBaselineSamples =
     [];
 
+
   sjHoldStartTime =
     0;
 
+
   sjHeldFlexion =
     null;
+
 
   sjProtocolInvalid =
     false;
@@ -5784,7 +7142,7 @@ function prepareNextJump() {
 
 
 /* =========================================================
-   FEEDBACK
+   VISUAL / AUDIO FEEDBACK
 ========================================================= */
 
 function showWarning(
@@ -5798,7 +7156,9 @@ function showWarning(
   if (
     mode !==
     "visual"
+
     &&
+
     mode !==
     "both"
   ) {
@@ -5832,8 +7192,11 @@ function showWarning(
 
   warningHideTimer =
     setTimeout(
+
       hideWarning,
+
       1500
+
     );
 
 }
@@ -5859,7 +7222,9 @@ function showSuccess() {
   if (
     mode ===
     "audio"
+
     ||
+
     mode ===
     "off"
   ) {
@@ -5934,7 +7299,9 @@ function beepWarning() {
   if (
     mode !==
     "audio"
+
     &&
+
     mode !==
     "both"
   ) {
@@ -5949,10 +7316,15 @@ function beepWarning() {
   ) {
 
     audioContext =
+
       new (
+
         window.AudioContext
+
         ||
+
         window.webkitAudioContext
+
       )();
 
   }
@@ -6000,16 +7372,17 @@ function beepWarning() {
 
 
   oscillator.stop(
-    audioContext.currentTime
-    +
+
+    audioContext.currentTime +
     0.12
+
   );
 
 }
 
 
 /* =========================================================
-   SKELETON
+   DRAW SKELETON
 ========================================================= */
 
 function drawSkeleton(
@@ -6023,16 +7396,27 @@ function drawSkeleton(
   const connections = [
 
     [5, 6],
+
     [5, 7],
+
     [7, 9],
+
     [6, 8],
+
     [8, 10],
+
     [5, 11],
+
     [6, 12],
+
     [11, 12],
+
     [11, 13],
+
     [13, 15],
+
     [12, 14],
+
     [14, 16]
 
   ];
@@ -6047,11 +7431,13 @@ function drawSkeleton(
 
 
   connections.forEach(
+
     (
       [a, b]
     ) => {
 
       if (
+
         kp[a].score >
         0.35
 
@@ -6059,20 +7445,25 @@ function drawSkeleton(
 
         kp[b].score >
         0.35
+
       ) {
 
         ctx.beginPath();
 
 
         ctx.moveTo(
+
           kp[a].x,
           kp[a].y
+
         );
 
 
         ctx.lineTo(
+
           kp[b].x,
           kp[b].y
+
         );
 
 
@@ -6081,10 +7472,12 @@ function drawSkeleton(
       }
 
     }
+
   );
 
 
   kp.forEach(
+
     point => {
 
       if (
@@ -6096,11 +7489,17 @@ function drawSkeleton(
 
 
         ctx.arc(
+
           point.x,
           point.y,
+
           5,
+
           0,
-          Math.PI * 2
+
+          Math.PI *
+          2
+
         );
 
 
@@ -6113,13 +7512,14 @@ function drawSkeleton(
       }
 
     }
+
   );
 
 }
 
 
 /* =========================================================
-   RESULTS
+   MOVEMENT RESULT ROW
 ========================================================= */
 
 function addMovementResultRow(
@@ -6132,27 +7532,44 @@ function addMovementResultRow(
     );
 
 
+  const eccText =
+
+    Number.isFinite(
+      rep.eccentric
+    )
+
+      ? `${rep.eccentric.toFixed(2)} s`
+
+      : "—";
+
+
+  const conText =
+
+    Number.isFinite(
+      rep.concentric
+    )
+
+      ? `${rep.concentric.toFixed(2)} s`
+
+      : "—";
+
+
   row.innerHTML = `
 
-    <td>${rep.number}</td>
+    <td>
+      ${rep.number}
+    </td>
 
     <td>
       ${rep.angle.toFixed(0)}°
     </td>
 
     <td>
-      ${
-        rep.eccentric ===
-        null
-
-          ? "—"
-
-          : `${rep.eccentric.toFixed(2)} s`
-      }
+      ${eccText}
     </td>
 
     <td>
-      ${rep.concentric.toFixed(2)} s
+      ${conText}
     </td>
 
     <td
@@ -6180,6 +7597,10 @@ function addMovementResultRow(
 }
 
 
+/* =========================================================
+   MOVEMENT SUMMARY
+========================================================= */
+
 function updateMovementSummary() {
 
   if (
@@ -6196,26 +7617,34 @@ function updateMovementSummary() {
 
 
   const avgAngle =
+
     movementResults.reduce(
+
       (
         sum,
         rep
       ) =>
         sum +
         rep.angle,
+
       0
+
     )
+
     /
+
     movementResults.length;
 
 
   const eccValues =
+
     movementResults
 
       .filter(
         rep =>
-          rep.eccentric !==
-          null
+          Number.isFinite(
+            rep.eccentric
+          )
       )
 
       .map(
@@ -6224,45 +7653,80 @@ function updateMovementSummary() {
       );
 
 
+  const conValues =
+
+    movementResults
+
+      .filter(
+        rep =>
+          Number.isFinite(
+            rep.concentric
+          )
+      )
+
+      .map(
+        rep =>
+          rep.concentric
+      );
+
+
   const avgEcc =
+
     eccValues.length
 
       ? eccValues.reduce(
+
           (
             sum,
             value
           ) =>
             sum +
             value,
+
           0
+
         )
+
         /
+
         eccValues.length
 
       : null;
 
 
   const avgCon =
-    movementResults.reduce(
-      (
-        sum,
-        rep
-      ) =>
-        sum +
-        rep.concentric,
-      0
-    )
-    /
-    movementResults.length;
+
+    conValues.length
+
+      ? conValues.reduce(
+
+          (
+            sum,
+            value
+          ) =>
+            sum +
+            value,
+
+          0
+
+        )
+
+        /
+
+        conValues.length
+
+      : null;
 
 
   const compliance =
+
     (
-      movementSuccessfulReps
-      /
+      movementSuccessfulReps /
       movementResults.length
     )
+
     *
+
     100;
 
 
@@ -6308,13 +7772,24 @@ function updateMovementSummary() {
     · Concéntrica media:
 
     <strong>
-      ${avgCon.toFixed(2)} s
+      ${
+        avgCon ===
+        null
+
+          ? "—"
+
+          : `${avgCon.toFixed(2)} s`
+      }
     </strong>
 
   `;
 
 }
 
+
+/* =========================================================
+   JUMP RESULT ROW
+========================================================= */
 
 function addJumpResultRow(
   result
@@ -6327,25 +7802,30 @@ function addJumpResultRow(
 
 
   const protocolValue =
+
     activeExercise ===
     "sj"
 
       ? (
+
           result.holdTime ===
           null
 
             ? result.reason
 
             : `${result.holdTime.toFixed(2)} s`
+
         )
 
       : (
+
           result.descentTime ===
           null
 
             ? "—"
 
             : `${result.descentTime.toFixed(2)} s`
+
         );
 
 
@@ -6421,6 +7901,10 @@ function addJumpResultRow(
 }
 
 
+/* =========================================================
+   JUMP SUMMARY
+========================================================= */
+
 function updateJumpSummary() {
 
   if (
@@ -6438,17 +7922,22 @@ function updateJumpSummary() {
 
   const valid =
     jumpResults.filter(
+
       result =>
+
         result.valid
+
         &&
+
         result.estimatedHeightCm !==
         null
+
     );
 
 
   const invalidCount =
-    jumpResults.length
-    -
+
+    jumpResults.length -
     valid.length;
 
 
@@ -6499,30 +7988,42 @@ function updateJumpSummary() {
 
 
   const avgHeight =
+
     heights.reduce(
+
       (
         sum,
         value
       ) =>
         sum +
         value,
+
       0
+
     )
+
     /
+
     heights.length;
 
 
   const avgFlight =
+
     flights.reduce(
+
       (
         sum,
         value
       ) =>
         sum +
         value,
+
       0
+
     )
+
     /
+
     flights.length;
 
 
@@ -6566,7 +8067,7 @@ function updateJumpSummary() {
 
 
 /* =========================================================
-   START
+   START ANALYSIS
 ========================================================= */
 
 function startAnalysis() {
@@ -6589,9 +8090,12 @@ function startAnalysis() {
   ) {
 
     statusBox.textContent =
+
       lastPositionAssessment
         ?.text
+
       ||
+
       "Ajusta tu posición antes de iniciar.";
 
 
@@ -6630,6 +8134,10 @@ function startAnalysis() {
     false;
 
 
+  /*
+    MOVIMIENTOS
+  */
+
   if (
     activeCategory ===
     "movement"
@@ -6655,32 +8163,11 @@ function startAnalysis() {
       "Serie en curso...";
 
 
-    movementMaxAngle =
-      0;
-
-
-    movementPreviousAngle =
-      null;
-
-
-    deadliftEccentricForNextRep =
-      null;
-
-
-    deadliftDescentStartTime =
-      0;
-
-
-    movementState =
-      activeExercise ===
-      "deadlift"
-
-        ? "WAIT_FLOOR"
-
-        : "READY";
+    resetDynamicMovementTiming();
 
 
     repDisplay.textContent =
+
       `0 / ${
         getMovementSettings()
           .targetReps
@@ -6688,7 +8175,7 @@ function startAnalysis() {
 
 
     stateDisplay.textContent =
-      movementState;
+      "CALIBRANDO";
 
 
     eccDisplay.textContent =
@@ -6699,6 +8186,11 @@ function startAnalysis() {
       "—";
 
   }
+
+
+  /*
+    SALTOS
+  */
 
   else {
 
@@ -6726,6 +8218,7 @@ function startAnalysis() {
 
 
     repDisplay.textContent =
+
       `0 / ${
         getJumpSettings()
           .targetJumps
@@ -6753,8 +8246,75 @@ function startAnalysis() {
   updateSetupFlow();
 
 
-  statusBox.textContent =
-    `${exerciseMeta[activeExercise].name} activo`;
+  /*
+    INDICACIONES
+  */
+
+  if (
+    activeCategory ===
+    "movement"
+  ) {
+
+    if (
+      activeExercise ===
+      "deadlift"
+    ) {
+
+      statusBox.textContent =
+        "Mantén la posición inicial en el piso durante un instante para calibrar.";
+
+    }
+
+
+    else if (
+      activeExercise ===
+      "bench"
+    ) {
+
+      statusBox.textContent =
+        "Mantén los brazos extendidos durante un instante para calibrar.";
+
+    }
+
+
+    else {
+
+      statusBox.textContent =
+        "Mantente de pie durante un instante para calibrar la posición inicial.";
+
+    }
+
+  }
+
+
+  else if (
+    activeExercise ===
+    "sj"
+  ) {
+
+    statusBox.textContent =
+      "Squat Jump activo · adopta la posición objetivo y mantén la pausa antes de saltar.";
+
+  }
+
+
+  else if (
+    activeExercise ===
+    "cmj"
+  ) {
+
+    statusBox.textContent =
+      "CMJ activo · inicia de pie y realiza el countermovement cuando estés listo.";
+
+  }
+
+
+  else {
+
+    statusBox.textContent =
+      "Abalakov activo · puedes utilizar libremente los brazos.";
+
+  }
 
 
   if (
@@ -6762,11 +8322,26 @@ function startAnalysis() {
   ) {
 
     audioContext =
+
       new (
+
         window.AudioContext
+
         ||
+
         window.webkitAudioContext
+
       )();
+
+  }
+
+
+  if (
+    audioContext.state ===
+    "suspended"
+  ) {
+
+    audioContext.resume();
 
   }
 
@@ -6774,7 +8349,7 @@ function startAnalysis() {
 
 
 /* =========================================================
-   STOP
+   STOP ANALYSIS
 ========================================================= */
 
 function stopAnalysis(
@@ -6808,14 +8383,11 @@ function stopAnalysis(
     "movement"
   ) {
 
-    movementState =
-      "COMPLETE";
-
-
     updateMovementSummary();
 
 
     statusBox.textContent =
+
       automatic
 
         ? `Serie completada · ${movementRepCount} repeticiones`
@@ -6834,6 +8406,7 @@ function stopAnalysis(
 
 
     statusBox.textContent =
+
       automatic
 
         ? `Serie completada · ${jumpCount} saltos`
@@ -6862,7 +8435,9 @@ function detectBrowser() {
 
 
   if (
-    /CriOS/i.test(ua)
+    /CriOS/i.test(
+      ua
+    )
   ) {
 
     return "Chrome iOS";
@@ -6871,7 +8446,9 @@ function detectBrowser() {
 
 
   if (
-    /FxiOS/i.test(ua)
+    /FxiOS/i.test(
+      ua
+    )
   ) {
 
     return "Firefox iOS";
@@ -6880,7 +8457,9 @@ function detectBrowser() {
 
 
   if (
-    /EdgiOS/i.test(ua)
+    /EdgiOS/i.test(
+      ua
+    )
   ) {
 
     return "Edge iOS";
@@ -6889,11 +8468,17 @@ function detectBrowser() {
 
 
   if (
-    /Safari/i.test(ua)
+
+    /Safari/i.test(
+      ua
+    )
+
     &&
+
     !/Chrome|CriOS|Android/i.test(
       ua
     )
+
   ) {
 
     return "Safari";
@@ -6902,7 +8487,9 @@ function detectBrowser() {
 
 
   if (
-    /Chrome/i.test(ua)
+    /Chrome/i.test(
+      ua
+    )
   ) {
 
     return "Chrome";
@@ -6911,7 +8498,9 @@ function detectBrowser() {
 
 
   if (
-    /Firefox/i.test(ua)
+    /Firefox/i.test(
+      ua
+    )
   ) {
 
     return "Firefox";
@@ -6931,7 +8520,9 @@ function detectDevice() {
 
 
   if (
-    /iPhone/i.test(ua)
+    /iPhone/i.test(
+      ua
+    )
   ) {
 
     return "iPhone";
@@ -6940,7 +8531,9 @@ function detectDevice() {
 
 
   if (
-    /iPad/i.test(ua)
+    /iPad/i.test(
+      ua
+    )
   ) {
 
     return "iPad";
@@ -6949,7 +8542,9 @@ function detectDevice() {
 
 
   if (
-    /Android/i.test(ua)
+    /Android/i.test(
+      ua
+    )
   ) {
 
     return "Android";
@@ -6958,7 +8553,9 @@ function detectDevice() {
 
 
   if (
-    /Macintosh/i.test(ua)
+    /Macintosh/i.test(
+      ua
+    )
   ) {
 
     return "Mac";
@@ -6967,7 +8564,9 @@ function detectDevice() {
 
 
   if (
-    /Windows/i.test(ua)
+    /Windows/i.test(
+      ua
+    )
   ) {
 
     return "Windows";
@@ -7028,6 +8627,10 @@ async function submitFeedback(
     "Enviando...";
 
 
+  feedbackStatus.textContent =
+    "";
+
+
   const payload =
     new FormData();
 
@@ -7037,11 +8640,6 @@ async function submitFeedback(
     `Nuevo feedback ${APP_VERSION}`
   );
 
-
-  /*
-    Nombre tomado automáticamente
-    desde la pantalla de acceso.
-  */
 
   payload.append(
     "tester",
@@ -7064,13 +8662,16 @@ async function submitFeedback(
 
 
   payload.append(
+
     "categoria",
+
     activeCategory ===
-      "movement"
+    "movement"
 
       ? "Movimiento"
 
       : "Salto"
+
   );
 
 
@@ -7093,12 +8694,17 @@ async function submitFeedback(
 
 
   payload.append(
+
     "contacto",
+
     feedbackContact
       .value
       .trim()
+
     ||
+
     "No indicado"
+
   );
 
 
@@ -7121,22 +8727,28 @@ async function submitFeedback(
 
 
   payload.append(
+
     "camara",
+
     currentFacingMode ===
-      "user"
+    "user"
 
       ? "Frontal"
 
       : "Trasera"
+
   );
 
 
   payload.append(
+
     "fecha_hora",
+
     new Date()
       .toLocaleString(
         "es-CL"
       )
+
   );
 
 
@@ -7144,7 +8756,9 @@ async function submitFeedback(
 
     const response =
       await fetch(
+
         FORMSPREE_ENDPOINT,
+
         {
 
           method:
@@ -7161,6 +8775,7 @@ async function submitFeedback(
           }
 
         }
+
       );
 
 
@@ -7232,7 +8847,7 @@ feedbackForm.addEventListener(
 
 
 /* =========================================================
-   INITIAL STATE
+   INITIALIZE
 ========================================================= */
 
 initializeAccessGate();
