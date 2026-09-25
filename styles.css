@@ -366,8 +366,9 @@ td { padding: 12px; border-bottom: 1px solid #edf1f5; color: #344253; font-size:
   #jumpResults tbody td:nth-child(2)::before { content: "Altura estimada"; }
   #jumpResults tbody td:nth-child(3)::before { content: "Tiempo de vuelo"; }
   #jumpResults tbody td:nth-child(4)::before { content: "Protocolo"; }
-  #jumpResults tbody td:nth-child(5)::before { content: "Aterrizaje"; }
-  #jumpResults tbody td:nth-child(6)::before { content: "Estado"; }
+  #jumpResults tbody td:nth-child(5)::before { content: "Profundidad"; }
+  #jumpResults tbody td:nth-child(6)::before { content: "Potencia pico est."; }
+  #jumpResults tbody td:nth-child(7)::before { content: "Estado"; }
 
   .feedback-actions { display: grid; grid-template-columns: 1fr; }
 }
@@ -377,3 +378,15 @@ td { padding: 12px; border-bottom: 1px solid #edf1f5; color: #344253; font-size:
   .side-choice { font-size: 7px; }
   .live-main-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* 0.8.2 · Recuadro de estado de la serie (sobre la cámara) */
+.series-badge { position: absolute; top: 10px; left: 50%; z-index: 3; max-width: calc(100% - 20px); padding: 7px 12px; border-radius: 10px; transform: translateX(-50%); font-size: 11px; font-weight: 850; letter-spacing: .5px; line-height: 1.3; text-align: center; pointer-events: none; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+.series-badge.ready { background: var(--green); color: #fff; }
+.series-badge.wait { border: 1px solid var(--amber); background: rgba(2,4,6,.80); color: #fff; }
+
+/* 0.8.5 · Potencia relativa bajo la absoluta */
+.cell-sub { display: block; margin-top: 2px; color: #7a899a; font-size: 10px; font-weight: 650; }
+.cell-value { display: inline-block; text-align: inherit; }
+/* 0.8.5 · Las etiquetas en mayúscula necesitan alto de línea para no recortar tildes (Ó, É, Á). */
+.metric small, .live-side-pill small { line-height: 1.45; padding-top: 1px; }
+
