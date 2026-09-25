@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1118" />
-  <meta name="description" content="KINEMYX Beta - Human Movement Intelligence." />
-  <title>KINEMYX - Human Movement Intelligence</title>
+  <meta name="description" content="KINEMYX Beta · Inteligencia del movimiento humano." />
+  <title>KINEMYX · Inteligencia del movimiento humano</title>
 
-  <link rel="stylesheet" href="styles.css?v=0.8.1" />
+  <link rel="stylesheet" href="styles.css?v=0.8.5" />
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
@@ -23,8 +23,8 @@
 
   <div class="access-card">
     <div class="access-brand">KINEMY<span>X</span></div>
-    <div class="access-brand-subtitle">Human Movement Intelligence</div>
-    <div class="access-beta-badge">BETA 0.8.1 · ACCESO PRIVADO</div>
+    <div class="access-brand-subtitle">Inteligencia del movimiento humano</div>
+    <div class="access-beta-badge">BETA 0.8.5 · ACCESO PRIVADO</div>
 
     <h1>Bienvenido a KINEMYX</h1>
     <p class="access-description">
@@ -61,15 +61,15 @@
   <div class="header-row">
     <div>
       <div class="brand">KINEMY<span>X</span></div>
-      <div class="subtitle">Human Movement Intelligence</div>
+      <div class="subtitle">Inteligencia del movimiento humano</div>
     </div>
 
     <div class="header-actions">
       <div class="tester-chip">
         <span class="tester-dot"></span>
-        <span id="testerNameDisplay">Tester</span>
+        <span id="testerNameDisplay">Usuario</span>
       </div>
-      <div class="beta-badge">BETA 0.8.1</div>
+      <div class="beta-badge">BETA 0.8.5</div>
       <button id="logoutButton" type="button" class="logout-button">Salir</button>
     </div>
   </div>
@@ -93,7 +93,7 @@
     </div>
 
     <div id="jumpExerciseSelector" class="exercise-selector hidden">
-      <button type="button" data-exercise="sj" class="secondary">Squat Jump</button>
+      <button type="button" data-exercise="sj" class="secondary">SJ</button>
       <button type="button" data-exercise="cmj" class="secondary">CMJ</button>
       <button type="button" data-exercise="abalakov" class="secondary">Abalakov</button>
     </div>
@@ -115,7 +115,7 @@
       </div>
 
       <div class="side-selector-buttons">
-        <button id="sideAutoButton" type="button" class="side-choice active" data-side-mode="auto">AUTO</button>
+        <button id="sideAutoButton" type="button" class="side-choice active" data-side-mode="auto">AUTOMÁTICO</button>
         <button id="sideLeftButton" type="button" class="side-choice" data-side-mode="left">IZQUIERDO</button>
         <button id="sideRightButton" type="button" class="side-choice" data-side-mode="right">DERECHO</button>
       </div>
@@ -164,6 +164,7 @@
       <div class="camera-wrapper">
         <video id="video" autoplay muted playsinline></video>
         <canvas id="canvas"></canvas>
+        <div id="seriesBadge" class="series-badge hidden" aria-live="polite"></div>
       </div>
 
       <div id="positionGuide" class="position-guide hidden" aria-live="polite">
@@ -180,46 +181,46 @@
     <div class="live-panel">
       <div class="live-header">
         <div>
-          <div class="live-label">KINEMYX LIVE</div>
-          <strong id="liveExerciseLabel">SQUAT</strong>
+          <div class="live-label">KINEMYX EN VIVO</div>
+          <strong id="liveExerciseLabel">SENTADILLA</strong>
         </div>
 
         <div class="live-side-pill">
           <small id="sideLiveLabel">LADO</small>
-          <strong id="sideDisplay">AUTO</strong>
+          <strong id="sideDisplay">AUTOMÁTICO</strong>
         </div>
       </div>
 
       <div class="live-main-grid">
         <div class="metric metric-primary">
-          <small id="countLabel">REP</small>
+          <small id="countLabel">REP.</small>
           <strong id="repDisplay">0 / 8</strong>
         </div>
 
         <div class="metric metric-primary">
-          <small id="primaryMetricLabel">KNEE FLEXION</small>
+          <small id="primaryMetricLabel">FLEXIÓN RODILLA</small>
           <strong id="angleDisplay">—°</strong>
         </div>
 
         <div class="metric metric-primary">
-          <small>PHASE</small>
-          <strong id="stateDisplay">READY</strong>
+          <small>FASE</small>
+          <strong id="stateDisplay">LISTO</strong>
         </div>
 
         <div class="metric metric-primary">
-          <small>TRACKING</small>
+          <small>SEGUIMIENTO</small>
           <strong id="trackingLiveDisplay">ESPERA</strong>
         </div>
       </div>
 
       <div class="live-secondary-grid">
         <div class="metric metric-secondary">
-          <small id="secondaryMetricLabel">ECCENTRIC</small>
+          <small id="secondaryMetricLabel">EXCÉNTRICA</small>
           <strong id="eccDisplay">—</strong>
         </div>
 
         <div class="metric metric-secondary">
-          <small id="tertiaryMetricLabel">CONCENTRIC</small>
+          <small id="tertiaryMetricLabel">CONCÉNTRICA</small>
           <strong id="conDisplay">—</strong>
         </div>
       </div>
@@ -274,9 +275,9 @@
           <label><input id="movementCheckCon" type="checkbox" checked />Tempo concéntrico</label>
         </div>
 
-        <h3>Feedback</h3>
+        <h3>Avisos durante la serie</h3>
         <div class="settings-grid">
-          <label>Tipo de feedback
+          <label>Tipo de aviso
             <select id="movementFeedbackMode">
               <option value="both">Visual + audio</option>
               <option value="visual">Solo visual</option>
@@ -301,11 +302,18 @@
       </summary>
 
       <div class="config-content">
-        <h3>Test</h3>
+        <h3>Prueba</h3>
         <div class="settings-grid">
           <label>Número de saltos<input id="jumpTargetJumps" type="number" value="3" min="1" max="20" /></label>
           <label id="sjHoldWrap" class="hidden">Pausa inicial SJ<input id="sjHoldTarget" type="number" value="1" min="0.3" max="5" step="0.1" /><span>segundos</span></label>
         </div>
+
+        <h3>Datos del evaluado <span class="optional">(opcional)</span></h3>
+        <div class="settings-grid">
+          <label>Estatura<input id="jumpStature" type="number" inputmode="decimal" min="100" max="230" step="0.5" placeholder="Ej. 175" /><span>cm · agrega la profundidad del contramovimiento</span></label>
+          <label>Peso corporal<input id="jumpBodyMass" type="number" inputmode="decimal" min="20" max="200" step="0.1" placeholder="Ej. 72" /><span>kg · agrega la potencia pico estimada</span></label>
+        </div>
+        <div class="config-note muted-note">La altura del salto se calcula con el tiempo de vuelo y no depende de estos datos. Se usan solo en este dispositivo y no se envían ni se guardan.</div>
 
         <h3>Variables</h3>
         <div class="checks">
@@ -313,9 +321,9 @@
           <label><input id="jumpCheckLanding" type="checkbox" checked />Detección de aterrizaje</label>
         </div>
 
-        <h3>Feedback</h3>
+        <h3>Avisos durante la serie</h3>
         <div class="settings-grid">
-          <label>Tipo de feedback
+          <label>Tipo de aviso
             <select id="jumpFeedbackMode">
               <option value="both">Visual + audio</option>
               <option value="visual">Solo visual</option>
@@ -326,7 +334,7 @@
         </div>
 
         <div id="jumpProtocolNote" class="config-note">
-          CMJ: vista frontal, cuerpo completo y ambos pies visibles. Inicia de pie, realiza un countermovement y salta verticalmente.
+          CMJ: vista frontal, cuerpo completo y ambos pies visibles. Inicia de pie, con las manos en la cintura, realiza el contramovimiento y salta verticalmente.
         </div>
 
         <div class="config-note muted-note">
@@ -367,7 +375,8 @@
           <th>Altura est.</th>
           <th>Vuelo</th>
           <th id="jumpProtocolHeader">Descenso</th>
-          <th>Aterrizaje</th>
+          <th>Profundidad</th>
+          <th>Potencia pico est.</th>
           <th>Estado</th>
         </tr>
       </thead>
@@ -381,7 +390,7 @@
         <div class="feedback-summary-icon">💬</div>
         <div class="feedback-summary-copy">
           <div class="section-eyebrow">KINEMYX BETA</div>
-          <strong>Enviar feedback</strong>
+          <strong>Enviar comentarios</strong>
           <small>¿Algo no funcionó bien? Cuéntamelo.</small>
         </div>
         <div class="feedback-arrow">→</div>
@@ -433,7 +442,7 @@
           </label>
 
           <div class="feedback-actions">
-            <button id="feedbackSubmit" type="submit">Enviar feedback</button>
+            <button id="feedbackSubmit" type="submit">Enviar comentarios</button>
             <div id="feedbackStatus" class="feedback-status" aria-live="polite"></div>
           </div>
         </form>
@@ -442,14 +451,14 @@
   </section>
 
   <footer class="app-footer">
-    <strong>KINEMYX Beta 0.8.1</strong>
-    <span>Dual View Tracking Engine · Mediciones mediante visión 2D.</span>
+    <strong>KINEMYX Beta 0.8.5</strong>
+    <span>Motor de seguimiento de doble vista · Mediciones estimadas mediante visión 2D.</span>
   </footer>
 
 </main>
 </div>
 
-<script src="app.js?v=0.8.1"></script>
+<script src="app.js?v=0.8.5"></script>
 
 </body>
 </html>
