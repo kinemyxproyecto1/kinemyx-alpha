@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.1
+   KINEMYX Beta 0.8.5
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -23,6 +23,33 @@
    - Punto ámbar = visible pero no apto para medir;
      punto hueco = posición retenida (no detectado este frame).
    - Sin cambios en umbrales, filtros ni motores de medición.
+
+   0.8.2 · Serie armada:
+   - "Iniciar serie" se puede presionar antes de estar ubicado.
+   - La serie parte sola al detectar posición válida y, una vez
+     calibrado el motor, aparece el recuadro verde "LISTO" + beep.
+
+   0.8.3 · Puntos por ejercicio (vista lateral):
+   - Sentadilla / peso muerto: solo hombro, cadera, rodilla, tobillo.
+   - Press banca: solo hombro y codo. Métrica = ángulo del húmero
+     respecto de la vertical (0° brazo vertical, 90° húmero paralelo
+     al piso). Funciona encuadrando de cadera hacia arriba o cuerpo
+     completo. Ya no depende de la muñeca.
+
+   0.8.4 · Precisión temporal:
+   - Cada cuadro se procesa una sola vez (antes el ciclo a 60 Hz podía
+     analizar dos veces el mismo cuadro de una cámara a 30 fps).
+   - La hora de cada medición es la del cuadro de video (captura),
+     no la del término de la inferencia de MoveNet.
+   - Despegue y aterrizaje se interpolan entre cuadros (sub-cuadro).
+   - Sin cambios en umbrales ni filtros de puntos.
+
+   0.8.5 · Español completo + datos del evaluado en saltos:
+   - Toda la interfaz en español (estados, paneles y mensajes).
+   - Estatura (opcional) → escala px/cm → profundidad del
+     contramovimiento (CMJ/Abalakov).
+   - Peso (opcional) → potencia pico estimada (Sayers 1999; SJ y CMJ).
+   - La altura del salto por tiempo de vuelo NO usa estatura ni peso.
 ========================================================= */
 
 
@@ -32,7 +59,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.1";
+const APP_VERSION = "KINEMYX Beta 0.8.5";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -94,7 +121,7 @@ async function sha256(text) {
 }
 
 function getTesterName() {
-  return localStorage.getItem(TESTER_NAME_STORAGE_KEY) || "Tester no identificado";
+  return localStorage.getItem(TESTER_NAME_STORAGE_KEY) || "Usuario no identificado";
 }
 
 function showApplication() {
@@ -215,6 +242,7 @@ const cameraButton = $("cameraButton");
 const switchCameraButton = $("switchCameraButton");
 const startButton = $("startButton");
 const stopButton = $("stopButton");
+const seriesBadge = $("seriesBadge");
 
 const liveExerciseLabel = $("liveExerciseLabel");
 const countLabel = $("countLabel");
@@ -278,6 +306,8 @@ const movementCheckCon = $("movementCheckCon");
 const movementCheckAngleText = $("movementCheckAngleText");
 
 const jumpTargetJumps = $("jumpTargetJumps");
+const jumpStature = $("jumpStature");
+const jumpBodyMass = $("jumpBodyMass");
 const sjHoldWrap = $("sjHoldWrap");
 const sjHoldTarget = $("sjHoldTarget");
 const jumpFeedbackMode = $("jumpFeedbackMode");
@@ -308,6 +338,7 @@ let detectorLoadToken = 0;
 let cameraReady = false;
 let trackingReady = false;
 let analysisActive = false;
+let seriesArmed = false; // "Iniciar serie" presionado, esperando posición válida
 let detectionLoopStarted = false;
 let currentStream = null;
 let currentFacingMode = "user";
@@ -354,6 +385,11 @@ const TRACK_MAX_SPEED_SCALE_JUMP = 7.0;
 const SEGMENT_RATIO_MIN = 0.56;
 const SEGMENT_RATIO_MAX = 1.62;
 const SEGMENT_BASELINE_ALPHA = 0.04;
+// Muslo en vista frontal (ver segmentPlausible): acortamiento aparente aceptado
+// hasta 30% del largo de pie (muslo inclinado ≈ 72°); referencia aprendida solo
+// con el muslo a ≥ 90% de su largo (casi vertical). Heurísticos, por validar.
+const FRONTAL_THIGH_RATIO_MIN = 0.30;
+const FRONTAL_THIGH_LEARN_MIN = 0.90;
 
 const GRAVITY = 9.81;
 
@@ -589,6 +625,32 @@ function segmentPlausible(name, a, b, update = true) {
   }
 
   const ratio = length / baseline;
+
+  // 0.8.5 · Muslo en vista frontal: al flexionar cadera y rodilla el muslo
+  // apunta hacia la cámara y su largo aparente se acorta (inclinado 60° ≈ 50%).
+  // Eso es proyección, no error de detección: se acepta hasta
+  // FRONTAL_THIGH_RATIO_MIN y la referencia solo se aprende con el muslo casi
+  // vertical (≥ FRONTAL_THIGH_LEARN_MIN), para que una pausa en cuclillas (SJ)
+  // no la acorte. Si el muslo mide más que la referencia, la referencia se
+  // había tomado acortada y se reemplaza (el largo real no puede crecer).
+  if (name.includes("front") && name.includes("hip-knee")) {
+    if (ratio > SEGMENT_RATIO_MAX) {
+      if (update) segmentBaselines.set(name, length);
+      return true;
+    }
+
+    const okThigh = ratio >= FRONTAL_THIGH_RATIO_MIN;
+
+    if (okThigh && update && ratio >= FRONTAL_THIGH_LEARN_MIN) {
+      segmentBaselines.set(
+        name,
+        baseline * (1 - SEGMENT_BASELINE_ALPHA) + length * SEGMENT_BASELINE_ALPHA
+      );
+    }
+
+    return okThigh;
+  }
+
   const ok = ratio >= SEGMENT_RATIO_MIN && ratio <= SEGMENT_RATIO_MAX;
 
   if (ok && update) {
@@ -610,9 +672,9 @@ const exerciseMeta = {
   squat: {
     category: "movement",
     name: "Sentadilla",
-    live: "SQUAT",
+    live: "SENTADILLA",
     angleName: "Flexión de rodilla",
-    angleShort: "KNEE FLEXION",
+    angleShort: "FLEXIÓN RODILLA",
     defaultAngle: 90,
     defaultTolerance: 5,
     defaultReps: 8,
@@ -623,9 +685,9 @@ const exerciseMeta = {
   deadlift: {
     category: "movement",
     name: "Peso muerto",
-    live: "DEADLIFT",
+    live: "PESO MUERTO",
     angleName: "Flexión de cadera",
-    angleShort: "HIP FLEXION",
+    angleShort: "FLEXIÓN CADERA",
     defaultAngle: 65,
     defaultTolerance: 10,
     defaultReps: 6,
@@ -636,9 +698,9 @@ const exerciseMeta = {
   bench: {
     category: "movement",
     name: "Press banca",
-    live: "BENCH PRESS",
-    angleName: "Flexión de codo",
-    angleShort: "ELBOW FLEXION",
+    live: "PRESS BANCA",
+    angleName: "Descenso del brazo",
+    angleShort: "ÁNGULO BRAZO",
     defaultAngle: 90,
     defaultTolerance: 10,
     defaultReps: 8,
@@ -648,19 +710,19 @@ const exerciseMeta = {
 
   sj: {
     category: "jump",
-    name: "Squat Jump",
-    live: "SQUAT JUMP"
+    name: "SJ · Salto sin contramovimiento",
+    live: "SJ"
   },
 
   cmj: {
     category: "jump",
-    name: "CMJ",
+    name: "CMJ · Salto con contramovimiento",
     live: "CMJ"
   },
 
   abalakov: {
     category: "jump",
-    name: "Abalakov",
+    name: "Abalakov · Salto con brazos libres",
     live: "ABALAKOV"
   }
 };
@@ -686,8 +748,17 @@ function getMovementSettings() {
   };
 }
 
+// Estatura y peso son opcionales: fuera de rango se ignoran (null).
+function readOptionalNumber(input, min, max) {
+  if (!input || input.value === "") return null;
+  const value = Number(String(input.value).replace(",", "."));
+  return Number.isFinite(value) && value >= min && value <= max ? value : null;
+}
+
 function getJumpSettings() {
   return {
+    statureCm: readOptionalNumber(jumpStature, 100, 230),
+    bodyMassKg: readOptionalNumber(jumpBodyMass, 20, 200),
     targetJumps: Math.max(1, Number(jumpTargetJumps.value) || 1),
     holdTarget: Math.max(0.3, Number(sjHoldTarget.value) || 1),
     feedbackMode: jumpFeedbackMode.value,
@@ -722,10 +793,12 @@ function updateViewModeUI() {
     sideDisplay.textContent =
       lockedSide || sideMode !== "auto"
         ? sideLabel(lockedSide || sideMode)
-        : "AUTO";
+        : "AUTOMÁTICO";
 
     positionTipText.textContent =
-      "Para movimientos, ubícate completamente de perfil. KINEMYX analizará una sola cadena anatómica y bloqueará ese lado durante la serie.";
+      activeExercise === "bench"
+        ? "Press banca: cámara de perfil, a la altura del banco. Basta encuadrar de la cadera hacia arriba (o cuerpo completo); KINEMYX usa solo hombro y codo."
+        : "Para movimientos, ubícate completamente de perfil. KINEMYX usará hombro, cadera, rodilla y tobillo del lado visible y bloqueará ese lado durante la serie.";
   } else {
     sideLiveLabel.textContent = "VISTA";
     sideDisplay.textContent = "FRONTAL";
@@ -752,8 +825,8 @@ function updateSideHelp(side = null) {
 
   if (sideMode === "auto") {
     sideModeHelp.textContent = side
-      ? `AUTO · lado con mejor visibilidad: ${sideLabel(side)}.`
-      : "AUTO seleccionará el lado con mejor visibilidad antes de iniciar la serie.";
+      ? `Automático · lado con mejor visibilidad: ${sideLabel(side)}.`
+      : "El modo automático seleccionará el lado con mejor visibilidad antes de iniciar la serie.";
   } else {
     sideModeHelp.textContent =
       `Modo manual · KINEMYX analizará únicamente el lado ${sideLabel(sideMode).toLowerCase()}.`;
@@ -761,7 +834,7 @@ function updateSideHelp(side = null) {
 }
 
 function selectSideMode(mode) {
-  if (analysisActive) {
+  if (analysisActive || seriesArmed) {
     statusBox.textContent = "Finaliza la serie antes de cambiar el lado de análisis.";
     return;
   }
@@ -797,6 +870,9 @@ function setStep(element, textElement, statusElement, state, text, status) {
 function updateSetupFlow() {
   const name = exerciseMeta[activeExercise].name;
 
+  startButton.textContent = seriesArmed ? "Esperando posición…" : "Iniciar serie";
+  stopButton.textContent = seriesArmed ? "Cancelar serie" : "Finalizar serie";
+
   setStep(
     stepAnalysis,
     stepAnalysisText,
@@ -821,7 +897,7 @@ function updateSetupFlow() {
     trackingLiveDisplay.textContent = "CARGANDO";
 
     setStep(stepCamera, stepCameraText, stepCameraStatus, "done", "Cámara activa", "✓");
-    setStep(stepPosition, stepPositionText, stepPositionStatus, "active", "Cargando tracking", "…");
+    setStep(stepPosition, stepPositionText, stepPositionStatus, "active", "Cargando seguimiento", "…");
     setStep(stepStart, stepStartText, stepStartStatus, "pending", "Esperando motor", "4");
 
     startButton.disabled = true;
@@ -855,21 +931,29 @@ function updateSetupFlow() {
       stepStart,
       stepStartText,
       stepStartStatus,
-      analysisActive ? "done" : "pending",
-      analysisActive ? "Serie en curso" : "Esperando posición",
-      analysisActive ? "●" : "4"
+      analysisActive ? "done" : seriesArmed ? "active" : "pending",
+      analysisActive
+        ? "Serie en curso"
+        : seriesArmed
+        ? "Serie armada · ubícate"
+        : "Puedes iniciar y luego ubicarte",
+      analysisActive || seriesArmed ? "●" : "4"
     );
 
-    if (!analysisActive) startButton.disabled = true;
+    // 0.8.2: se permite armar la serie antes de estar en posición.
+    startButton.disabled = analysisActive || seriesArmed;
     return;
   }
 
-  trackingLiveDisplay.textContent = "OK";
+  trackingLiveDisplay.textContent = "CORRECTO";
 
   setStep(stepPosition, stepPositionText, stepPositionStatus, "done", "Posición correcta", "✓");
 
   if (analysisActive) {
     setStep(stepStart, stepStartText, stepStartStatus, "done", "Serie en curso", "●");
+    startButton.disabled = true;
+  } else if (seriesArmed) {
+    setStep(stepStart, stepStartText, stepStartStatus, "active", "Iniciando serie…", "●");
     startButton.disabled = true;
   } else {
     setStep(stepStart, stepStartText, stepStartStatus, "active", "Listo para iniciar", "4");
@@ -908,7 +992,7 @@ if ("ResizeObserver" in window) {
 ========================================================= */
 
 function selectCategory(category) {
-  if (analysisActive) {
+  if (analysisActive || seriesArmed) {
     statusBox.textContent = "Finaliza la serie antes de cambiar de categoría.";
     return;
   }
@@ -926,13 +1010,13 @@ function selectCategory(category) {
   if (cameraReady) {
     ensureDetectorForActiveMode().catch((error) => {
       console.error(error);
-      statusBox.textContent = "No fue posible cargar el motor de tracking.";
+      statusBox.textContent = "No fue posible cargar el motor de seguimiento.";
     });
   }
 }
 
 function selectExercise(exercise) {
-  if (analysisActive) {
+  if (analysisActive || seriesArmed) {
     statusBox.textContent = "Finaliza la serie antes de cambiar de análisis.";
     return;
   }
@@ -993,10 +1077,10 @@ function configureMovementUI(exercise) {
   const meta = exerciseMeta[exercise];
 
   liveExerciseLabel.textContent = meta.live;
-  countLabel.textContent = "REP";
+  countLabel.textContent = "REP.";
   primaryMetricLabel.textContent = meta.angleShort;
-  secondaryMetricLabel.textContent = "ECCENTRIC";
-  tertiaryMetricLabel.textContent = "CONCENTRIC";
+  secondaryMetricLabel.textContent = "EXCÉNTRICA";
+  tertiaryMetricLabel.textContent = "CONCÉNTRICA";
 
   movementAngleName.textContent = `${meta.angleName} objetivo`;
   movementCheckAngleText.textContent = meta.angleName;
@@ -1011,7 +1095,7 @@ function configureMovementUI(exercise) {
 
   repDisplay.textContent = `0 / ${meta.defaultReps}`;
   angleDisplay.textContent = "—°";
-  stateDisplay.textContent = "READY";
+  stateDisplay.textContent = "LISTO";
   eccDisplay.textContent = "—";
   conDisplay.textContent = "—";
 
@@ -1023,16 +1107,16 @@ function configureJumpUI(exercise) {
   const meta = exerciseMeta[exercise];
 
   liveExerciseLabel.textContent = meta.live;
-  countLabel.textContent = "JUMP";
-  primaryMetricLabel.textContent = "VIEW";
-  secondaryMetricLabel.textContent = "FLIGHT TIME";
-  tertiaryMetricLabel.textContent = "HEIGHT EST.";
+  countLabel.textContent = "SALTOS";
+  primaryMetricLabel.textContent = "VISTA";
+  secondaryMetricLabel.textContent = "TIEMPO VUELO";
+  tertiaryMetricLabel.textContent = "ALTURA EST.";
 
   jumpResultsTitle.textContent = meta.name;
 
   repDisplay.textContent = `0 / ${Math.max(1, Number(jumpTargetJumps.value) || 3)}`;
   angleDisplay.textContent = "FRONTAL";
-  stateDisplay.textContent = exercise === "sj" ? "START" : "READY";
+  stateDisplay.textContent = jumpStateLabel(exercise === "sj" ? "START" : "READY");
   eccDisplay.textContent = "—";
   conDisplay.textContent = "—";
 
@@ -1041,11 +1125,11 @@ function configureJumpUI(exercise) {
   if (exercise === "sj") {
     jumpProtocolHeader.textContent = "Pausa";
     jumpProtocolNote.textContent =
-      "Squat Jump: vista frontal, cuerpo completo y ambos pies visibles. Adopta tu posición inicial, mantén la pausa configurada y salta sin countermovement adicional.";
+      "SJ: vista frontal, cuerpo completo y ambos pies visibles. Adopta la posición inicial, mantén la pausa configurada y salta sin contramovimiento.";
   } else if (exercise === "cmj") {
     jumpProtocolHeader.textContent = "Descenso";
     jumpProtocolNote.textContent =
-      "CMJ: vista frontal, cuerpo completo y ambos pies visibles. Inicia de pie, realiza el countermovement y salta verticalmente.";
+      "CMJ: vista frontal, cuerpo completo y ambos pies visibles. Inicia de pie, con las manos en la cintura, realiza el contramovimiento y salta verticalmente.";
   } else {
     jumpProtocolHeader.textContent = "Descenso";
     jumpProtocolNote.textContent =
@@ -1166,6 +1250,8 @@ async function initializeCamera() {
       video.onloadedmetadata = async () => {
         await video.play();
         syncCanvasToVideoFrame();
+        armFrameClock();
+        lastFrameTimestamp = 0;
         resolve();
       };
     });
@@ -1209,15 +1295,17 @@ function stopCamera() {
   cameraReady = false;
   trackingReady = false;
   analysisActive = false;
+  seriesArmed = false;
   lockedSide = null;
   video.srcObject = null;
+  setSeriesBadge(null);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   trackingLiveDisplay.textContent = "ESPERA";
 }
 
 async function switchCamera() {
-  if (analysisActive) {
+  if (analysisActive || seriesArmed) {
     statusBox.textContent = "Finaliza la serie antes de cambiar de cámara.";
     return;
   }
@@ -1283,6 +1371,66 @@ function syncCanvasToVideoFrame() {
    DETECTION LOOP
 ========================================================= */
 
+/* ---------------------------------------------------------
+   RELOJ DE CUADROS (0.8.4)
+   requestVideoFrameCallback entrega, para cada cuadro nuevo de la
+   cámara, su número (presentedFrames) y su hora (captureTime o, si
+   el navegador no la da, expectedDisplayTime), en la misma base de
+   tiempo que performance.now(). Con eso:
+   - no se analiza dos veces el mismo cuadro;
+   - la hora de la medición es la del cuadro, no la del fin de la
+     inferencia (que varía ±10-20 ms en teléfonos).
+   Sin soporte (navegadores antiguos): se deduplica por
+   video.currentTime y se toma la hora ANTES de la inferencia.
+--------------------------------------------------------- */
+
+const frameClock = {
+  supported:
+    typeof HTMLVideoElement !== "undefined" &&
+    "requestVideoFrameCallback" in HTMLVideoElement.prototype,
+  generation: 0,
+  frameId: 0,
+  frameTime: 0
+};
+
+let lastProcessedFrameId = -1;
+let lastProcessedVideoTime = -1;
+let lastFrameTimestamp = 0;
+
+function armFrameClock() {
+  if (!frameClock.supported) return;
+
+  const generation = ++frameClock.generation;
+  frameClock.frameId = 0;
+  lastProcessedFrameId = -1;
+
+  const onFrame = (now, metadata) => {
+    if (generation !== frameClock.generation) return; // cadena antigua
+
+    frameClock.frameId = metadata?.presentedFrames ?? frameClock.frameId + 1;
+
+    const candidates = [metadata?.captureTime, metadata?.expectedDisplayTime, now];
+    frameClock.frameTime = candidates.find((value) => Number.isFinite(value) && value > 0) || performance.now();
+
+    video.requestVideoFrameCallback(onFrame);
+  };
+
+  video.requestVideoFrameCallback(onFrame);
+}
+
+// Devuelve { id, time } del cuadro a analizar, o null si no hay cuadro nuevo.
+function takeNewFrame() {
+  if (frameClock.supported && frameClock.frameId > 0) {
+    if (frameClock.frameId === lastProcessedFrameId) return null;
+    return { id: frameClock.frameId, time: frameClock.frameTime };
+  }
+
+  // Respaldo sin requestVideoFrameCallback.
+  const videoTime = video.currentTime;
+  if (videoTime === lastProcessedVideoTime) return null;
+  return { id: null, videoTime, time: performance.now() };
+}
+
 async function detectLoop() {
   if (
     !cameraReady ||
@@ -1294,16 +1442,29 @@ async function detectLoop() {
     return;
   }
 
+  const frame = takeNewFrame();
+
+  if (!frame) {
+    requestAnimationFrame(detectLoop);
+    return;
+  }
+
+  if (frame.id !== null) lastProcessedFrameId = frame.id;
+  else lastProcessedVideoTime = frame.videoTime;
+
+  // Tiempos estrictamente crecientes para los motores de medición.
+  const timestamp = Math.max(frame.time, lastFrameTimestamp + 1);
+  lastFrameTimestamp = timestamp;
+
   try {
     const poses = await detector.estimatePoses(video);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (poses && poses.length > 0) {
-      const timestamp = performance.now();
       const stabilized = stabilizePose(poses[0], timestamp);
       processPose(stabilized, timestamp);
     } else {
-      handleMissingPose();
+      handleMissingPose(timestamp);
     }
   } catch (error) {
     console.warn("MoveNet:", error);
@@ -1370,11 +1531,11 @@ function frontalData(pose) {
 ========================================================= */
 
 function movementRequiredEntries(points) {
+  // 0.8.3: press banca solo hombro y codo (la muñeca se pierde con barra/discos).
   if (activeExercise === "bench") {
     return [
       ["shoulder", points.shoulder],
-      ["elbow", points.elbow],
-      ["wrist", points.wrist]
+      ["elbow", points.elbow]
     ];
   }
 
@@ -1519,13 +1680,6 @@ function validateMovementGeometry(points, side) {
     return false;
   }
 
-  if (
-    activeExercise === "bench" &&
-    !segmentPlausible(`${prefix}:elbow-wrist`, points.elbow, points.wrist)
-  ) {
-    return false;
-  }
-
   return true;
 }
 
@@ -1562,7 +1716,7 @@ function assessMovementPosition(pose, side) {
   if (confidence < MIN_TRACKING_CONFIDENCE) {
     return {
       ready: false,
-      short: "Tracking inestable",
+      short: "Seguimiento inestable",
       title: "Mejora la visibilidad",
       text: `Mantén visible el lado ${sideLabel(side).toLowerCase()} y mejora la iluminación.`
     };
@@ -1575,7 +1729,7 @@ function assessMovementPosition(pose, side) {
     return {
       ready: false,
       short: "Articulación inestable",
-      title: "Tracking anatómico inestable",
+      title: "Seguimiento anatómico inestable",
       text: "Mantén la posición un instante. KINEMYX está descartando un punto anatómico incoherente."
     };
   }
@@ -1643,8 +1797,8 @@ function validateFrontalGeometry(data) {
       ok: false,
       assessment: {
         ready: false,
-        short: "Tracking cruzado",
-        title: "Tracking bilateral inestable",
+        short: "Lados cruzados",
+        title: "Seguimiento bilateral inestable",
         text: "Mantente de frente y evita cruzar las piernas o girar el tronco mientras se calibra."
       }
     };
@@ -1669,7 +1823,7 @@ function validateFrontalGeometry(data) {
       assessment: {
         ready: false,
         short: "Piernas inestables",
-        title: "Tracking bilateral inestable",
+        title: "Seguimiento bilateral inestable",
         text: "Asegúrate de que ambas piernas y ambos tobillos estén completamente visibles."
       }
     };
@@ -1691,7 +1845,7 @@ function validateFrontalGeometry(data) {
         assessment: {
           ready: false,
           short: "Articulación inestable",
-          title: "Tracking anatómico inestable",
+          title: "Seguimiento anatómico inestable",
           text: "Mantén el cuerpo visible un instante. KINEMYX está descartando una articulación incoherente."
         }
       };
@@ -1721,7 +1875,7 @@ function assessJumpPosition(pose) {
   if (confidence < MIN_TRACKING_CONFIDENCE) {
     return {
       ready: false,
-      short: "Tracking inestable",
+      short: "Seguimiento inestable",
       title: "Mejora la visibilidad",
       text: "Mantén ambos lados del cuerpo visibles y mejora la iluminación."
     };
@@ -1737,7 +1891,7 @@ function assessJumpPosition(pose) {
     ready: true,
     short: "Posición correcta",
     title: "Vista frontal correcta",
-    text: "Tracking bilateral estable · hombros, codos, caderas, rodillas y tobillos detectados."
+    text: "Seguimiento bilateral estable · hombros, codos, caderas, rodillas y tobillos detectados."
   };
 }
 
@@ -1766,7 +1920,7 @@ function updateTrackingState(ready) {
 
   if (ready) {
     lastGoodTrackingAt = now;
-    trackingLiveDisplay.textContent = "OK";
+    trackingLiveDisplay.textContent = "CORRECTO";
 
     if (!trackingReady) {
       trackingReady = true;
@@ -1786,7 +1940,7 @@ function updateTrackingState(ready) {
   }
 }
 
-function handleMissingPose() {
+function handleMissingPose(timestamp = performance.now()) {
   lastPositionAssessment = {
     ready: false,
     short: "No te detecto",
@@ -1802,14 +1956,16 @@ function handleMissingPose() {
   updateTrackingState(false);
 
   if (analysisActive && activeCategory === "movement") {
-    pauseDynamicMovementTiming(performance.now());
+    pauseDynamicMovementTiming(timestamp);
   }
 
   if (analysisActive && activeCategory === "jump") {
-    markJumpTrackingCompromised("Tracking perdido");
+    markJumpTrackingCompromised("Seguimiento perdido");
   }
 
-  if (analysisActive) trackingWarning("Tracking perdido");
+  if (analysisActive) trackingWarning("Seguimiento perdido");
+  if (seriesArmed) armReadySince = null;
+  updateSeriesCue();
   updateSetupFlow();
 }
 
@@ -1830,6 +1986,19 @@ function calculateAngle(a, b, c) {
 
 function flexionFromAngle(a, b, c) {
   return clamp(180 - calculateAngle(a, b, c), 0, 170);
+}
+
+// Press banca (0.8.3): ángulo del húmero (hombro→codo) respecto de la
+// vertical de la imagen. Solo requiere hombro y codo.
+//   0°   = brazo vertical (lockout)
+//   90°  = húmero paralelo al piso (≈ codo a 90° en un agarre estándar)
+//   >90° = codo por debajo del plano del hombro
+// Usa |dx| para no depender de hacia qué lado queda la cabeza.
+// Supone el teléfono vertical y nivelado (la vertical de la imagen = gravedad).
+function armAngleFromVertical(shoulder, elbow) {
+  const dx = Math.abs(elbow.x - shoulder.x);
+  const up = shoulder.y - elbow.y;
+  return clamp((Math.atan2(dx, up) * 180) / Math.PI, 0, 170);
 }
 
 
@@ -1891,34 +2060,35 @@ const jointShortLabels = {
   ankle: "TOBILLO"
 };
 
-// Qué se enfatiza en vista lateral según el ejercicio.
-// focus = articulación medida; angle = [proximal, vértice, distal]
-// (mismo trío que usa getDynamicMovementMetrics para la señal primaria).
+// Qué se dibuja en vista lateral según el ejercicio (0.8.3).
+// joints   = únicos puntos que se muestran
+// segments = únicas líneas que se muestran
+// focus    = articulación donde se mide (destacada + arco)
+// angle    = [proximal, vértice, distal] para ángulo articular, o
+// angleType "vertical" = húmero vs vertical (press banca, ver armAngleFromVertical).
 const LATERAL_DRAW_PROFILE = {
   squat: {
+    joints: ["shoulder", "hip", "knee", "ankle"],
+    segments: [["shoulder", "hip"], ["hip", "knee"], ["knee", "ankle"]],
     focus: "knee",
     angle: ["hip", "knee", "ankle"],
-    primary: ["shoulder-hip", "hip-knee", "knee-ankle"]
+    label: "RODILLA"
   },
   deadlift: {
+    joints: ["shoulder", "hip", "knee", "ankle"],
+    segments: [["shoulder", "hip"], ["hip", "knee"], ["knee", "ankle"]],
     focus: "hip",
     angle: ["shoulder", "hip", "knee"],
-    primary: ["shoulder-hip", "hip-knee", "knee-ankle"]
+    label: "CADERA"
   },
   bench: {
-    focus: "elbow",
-    angle: ["shoulder", "elbow", "wrist"],
-    primary: ["shoulder-elbow", "elbow-wrist"]
+    joints: ["shoulder", "elbow"],
+    segments: [["shoulder", "elbow"]],
+    focus: "shoulder",
+    angleType: "vertical",
+    label: "BRAZO"
   }
 };
-
-const LATERAL_SEGMENTS = [
-  ["shoulder", "elbow"],
-  ["elbow", "wrist"],
-  ["shoulder", "hip"],
-  ["hip", "knee"],
-  ["knee", "ankle"]
-];
 
 let overlayScale = 1;
 let overlayLabelSide = 1; // 1 = etiquetas a la derecha del punto, -1 = izquierda
@@ -2097,57 +2267,72 @@ function drawLateralSkeleton(pose, side) {
   const prefix = `draw:${side}`;
   const profile = LATERAL_DRAW_PROFILE[activeExercise] || LATERAL_DRAW_PROFILE.squat;
 
-  for (const [from, to] of LATERAL_SEGMENTS) {
-    const key = `${from}-${to}`;
-    const name = `${prefix}:${key}`;
+  for (const [from, to] of profile.segments) {
+    const name = `${prefix}:${from}-${to}`;
     const a = p[from];
     const b = p[to];
 
     if (segmentPlausible(name, a, b)) {
-      drawConnection(a, b, name, {
-        role: profile.primary.includes(key) ? "primary" : "secondary"
-      });
+      drawConnection(a, b, name, { role: "primary" });
     }
   }
 
-  const joints = ["shoulder", "elbow", "wrist", "hip", "knee", "ankle"];
+  const points = profile.joints.map((joint) => p[joint]);
 
-  updateLabelSide(Object.values(p));
-  beginOverlayFrame(joints.map((joint) => p[joint]), p[profile.focus]);
+  updateLabelSide(points);
+  beginOverlayFrame(points, p[profile.focus]);
 
   // Primero todos los puntos, después las etiquetas (no se tapan entre sí).
-  for (const joint of joints) {
-    const inPrimary = profile.primary.some((key) => key.split("-").includes(joint));
-
-    drawPoint(p[joint], {
-      focus: joint === profile.focus,
-      ring: inPrimary ? OVERLAY_COLORS.primary : OVERLAY_COLORS.secondary
-    });
+  for (const joint of profile.joints) {
+    drawPoint(p[joint], { focus: joint === profile.focus });
   }
 
-  for (const joint of joints) {
+  for (const joint of profile.joints) {
     // La articulación medida se rotula junto con su ángulo (drawLateralAngle).
     if (joint !== profile.focus) drawJointLabel(p[joint], jointShortLabels[joint]);
   }
 }
 
-// Dibuja el arco del ángulo medido y la flexión en la articulación foco.
-// flexionValue es el mismo valor suavizado que se muestra en el panel,
+// Dibuja el arco del ángulo medido en la articulación foco.
+// value es el mismo valor suavizado que se muestra en el panel,
 // para que overlay y panel nunca discrepen.
-function drawLateralAngle(pose, side, flexionValue) {
+function drawLateralAngle(pose, side, value) {
   const profile = LATERAL_DRAW_PROFILE[activeExercise];
   if (!profile) return;
 
   const p = sideData(pose, side);
-  const [aKey, bKey, cKey] = profile.angle;
-  const a = p[aKey];
-  const b = p[bKey];
-  const c = p[cKey];
+  let b;
+  let angleA;
+  let angleC;
 
-  if (![a, b, c].every((point) => pointQuality(point) === "ok")) return;
+  if (profile.angleType === "vertical") {
+    b = p.shoulder;
+    const c = p.elbow;
+    if (![b, c].every((point) => pointQuality(point) === "ok")) return;
 
-  const angleA = Math.atan2(a.y - b.y, a.x - b.x);
-  const angleC = Math.atan2(c.y - b.y, c.x - b.x);
+    angleA = -Math.PI / 2; // vertical hacia arriba (y del canvas crece hacia abajo)
+    angleC = Math.atan2(c.y - b.y, c.x - b.x);
+
+    // Referencia vertical punteada desde el hombro.
+    ctx.save();
+    ctx.strokeStyle = OVERLAY_COLORS.reference;
+    ctx.lineWidth = px(1.25);
+    ctx.setLineDash([px(4), px(4)]);
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x, b.y - px(OVERLAY_ARC_RADIUS * 2.2));
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    const [aKey, bKey, cKey] = profile.angle;
+    const a = p[aKey];
+    const c = p[cKey];
+    b = p[bKey];
+    if (![a, b, c].every((point) => pointQuality(point) === "ok")) return;
+
+    angleA = Math.atan2(a.y - b.y, a.x - b.x);
+    angleC = Math.atan2(c.y - b.y, c.x - b.x);
+  }
 
   let delta = angleC - angleA;
   while (delta > Math.PI) delta -= Math.PI * 2;
@@ -2176,7 +2361,7 @@ function drawLateralAngle(pose, side, flexionValue) {
   const lx = b.x - Math.cos(bisector) * labelDistance;
   const ly = b.y - Math.sin(bisector) * labelDistance;
 
-  drawTag(lx, ly, `${jointShortLabels[bKey]} ${Math.round(flexionValue)}°`, {
+  drawTag(lx, ly, `${profile.label} ${Math.round(value)}°`, {
     align: "center",
     fontSize: OVERLAY_ANGLE_FONT,
     weight: 850
@@ -2328,6 +2513,8 @@ function processPose(pose, now) {
   } else {
     processJumpPose(pose, now);
   }
+
+  updateSeriesCue();
 }
 
 function processMovementPose(pose, now) {
@@ -2345,6 +2532,7 @@ function processMovementPose(pose, now) {
   drawLateralSkeleton(pose, side);
   showPositionGuide(assessment);
   updateTrackingState(assessment.ready);
+  checkArmedStart(assessment.ready, now);
   updateSetupFlow();
 
   if (!assessment.ready) {
@@ -2382,6 +2570,7 @@ function processJumpPose(pose, now) {
   drawFrontalSkeleton(pose);
   showPositionGuide(assessment);
   updateTrackingState(assessment.ready);
+  checkArmedStart(assessment.ready, now);
   updateSetupFlow();
 
   if (!assessment.ready) {
@@ -2454,12 +2643,12 @@ function dynSmooth(buffer, value) {
 
 function getDynamicMovementMetrics(points) {
   if (activeExercise === "bench") {
-    const elbowFlexion = flexionFromAngle(points.shoulder, points.elbow, points.wrist);
+    const armAngle = armAngleFromVertical(points.shoulder, points.elbow);
 
     return {
-      primary: elbowFlexion,
+      primary: armAngle,
       secondary: null,
-      signal: elbowFlexion
+      signal: armAngle
     };
   }
 
@@ -2855,6 +3044,7 @@ let jumpBaselineSamples = [];
 
 let jumpPreviousAnkleY = null;
 let jumpPreviousHipY = null;
+let jumpPreviousTime = null;
 let jumpDeepestHipY = null;
 let jumpStartTime = 0;
 let jumpBottomTime = 0;
@@ -2881,6 +3071,7 @@ function resetJumpState() {
   jumpBaselineSamples = [];
   jumpPreviousAnkleY = null;
   jumpPreviousHipY = null;
+  jumpPreviousTime = null;
   jumpDeepestHipY = null;
   jumpStartTime = 0;
   jumpBottomTime = 0;
@@ -2961,8 +3152,27 @@ function markJumpTrackingCompromised(reason) {
     jumpState !== "START"
   ) {
     jumpTrackingCompromised = true;
-    jumpTrackingReason = reason || "Tracking inestable";
+    jumpTrackingReason = reason || "Seguimiento inestable";
   }
+}
+
+// Estados internos del motor de salto → texto en pantalla (0.8.5).
+const JUMP_STATE_LABELS = {
+  CALIBRATING: "CALIBRANDO",
+  READY: "LISTO",
+  START: "INICIO",
+  HOLD: "PAUSA",
+  ARMED: "LISTO PARA SALTAR",
+  INVALID: "INVÁLIDO",
+  COUNTERMOVEMENT: "CONTRAMOVIMIENTO",
+  PROPULSION: "IMPULSO",
+  FLIGHT: "VUELO",
+  LANDING: "ATERRIZAJE",
+  COMPLETE: "COMPLETO"
+};
+
+function jumpStateLabel(state) {
+  return JUMP_STATE_LABELS[state] || state;
 }
 
 function updateJump(metrics, timestamp) {
@@ -2974,11 +3184,12 @@ function updateJump(metrics, timestamp) {
 
     jumpPreviousAnkleY = metrics.ankleY;
     jumpPreviousHipY = metrics.hipY;
+    jumpPreviousTime = timestamp;
 
     if (!calibrated) return;
 
     jumpState = activeExercise === "sj" ? "START" : "READY";
-    stateDisplay.textContent = jumpState;
+    stateDisplay.textContent = jumpStateLabel(jumpState);
     statusBox.textContent =
       activeExercise === "sj"
         ? "Posición inicial calibrada · mantén la pausa antes de saltar."
@@ -2994,8 +3205,9 @@ function updateJump(metrics, timestamp) {
 
   jumpPreviousAnkleY = metrics.ankleY;
   jumpPreviousHipY = metrics.hipY;
+  jumpPreviousTime = timestamp;
 
-  stateDisplay.textContent = jumpState;
+  stateDisplay.textContent = jumpStateLabel(jumpState);
   repDisplay.textContent = `${jumpCount} / ${settings.targetJumps}`;
 }
 
@@ -3028,7 +3240,7 @@ function updateSquatJumpFrontal(metrics, timestamp, settings) {
     if (downward > cmAllowance) {
       sjProtocolInvalid = true;
       jumpState = "INVALID";
-      showWarning("Countermovement detectado");
+      showWarning("Contramovimiento detectado");
       beepWarning();
       return;
     }
@@ -3039,7 +3251,7 @@ function updateSquatJumpFrontal(metrics, timestamp, settings) {
     }
   } else if (jumpState === "INVALID") {
     if (Math.abs(metrics.hipY - sjBaselineHipY) < scale * 0.03) {
-      addInvalidJumpResult("Countermovement");
+      addInvalidJumpResult("Contramovimiento");
       prepareNextJump();
     }
   } else if (jumpState === "PROPULSION") {
@@ -3084,6 +3296,28 @@ function updateCountermovementJumpFrontal(metrics, timestamp, settings) {
   }
 }
 
+// Interpolación sub-cuadro (0.8.4): hora en que la elevación del tobillo
+// (baseline - ankleY) cruzó el umbral, entre el cuadro anterior y el actual.
+// Reduce la dispersión del tiempo de vuelo de ±1 cuadro a unos pocos ms.
+// Solo se interpola si el cuadro anterior es reciente (≤ JUMP_INTERP_MAX_GAP_MS).
+const JUMP_INTERP_MAX_GAP_MS = 80;
+
+function interpolateCrossingTime(prevValue, value, threshold, timestamp) {
+  if (
+    jumpPreviousTime === null ||
+    !Number.isFinite(prevValue) ||
+    timestamp - jumpPreviousTime > JUMP_INTERP_MAX_GAP_MS ||
+    prevValue === value
+  ) {
+    return timestamp;
+  }
+
+  const fraction = (threshold - prevValue) / (value - prevValue);
+  if (!(fraction >= 0 && fraction <= 1)) return timestamp;
+
+  return jumpPreviousTime + fraction * (timestamp - jumpPreviousTime);
+}
+
 function detectJumpTakeoffFrontal(metrics, timestamp) {
   const propulsionMs = timestamp - jumpPropulsionStartTime;
   if (propulsionMs < JUMP_TAKEOFF_MIN_MS) return;
@@ -3108,7 +3342,14 @@ function detectJumpTakeoffFrontal(metrics, timestamp) {
 
   if (candidate) {
     if (jumpTakeoffConfirmFrames === 0) {
-      jumpTakeoffCandidateTime = timestamp;
+      const previousLift =
+        jumpPreviousAnkleY === null ? NaN : jumpBaselineAnkleY - jumpPreviousAnkleY;
+      jumpTakeoffCandidateTime = interpolateCrossingTime(
+        previousLift,
+        ankleLift,
+        ankleThreshold,
+        timestamp
+      );
     }
 
     jumpTakeoffConfirmFrames++;
@@ -3141,11 +3382,28 @@ function detectJumpLandingFrontal(metrics, timestamp) {
   const hipMovingDown =
     jumpPreviousHipY !== null && metrics.hipY > jumpPreviousHipY + 0.08;
 
-  const candidate = ankleNearGround && ankleMovingDown && hipMovingDown;
+  // 0.8.4: el primer cuadro exige tobillo cerca del suelo Y bajando; los
+  // cuadros de confirmación solo exigen que siga cerca del suelo. Antes se
+  // exigía "bajando" también al confirmar, pero al contacto el pie se detiene:
+  // a 20-30 fps a veces solo un cuadro lo muestra bajando, la confirmación
+  // fallaba y el aterrizaje se detectaba 150-250 ms tarde (en la amortiguación).
+  const candidate =
+    jumpLandingConfirmFrames === 0
+      ? ankleNearGround && ankleMovingDown && hipMovingDown
+      : ankleNearGround;
 
   if (candidate) {
     if (jumpLandingConfirmFrames === 0) {
-      jumpLandingCandidateTime = timestamp;
+      // Cruce de la elevación del tobillo hacia abajo del límite de "suelo".
+      const lift = jumpBaselineAnkleY - metrics.ankleY;
+      const previousLift =
+        jumpPreviousAnkleY === null ? NaN : jumpBaselineAnkleY - jumpPreviousAnkleY;
+      jumpLandingCandidateTime = interpolateCrossingTime(
+        previousLift,
+        lift,
+        ankleTolerance,
+        timestamp
+      );
     }
 
     jumpLandingConfirmFrames++;
@@ -3162,7 +3420,7 @@ function detectJumpLandingFrontal(metrics, timestamp) {
 
   if (flightMs > JUMP_MAX_FLIGHT_MS) {
     addInvalidJumpResult(jumpTrackingReason || "No se detectó aterrizaje");
-    showWarning("Salto invalidado · revisa tracking");
+    showWarning("Salto invalidado · revisa el seguimiento");
     beepWarning();
     prepareNextJump();
   }
@@ -3175,10 +3433,69 @@ function captureLandingFrontal(timestamp, settings, sjHold) {
   }
 }
 
+/* ---------------------------------------------------------
+   DATOS DEL EVALUADO (0.8.5)
+   La altura por tiempo de vuelo (h = g·t²/8) no depende de la
+   estatura ni del peso. Estos datos permiten variables nuevas:
+
+   · Estatura → escala px/cm. La distancia hombro–tobillo de pie
+     equivale a ≈ 0,779 × estatura (altura del hombro 0,818·H menos
+     altura del tobillo 0,039·H; proporciones segmentarias de Drillis
+     y Contini). Con ella: profundidad del contramovimiento en cm
+     (descenso de la cadera media desde la posición de pie).
+     Error esperado ±5-10% (proporciones individuales, ubicación
+     de los puntos de MoveNet y perspectiva).
+
+   · Peso → potencia pico estimada, ecuación de Sayers et al. (1999):
+       P (W) = 60,7 · h (cm) + 45,3 · m (kg) − 2055
+     Validada para SJ y CMJ sin impulso de brazos; no se calcula en
+     Abalakov. Hereda el error de la altura estimada.
+--------------------------------------------------------- */
+const SHOULDER_ANKLE_STATURE_RATIO = 0.779;
+const SAYERS_HEIGHT_COEF = 60.7;
+const SAYERS_MASS_COEF = 45.3;
+const SAYERS_INTERCEPT = -2055;
+
+function computeJumpExtras(settings, estimatedHeightCm) {
+  let depthCm = null;
+  let peakPowerW = null;
+
+  if (
+    settings.statureCm &&
+    activeExercise !== "sj" &&
+    jumpBaselineScale &&
+    jumpDeepestHipY !== null &&
+    jumpBaselineHipY !== null
+  ) {
+    const pxPerCm = jumpBaselineScale / (SHOULDER_ANKLE_STATURE_RATIO * settings.statureCm);
+    const depth = (jumpDeepestHipY - jumpBaselineHipY) / pxPerCm;
+    if (Number.isFinite(depth) && depth > 0) depthCm = depth;
+  }
+
+  if (
+    settings.bodyMassKg &&
+    activeExercise !== "abalakov" &&
+    Number.isFinite(estimatedHeightCm)
+  ) {
+    const power =
+      SAYERS_HEIGHT_COEF * estimatedHeightCm +
+      SAYERS_MASS_COEF * settings.bodyMassKg +
+      SAYERS_INTERCEPT;
+    if (power > 0) peakPowerW = power;
+  }
+
+  return {
+    depthCm,
+    peakPowerW,
+    relativePowerWkg: peakPowerW && settings.bodyMassKg ? peakPowerW / settings.bodyMassKg : null
+  };
+}
+
 function completeJump(settings, sjHold) {
   const flightTime = (jumpLandingTime - jumpTakeoffTime) / 1000;
   const estimatedHeightCm =
     ((GRAVITY * Math.pow(flightTime, 2)) / 8) * 100;
+  const extras = computeJumpExtras(settings, estimatedHeightCm);
 
   const descentTime =
     activeExercise === "sj"
@@ -3214,6 +3531,9 @@ function completeJump(settings, sjHold) {
     descentTime,
     holdTime: activeExercise === "sj" ? sjHold : null,
     landingDetected: landingValid,
+    depthCm: extras.depthCm,
+    peakPowerW: extras.peakPowerW,
+    relativePowerWkg: extras.relativePowerWkg,
     valid,
     reason: valid ? "Válido" : jumpTrackingReason || "Revisar"
   };
@@ -3237,6 +3557,9 @@ function addInvalidJumpResult(reason) {
     descentTime: null,
     holdTime: activeExercise === "sj" ? getJumpSettings().holdTarget : null,
     landingDetected: false,
+    depthCm: null,
+    peakPowerW: null,
+    relativePowerWkg: null,
     valid: false,
     reason
   };
@@ -3297,27 +3620,40 @@ function trackingWarning(message) {
   }
 }
 
-function beepWarning() {
+function ensureAudioContext() {
+  try {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === "suspended") audioContext.resume();
+    return audioContext;
+  } catch (error) {
+    return null;
+  }
+}
+
+function playTone(frequency, duration, volume) {
   const mode = getActiveFeedbackMode();
   if (mode !== "audio" && mode !== "both") return;
 
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  const context = ensureAudioContext();
+  if (!context) return;
 
-  if (audioContext.state === "suspended") audioContext.resume();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
 
-  const oscillator = audioContext.createOscillator();
-  const gain = audioContext.createGain();
-
-  oscillator.frequency.value = 520;
-  gain.gain.value = 0.025;
+  oscillator.frequency.value = frequency;
+  gain.gain.value = volume;
 
   oscillator.connect(gain);
-  gain.connect(audioContext.destination);
+  gain.connect(context.destination);
 
   oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.12);
+  oscillator.stop(context.currentTime + duration);
+}
+
+function beepWarning() {
+  playTone(520, 0.12, 0.025);
 }
 
 
@@ -3384,8 +3720,13 @@ function addJumpResultRow(result) {
     <td>${result.estimatedHeightCm === null ? "—" : `${result.estimatedHeightCm.toFixed(1)} cm`}</td>
     <td>${result.flightTime === null ? "—" : `${result.flightTime.toFixed(3)} s`}</td>
     <td>${protocolValue}</td>
-    <td>${result.landingDetected ? "Detectado" : "—"}</td>
-    <td class="${result.valid ? "pass" : "fail"}">${result.valid ? "✓" : "⚠"}</td>
+    <td>${result.depthCm === null ? "—" : `${result.depthCm.toFixed(0)} cm`}</td>
+    <td>${
+      result.peakPowerW === null
+        ? "—"
+        : `<span class="cell-value">${Math.round(result.peakPowerW).toLocaleString("es-CL")} W<small class="cell-sub">${result.relativePowerWkg.toFixed(1)} W/kg</small></span>`
+    }</td>
+    <td class="${result.valid ? "pass" : "fail"}" title="${result.valid ? "Válido" : result.reason || "Revisar"}">${result.valid ? "✓" : "⚠"}</td>
   `;
 
   jumpResultsBody.appendChild(row);
@@ -3418,12 +3759,28 @@ function updateJumpSummary() {
   const avgHeight = mean(heights);
   const avgFlight = mean(flights);
 
+  const depths = valid.filter((r) => r.depthCm !== null).map((r) => r.depthCm);
+  const powers = valid.filter((r) => r.peakPowerW !== null);
+  const extraLines = [];
+
+  if (depths.length) {
+    extraLines.push(`Profundidad media: <strong>${mean(depths).toFixed(0)} cm</strong>`);
+  }
+
+  if (powers.length) {
+    const bestPower = powers.reduce((a, b) => (b.peakPowerW > a.peakPowerW ? b : a));
+    extraLines.push(
+      `Mejor potencia pico est.: <strong>${Math.round(bestPower.peakPowerW).toLocaleString("es-CL")} W</strong> (${bestPower.relativePowerWkg.toFixed(1)} W/kg)`
+    );
+  }
+
   jumpSummary.innerHTML = `
     <strong>${valid.length}</strong> saltos válidos ·
     <strong>${invalidCount}</strong> por revisar<br>
     Mejor altura estimada: <strong>${best.toFixed(1)} cm</strong> ·
     Media: <strong>${avgHeight.toFixed(1)} cm</strong> ·
     Vuelo medio: <strong>${avgFlight.toFixed(3)} s</strong>
+    ${extraLines.length ? `<br>${extraLines.join(" · ")}` : ""}
   `;
 }
 
@@ -3432,6 +3789,115 @@ function updateJumpSummary() {
    START / STOP ANALYSIS
 ========================================================= */
 
+/* =========================================================
+   SERIE ARMADA · 0.8.2
+   ---------------------------------------------------------
+   1. "Iniciar serie" puede presionarse sin estar ubicado:
+      la serie queda ARMADA (recuadro "UBÍCATE EN POSICIÓN").
+   2. Con posición válida continua ARM_READY_HOLD_MS, la serie
+      parte sola (beginSeries) y el motor calibra (quietud).
+   3. Calibrado el motor: recuadro verde "LISTO" + beep.
+      - Movimientos: visible hasta que empieza la 1ª repetición.
+      - Saltos: reaparece antes de cada salto (cada salto
+        recalibra). SJ: "BAJA Y MANTÉN" hasta cumplir la pausa.
+   El toque en "Iniciar serie" también desbloquea el audio
+   en iOS (Web Audio exige un gesto del usuario).
+========================================================= */
+
+// Tiempo con posición válida continua antes de partir (heurístico:
+// evita partir por un frame suelto; la quietud la exige la calibración).
+const ARM_READY_HOLD_MS = 600;
+const READY_TONE_HZ = 880;
+
+let armReadySince = null;
+let readyCueActive = false;
+
+function setSeriesBadge(kind, text = "") {
+  if (!seriesBadge) return;
+
+  if (!kind) {
+    seriesBadge.classList.add("hidden");
+    return;
+  }
+
+  seriesBadge.textContent = text;
+  seriesBadge.className = `series-badge ${kind}`;
+}
+
+function currentSeriesCue() {
+  if (seriesArmed && !analysisActive) {
+    return ["wait", "SERIE ARMADA · UBÍCATE EN POSICIÓN"];
+  }
+
+  if (!analysisActive) return null;
+
+  if (activeCategory === "movement") {
+    if (dynState === "CALIBRATING") return ["wait", "CALIBRANDO · NO TE MUEVAS"];
+
+    if (dynState === "READY" && movementRepCount === 0) {
+      return [
+        "ready",
+        activeExercise === "deadlift"
+          ? "✓ LISTO · COMIENZA LA SUBIDA"
+          : "✓ LISTO · PUEDES PARTIR"
+      ];
+    }
+
+    return null;
+  }
+
+  if (jumpBaselineAnkleY === null) return ["wait", "CALIBRANDO · NO TE MUEVAS"];
+
+  if (activeExercise === "sj") {
+    if (jumpState === "START" || jumpState === "HOLD") {
+      return ["wait", "BAJA A LA POSICIÓN Y MANTÉN"];
+    }
+    if (jumpState === "ARMED") return ["ready", "✓ LISTO · SALTA"];
+    return null;
+  }
+
+  if (jumpState === "READY") return ["ready", "✓ LISTO · SALTA"];
+  return null;
+}
+
+function updateSeriesCue() {
+  const cue = currentSeriesCue();
+
+  if (!cue) {
+    setSeriesBadge(null);
+    readyCueActive = false;
+    return;
+  }
+
+  setSeriesBadge(cue[0], cue[1]);
+
+  if (cue[0] === "ready") {
+    if (!readyCueActive) {
+      readyCueActive = true;
+      playTone(READY_TONE_HZ, 0.18, 0.06);
+    }
+  } else {
+    readyCueActive = false;
+  }
+}
+
+function checkArmedStart(ready, now) {
+  if (!seriesArmed || analysisActive) return;
+
+  if (!ready) {
+    armReadySince = null;
+    return;
+  }
+
+  if (armReadySince === null) armReadySince = now;
+
+  if (now - armReadySince >= ARM_READY_HOLD_MS) {
+    seriesArmed = false;
+    armReadySince = null;
+    beginSeries();
+  }
+}
+
 function startAnalysis() {
   if (!cameraReady) {
     statusBox.textContent = "Activa la cámara primero.";
@@ -3439,16 +3905,32 @@ function startAnalysis() {
   }
 
   if (!detector || detectorLoading) {
-    statusBox.textContent = "Espera a que termine de cargar el motor de tracking.";
+    statusBox.textContent = "Espera a que termine de cargar el motor de seguimiento.";
     return;
   }
 
-  if (!trackingReady) {
-    statusBox.textContent =
-      lastPositionAssessment?.text || "Ajusta tu posición antes de iniciar.";
-    return;
-  }
+  if (analysisActive || seriesArmed) return;
 
+  // Gesto del usuario: desbloquea el audio en iOS para los beeps posteriores.
+  ensureAudioContext();
+
+  seriesArmed = true;
+  armReadySince = null;
+  readyCueActive = false;
+
+  movementConfigDetails.open = false;
+  jumpConfigDetails.open = false;
+
+  statusBox.textContent =
+    activeCategory === "movement"
+      ? "Serie armada · ubícate de perfil. KINEMYX partirá al detectarte."
+      : "Serie armada · ubícate de frente. KINEMYX partirá al detectarte.";
+
+  updateSetupFlow();
+  updateSeriesCue();
+}
+
+function beginSeries() {
   if (activeCategory === "movement") {
     lockedSide = sideMode === "auto" ? candidateSide : sideMode;
     activeSide = lockedSide;
@@ -3511,22 +3993,25 @@ function startAnalysis() {
         ? "Mantén estable tu posición inicial de Squat Jump."
         : "Mantente de pie y estable mientras KINEMYX calibra la vista frontal.";
   }
-
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-
-  if (audioContext.state === "suspended") audioContext.resume();
 }
 
 function stopAnalysis(automatic = false) {
+  if (seriesArmed && !analysisActive) {
+    seriesArmed = false;
+    armReadySince = null;
+    statusBox.textContent = "Serie cancelada antes de comenzar.";
+    updateSeriesCue();
+    updateSetupFlow();
+    return;
+  }
+
   if (!analysisActive) {
     statusBox.textContent = "No hay una serie activa.";
     return;
   }
 
   analysisActive = false;
-  stateDisplay.textContent = "COMPLETE";
+  stateDisplay.textContent = "COMPLETO";
 
   if (activeCategory === "movement") {
     updateMovementSummary();
@@ -3542,6 +4027,7 @@ function stopAnalysis(automatic = false) {
   }
 
   lockedSide = null;
+  updateSeriesCue();
   updateViewModeUI();
   updateSideHelp(candidateSide);
   updateSetupFlow();
@@ -3594,7 +4080,7 @@ async function submitFeedback(event) {
 
   const payload = new FormData();
 
-  payload.append("_subject", `Nuevo feedback ${APP_VERSION}`);
+  payload.append("_subject", `Nuevo comentario ${APP_VERSION}`);
   payload.append("tester", getTesterName());
   payload.append("perfil", feedbackProfile.value);
   payload.append("ejercicio", exerciseMeta[activeExercise].name);
@@ -3640,7 +4126,7 @@ async function submitFeedback(event) {
     feedbackStatus.className = "feedback-status error";
   } finally {
     feedbackSubmit.disabled = false;
-    feedbackSubmit.textContent = "Enviar feedback";
+    feedbackSubmit.textContent = "Enviar comentarios";
   }
 }
 
