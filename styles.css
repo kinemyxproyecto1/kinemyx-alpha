@@ -390,3 +390,39 @@ td { padding: 12px; border-bottom: 1px solid #edf1f5; color: #344253; font-size:
 /* 0.8.5 · Las etiquetas en mayúscula necesitan alto de línea para no recortar tildes (Ó, É, Á). */
 .metric small, .live-side-pill small { line-height: 1.45; padding-top: 1px; }
 
+/* =========================================================
+   0.8.6 · Alto fijo de los textos que cambian en vivo
+   Con la cámara activa, guía, aviso, estado y ayuda de lado
+   cambian de texto varias veces por segundo. Si su alto cambia,
+   todo lo que está debajo se desplaza y, en iPhone (Safari no
+   compensa el scroll), la página "tiembla" al moverse por ella.
+   Cada caja tiene ahora un alto fijo: máximo 2 líneas de texto.
+========================================================= */
+.warning { min-height: 38px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* Aviso sin mensaje: ocupa su espacio pero no se ve (antes aparecía/desaparecía). */
+.warning.is-idle { visibility: hidden; }
+
+.position-guide { min-height: 62px; }
+.position-guide-copy strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.position-guide-copy span {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; min-height: 2.9em;
+}
+
+.status {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; min-height: calc(2.9em + 22px);
+}
+
+.side-mode-help {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; min-height: 2.8em;
+}
+
+.buttons button { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+@media (max-width: 700px) {
+  .warning { min-height: 33px; }
+  .position-guide { min-height: 56px; }
+  .status { min-height: calc(2.9em + 18px); }
+}
