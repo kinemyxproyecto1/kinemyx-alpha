@@ -7,7 +7,7 @@
   <meta name="description" content="KINEMYX Beta · Inteligencia del movimiento humano." />
   <title>KINEMYX · Inteligencia del movimiento humano</title>
 
-  <link rel="stylesheet" href="styles.css?v=0.8.7" />
+  <link rel="stylesheet" href="styles.css?v=0.8.8" />
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
@@ -24,7 +24,7 @@
   <div class="access-card">
     <div class="access-brand">KINEMY<span>X</span></div>
     <div class="access-brand-subtitle">Inteligencia del movimiento humano</div>
-    <div class="access-beta-badge">BETA 0.8.7 · ACCESO PRIVADO</div>
+    <div class="access-beta-badge">BETA 0.8.8 · ACCESO PRIVADO</div>
 
     <h1>Bienvenido a KINEMYX</h1>
     <p class="access-description">
@@ -69,7 +69,7 @@
         <span class="tester-dot"></span>
         <span id="testerNameDisplay">Usuario</span>
       </div>
-      <div class="beta-badge">BETA 0.8.7</div>
+      <div class="beta-badge">BETA 0.8.8</div>
       <button id="logoutButton" type="button" class="logout-button">Salir</button>
     </div>
   </div>
@@ -275,6 +275,18 @@
           <label><input id="movementCheckCon" type="checkbox" checked />Tempo concéntrico</label>
         </div>
 
+        <h3>Motor de detección</h3>
+        <div class="settings-grid">
+          <label>Modelo
+            <select id="movementEngine">
+              <option value="blazepose-full" selected>BlazePose · preciso (recomendado)</option>
+              <option value="blazepose-heavy">BlazePose · máxima precisión (más lento)</option>
+              <option value="movenet">MoveNet · anterior</option>
+            </select>
+            <span>Para comparar, cambia el modelo y repite la misma serie en las mismas condiciones.</span>
+          </label>
+        </div>
+
         <h3>Avisos durante la serie</h3>
         <div class="settings-grid">
           <label>Tipo de aviso
@@ -451,14 +463,14 @@
   </section>
 
   <footer class="app-footer">
-    <strong>KINEMYX Beta 0.8.7</strong>
+    <strong>KINEMYX Beta 0.8.8</strong>
     <span>Motor de seguimiento de doble vista · Mediciones estimadas mediante visión 2D.</span>
   </footer>
 
 </main>
 </div>
 
-<script src="app.js?v=0.8.7"></script>
+<script src="app.js?v=0.8.8"></script>
 
 </body>
 </html>
