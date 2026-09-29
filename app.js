@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.7
+   KINEMYX Beta 0.8.8
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -72,6 +72,17 @@
      el ángulo sagital no se puede medir de frente.
    - Modos IZQUIERDO / DERECHO manuales: sin cambios.
    - Sin cambios en saltos ni en los motores de repetición.
+
+   0.8.8 · Precisión de puntos en movimientos:
+   - Motor BlazePose (33 puntos, pensado para ejercicio) para
+     sentadilla, peso muerto y press banca, con respaldo automático a
+     MoveNet si no carga. Selector de motor en Ajustes para comparar.
+   - Cadena lateral combinada también en modos IZQUIERDO/DERECHO
+     (el lado elegido solo decide cuando las piernas están separadas).
+   - Calibración robusta: ignora el cuadro más alto y el más bajo y
+     solo calibra en la posición inicial (de pie / brazos extendidos).
+   - Aviso específico cuando los pies quedan fuera de la imagen.
+   - Saltos sin cambios (MoveNet Lightning).
 ========================================================= */
 
 
@@ -81,7 +92,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.7";
+const APP_VERSION = "KINEMYX Beta 0.8.8";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -349,6 +360,7 @@ const movementEccTolerance = $("movementEccTolerance");
 const movementConTarget = $("movementConTarget");
 const movementConTolerance = $("movementConTolerance");
 const movementFeedbackMode = $("movementFeedbackMode");
+const movementEngineSelect = $("movementEngine");
 const movementCheckAngle = $("movementCheckAngle");
 const movementCheckEcc = $("movementCheckEcc");
 const movementCheckCon = $("movementCheckCon");
@@ -1241,12 +1253,103 @@ async function getCameraStream() {
   }
 }
 
+/* ---------------------------------------------------------
+   MOTORES DE DETECCIÓN (0.8.8)
+   - Movimientos: BlazePose (runtime tfjs, 33 puntos, entrenado para
+     ejercicio y yoga, con seguimiento entre cuadros) en variante
+     "full" (recomendada) o "heavy" (más precisa y más lenta).
+     Sus puntos se convierten al formato de 17 puntos que usa el resto
+     de la app (mismos nombres: left_shoulder, left_hip, ...), así que
+     umbrales, validaciones y motores de repetición no cambian.
+     Si BlazePose no carga (red, modelo o navegador), se usa MoveNet
+     Thunder automáticamente y se avisa en pantalla.
+   - Saltos: MoveNet Lightning (prioriza cuadros por segundo).
+   Usa las mismas librerías ya incluidas en index.html.
+--------------------------------------------------------- */
+const ENGINE_STORAGE_KEY = "kinemyx_movement_engine";
+const COCO_KEYPOINT_NAMES = [
+  "nose", "left_eye", "right_eye", "left_ear", "right_ear",
+  "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
+  "left_wrist", "right_wrist", "left_hip", "right_hip",
+  "left_knee", "right_knee", "left_ankle", "right_ankle"
+];
+// Índices BlazePose equivalentes (respaldo si faltan los nombres).
+const BLAZEPOSE_TO_COCO_INDEX = [0, 2, 5, 7, 8, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
+
+let blazeposeFailed = false;
+
+function engineLabel(profile) {
+  if (profile === "blazepose-full") return "BlazePose preciso";
+  if (profile === "blazepose-heavy") return "BlazePose máxima precisión";
+  if (profile === "thunder") return "MoveNet";
+  return "MoveNet rápido";
+}
+
+function selectedMovementEngine() {
+  const value = movementEngineSelect?.value || "blazepose-full";
+  if (value === "movenet") return "thunder";
+  if (blazeposeFailed) return "thunder";
+  return value;
+}
+
 function desiredDetectorProfile() {
-  return activeCategory === "movement" ? "thunder" : "lightning";
+  return activeCategory === "movement" ? selectedMovementEngine() : "lightning";
+}
+
+function isBlazePoseProfile(profile) {
+  return typeof profile === "string" && profile.startsWith("blazepose");
+}
+
+// BlazePose (33 puntos) → formato COCO de 17 puntos usado por la app.
+function toCocoPose(pose) {
+  if (!pose?.keypoints || pose.keypoints.length === 17) return pose;
+
+  const byName = new Map();
+  for (const point of pose.keypoints) {
+    if (point?.name) byName.set(point.name, point);
+  }
+
+  const keypoints = COCO_KEYPOINT_NAMES.map((name, index) => {
+    const point = byName.get(name) || pose.keypoints[BLAZEPOSE_TO_COCO_INDEX[index]] || {};
+    return {
+      x: point.x,
+      y: point.y,
+      score: Number.isFinite(point.score) ? point.score : 0,
+      name
+    };
+  });
+
+  return { ...pose, keypoints };
+}
+
+async function createDetectorForProfile(profile) {
+  if (isBlazePoseProfile(profile)) {
+    return poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
+      runtime: "tfjs",
+      modelType: profile === "blazepose-heavy" ? "heavy" : "full",
+      enableSmoothing: false
+    });
+  }
+
+  return poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, {
+    modelType:
+      profile === "thunder"
+        ? poseDetection.movenet.modelType.SINGLEPOSE_THUNDER
+        : poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+    enableSmoothing: false
+  });
+}
+
+async function estimatePosesForActiveDetector(timestamp) {
+  if (isBlazePoseProfile(detectorProfile)) {
+    const poses = await detector.estimatePoses(video, { flipHorizontal: false }, timestamp);
+    return (poses || []).map(toCocoPose);
+  }
+  return detector.estimatePoses(video);
 }
 
 async function ensureDetectorForActiveMode() {
-  const profile = desiredDetectorProfile();
+  let profile = desiredDetectorProfile();
 
   if (detector && detectorProfile === profile) return;
 
@@ -1255,23 +1358,27 @@ async function ensureDetectorForActiveMode() {
   updateSetupFlow();
 
   const token = ++detectorLoadToken;
+  let fallbackNotice = false;
 
   try {
     await tf.setBackend("webgl");
     await tf.ready();
 
-    const modelType =
-      profile === "thunder"
-        ? poseDetection.movenet.modelType.SINGLEPOSE_THUNDER
-        : poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
+    let newDetector;
 
-    const newDetector = await poseDetection.createDetector(
-      poseDetection.SupportedModels.MoveNet,
-      {
-        modelType,
-        enableSmoothing: false
+    try {
+      if (isBlazePoseProfile(profile)) {
+        setText(statusBox, `Cargando ${engineLabel(profile)}… (la primera vez puede tardar)`);
       }
-    );
+      newDetector = await createDetectorForProfile(profile);
+    } catch (error) {
+      if (!isBlazePoseProfile(profile)) throw error;
+      console.warn("BlazePose no disponible, se usa MoveNet:", error);
+      blazeposeFailed = true;
+      fallbackNotice = true;
+      profile = "thunder";
+      newDetector = await createDetectorForProfile(profile);
+    }
 
     if (token !== detectorLoadToken) {
       if (typeof newDetector.dispose === "function") newDetector.dispose();
@@ -1289,8 +1396,10 @@ async function ensureDetectorForActiveMode() {
     resetPoseTracker();
     setText(
       statusBox,
-      profile === "thunder"
-        ? "Motor lateral de alta precisión listo."
+      fallbackNotice
+        ? "BlazePose no pudo cargarse en este dispositivo · se usa MoveNet."
+        : activeCategory === "movement"
+        ? `Motor lateral listo · ${engineLabel(profile)}.`
         : "Motor frontal de alta velocidad listo."
     );
   } finally {
@@ -1299,6 +1408,35 @@ async function ensureDetectorForActiveMode() {
       updateSetupFlow();
     }
   }
+}
+
+function onMovementEngineChange() {
+  if (analysisActive || seriesArmed) {
+    setText(statusBox, "Finaliza la serie antes de cambiar el motor de detección.");
+    return;
+  }
+
+  try { localStorage.setItem(ENGINE_STORAGE_KEY, movementEngineSelect.value); } catch (error) {}
+
+  if (movementEngineSelect.value !== "movenet") blazeposeFailed = false;
+
+  if (cameraReady && activeCategory === "movement") {
+    ensureDetectorForActiveMode().catch((error) => {
+      console.error(error);
+      setText(statusBox, "No fue posible cargar el motor de seguimiento.");
+    });
+  }
+}
+
+if (movementEngineSelect) {
+  try {
+    const saved = localStorage.getItem(ENGINE_STORAGE_KEY);
+    if (saved && [...movementEngineSelect.options].some((o) => o.value === saved)) {
+      movementEngineSelect.value = saved;
+    }
+  } catch (error) {}
+
+  movementEngineSelect.addEventListener("change", onMovementEngineChange);
 }
 
 async function initializeCamera() {
@@ -1344,7 +1482,9 @@ async function initializeCamera() {
     setText(
       statusBox,
       activeCategory === "movement"
-        ? "Cámara activa · colócate completamente de perfil."
+        ? blazeposeFailed && movementEngineSelect?.value !== "movenet"
+          ? "BlazePose no pudo cargarse · se usa MoveNet. Colócate completamente de perfil."
+          : `Cámara activa · ${engineLabel(detectorProfile)} · colócate completamente de perfil.`
         : "Cámara activa · colócate de frente y muestra el cuerpo completo."
     );
 
@@ -1548,7 +1688,7 @@ async function detectLoop() {
   lastFrameTimestamp = timestamp;
 
   try {
-    const poses = await detector.estimatePoses(video);
+    const poses = await estimatePosesForActiveDetector(timestamp);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (poses && poses.length > 0) {
@@ -1716,8 +1856,9 @@ function groupContinuityCost(points, group, prev) {
   return used ? cost / used : null;
 }
 
-function fusedLateralData(pose) {
-  if (pose._lateralFused) return pose._lateralFused;
+function fusedLateralData(pose, preferSide = null) {
+  const cacheKey = `_lateralFused_${preferSide || "auto"}`;
+  if (pose[cacheKey]) return pose[cacheKey];
 
   const left = sideData(pose, "left");
   const right = sideData(pose, "right");
@@ -1743,12 +1884,15 @@ function fusedLateralData(pose) {
       continue;
     }
 
-    // Grupos separados: elegir un lado completo (continuidad > confianza).
+    // Grupos separados: elegir un lado completo. En modo manual manda el
+    // lado elegido (0.8.8); en automático, continuidad > confianza.
     const costLeft = groupContinuityCost(left, group, lateralPrevChain);
     const costRight = groupContinuityCost(right, group, lateralPrevChain);
     let chosen;
 
-    if (costLeft !== null && costRight !== null) {
+    if (preferSide === "left" || preferSide === "right") {
+      chosen = preferSide === "left" ? left : right;
+    } else if (costLeft !== null && costRight !== null) {
       chosen = costLeft <= costRight ? left : right;
     } else {
       const scoreLeft = averagePointConfidence(group.map((joint) => left[joint]));
@@ -1766,13 +1910,15 @@ function fusedLateralData(pose) {
   }
   lateralPrevChain = { ...(lateralPrevChain || {}), ...memory };
 
-  pose._lateralFused = out;
+  pose[cacheKey] = out;
   return out;
 }
 
 // Puntos de la cadena lateral usada por movimientos.
 function movementPoints(pose, side) {
-  return side === "fused" ? fusedLateralData(pose) : sideData(pose, side);
+  // 0.8.8: todos los modos usan la cadena combinada; en IZQUIERDO/DERECHO
+  // el lado elegido solo decide cuando las piernas están separadas.
+  return fusedLateralData(pose, side === "fused" ? null : side);
 }
 
 function getMovementTrackingSide(pose) {
@@ -1841,6 +1987,9 @@ function checkEdgeAssessment(entries) {
    En press banca solo se evalúa si la cadera es visible.
 --------------------------------------------------------- */
 const LATERAL_MAX_SHOULDER_RATIO = 0.45; // heurístico, por validar
+// 0.8.8: si falta tobillo/rodilla y lo más bajo que se ve está en el 18%
+// inferior de la imagen, lo más probable es que los pies estén cortados.
+const FEET_OUT_OF_FRAME_Y = 0.82;
 const ORIENTATION_SMOOTHING = 0.35;
 
 let orientationRatioSmoothed = null;
@@ -1925,6 +2074,26 @@ function assessMovementPosition(pose, side) {
     const main = missing[0];
 
     let correction = "Asegúrate de que la articulación quede claramente visible para la cámara.";
+
+    const lowestVisibleY = Math.max(
+      ...[points.hip, points.knee, points.ankle]
+        .filter((point) => isPointDrawable(point))
+        .map((point) => point.y),
+      0
+    );
+    const feetOutOfFrame =
+      (main === "tobillo" || main === "rodilla") &&
+      video.videoHeight &&
+      lowestVisibleY > video.videoHeight * FEET_OUT_OF_FRAME_Y;
+
+    if (feetOutOfFrame) {
+      return {
+        ready: false,
+        short: "Pies fuera de la imagen",
+        title: "Los pies quedan fuera del encuadre",
+        text: "Aléjate un paso o baja el teléfono hasta ver los pies completos con espacio debajo."
+      };
+    }
 
     if (main === "tobillo" || main === "rodilla") {
       correction = "Aléjate hasta que la pierna y el pie completos queden visibles.";
@@ -2849,6 +3018,11 @@ const DYN_TURNAROUND_STABLE_MS = 160;
 const DYN_TURNAROUND_TOLERANCE = 1.0;
 const DYN_BASELINE_ADAPTATION = 0.20;
 const SMOOTHING_FRAMES = 5;
+// 0.8.8: valor máximo de la métrica principal para aceptar la calibración
+// (posición inicial). Sentadilla: flexión de rodilla ≤ 30° (de pie).
+// Press banca: brazo ≤ 40° desde la vertical (extendido). Peso muerto ya
+// exige el bloqueo (DEADLIFT_TOP_MAX_HIP_FLEXION). Heurísticos.
+const CALIBRATION_START_MAX_PRIMARY = { squat: 30, bench: 40 };
 
 /* ---------------------------------------------------------
    PESO MUERTO DESDE ARRIBA (0.8.6)
@@ -3068,9 +3242,27 @@ function calibrateDynamicMovement(metrics) {
   if (dynCalibrationSamples.length < DYN_CALIBRATION_FRAMES) return false;
 
   const signals = dynCalibrationSamples.map((sample) => sample.signal);
-  const range = Math.max(...signals) - Math.min(...signals);
+
+  // 0.8.8: rango robusto (se descartan el cuadro más alto y el más bajo):
+  // un solo cuadro con el punto desplazado ya no impide calibrar.
+  const sorted = [...signals].sort((a, b) => a - b);
+  const range = sorted[sorted.length - 2] - sorted[1];
 
   if (range > DYN_CALIBRATION_RANGE) return false;
+
+  // 0.8.8: solo se calibra en la posición inicial (evita calibrar abajo
+  // si la persona empezó a moverse antes del recuadro verde).
+  const primaryNow = mean(dynCalibrationSamples.map((sample) => sample.primary));
+  const startLimit = CALIBRATION_START_MAX_PRIMARY[activeExercise];
+  if (Number.isFinite(startLimit) && primaryNow > startLimit) {
+    setText(
+      statusBox,
+      activeExercise === "bench"
+        ? "Extiende los brazos y quédate quieto para calibrar."
+        : "Ponte de pie y quédate quieto para calibrar."
+    );
+    return false;
+  }
 
   dynBaselineSignal = mean(signals);
   dynBaselinePrimary = mean(dynCalibrationSamples.map((sample) => sample.primary));
