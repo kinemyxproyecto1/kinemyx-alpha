@@ -4663,10 +4663,10 @@ async function submitFeedback(event) {
 
 feedbackForm.addEventListener("submit", submitFeedback);
 
+
 /* =========================================================
    INITIALIZE
 ========================================================= */
-
 
 initializeAccessGate();
 updateSideButtons();
