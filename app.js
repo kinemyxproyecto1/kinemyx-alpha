@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.5
+   KINEMYX Beta 0.8.6
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -50,6 +50,16 @@
      contramovimiento (CMJ/Abalakov).
    - Peso (opcional) → potencia pico estimada (Sayers 1999; SJ y CMJ).
    - La altura del salto por tiempo de vuelo NO usa estatura ni peso.
+
+   0.8.6 · Peso muerto desde arriba + interfaz estable:
+   - Peso muerto: la primera subida desde el piso es la INICIACIÓN
+     (no se cuenta). Se calibra arriba, en bloqueo, y cada repetición
+     es bajada (excéntrica) → subida (concéntrica) → bloqueo.
+   - Interfaz: el DOM se escribe solo cuando un valor cambia, y guía,
+     aviso, estado y ayuda de lado tienen alto fijo. Evita que la
+     página "tiemble" al hacer scroll con la cámara activa (iPhone).
+   - El canvas solo se redimensiona si cambia su tamaño real.
+   - Sin cambios en umbrales de tracking ni en el motor de saltos.
 ========================================================= */
 
 
@@ -59,7 +69,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.5";
+const APP_VERSION = "KINEMYX Beta 0.8.6";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -88,6 +98,33 @@ function midpoint(a, b) {
 
 function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/* ---------------------------------------------------------
+   ESCRITURA MÍNIMA EN EL DOM (0.8.6)
+   El ciclo de detección actualiza la interfaz en cada cuadro
+   (≈30 veces por segundo). Reescribir un texto, una clase o
+   "disabled" con el MISMO valor igual invalida estilos y
+   puede reflujar la página; si además el alto cambia, en iPhone
+   la página salta mientras se hace scroll. Estos helpers solo
+   tocan el DOM cuando el valor realmente cambia.
+--------------------------------------------------------- */
+
+function setText(element, value) {
+  if (!element) return;
+  const text = String(value);
+  if (element.textContent !== text) element.textContent = text;
+}
+
+function setClass(element, className, enabled) {
+  if (!element) return;
+  if (element.classList.contains(className) !== enabled) {
+    element.classList.toggle(className, enabled);
+  }
+}
+
+function setDisabled(element, disabled) {
+  if (element && element.disabled !== disabled) element.disabled = disabled;
 }
 
 
@@ -785,26 +822,34 @@ function sideLabel(side) {
 function updateViewModeUI() {
   const isMovement = activeCategory === "movement";
 
-  viewModeBadge.textContent = isMovement ? "VISTA LATERAL" : "VISTA FRONTAL";
-  sideSelectorPanel.classList.toggle("hidden", !isMovement);
+  setText(viewModeBadge, isMovement ? "VISTA LATERAL" : "VISTA FRONTAL");
+  setClass(sideSelectorPanel, "hidden", !isMovement);
 
   if (isMovement) {
-    sideLiveLabel.textContent = "LADO";
-    sideDisplay.textContent =
+    setText(sideLiveLabel, "LADO");
+    setText(
+      sideDisplay,
       lockedSide || sideMode !== "auto"
         ? sideLabel(lockedSide || sideMode)
-        : "AUTOMÁTICO";
+        : "AUTOMÁTICO"
+    );
 
-    positionTipText.textContent =
+    setText(
+      positionTipText,
       activeExercise === "bench"
         ? "Press banca: cámara de perfil, a la altura del banco. Basta encuadrar de la cadera hacia arriba (o cuerpo completo); KINEMYX usa solo hombro y codo."
-        : "Para movimientos, ubícate completamente de perfil. KINEMYX usará hombro, cadera, rodilla y tobillo del lado visible y bloqueará ese lado durante la serie.";
+        : activeExercise === "deadlift"
+        ? "Peso muerto: ubícate de perfil. Toma la barra y súbela: esa primera subida no se cuenta. Las repeticiones se cuentan desde arriba (bajada → subida)."
+        : "Para movimientos, ubícate completamente de perfil. KINEMYX usará hombro, cadera, rodilla y tobillo del lado visible y bloqueará ese lado durante la serie."
+    );
   } else {
-    sideLiveLabel.textContent = "VISTA";
-    sideDisplay.textContent = "FRONTAL";
+    setText(sideLiveLabel, "VISTA");
+    setText(sideDisplay, "FRONTAL");
 
-    positionTipText.textContent =
-      "Para saltos, mira de frente a la cámara. Deben verse ambos hombros, codos, caderas, rodillas y tobillos durante todo el salto.";
+    setText(
+      positionTipText,
+      "Para saltos, mira de frente a la cámara. Deben verse ambos hombros, codos, caderas, rodillas y tobillos durante todo el salto."
+    );
   }
 }
 
@@ -818,24 +863,31 @@ function updateSideHelp(side = null) {
   if (activeCategory !== "movement") return;
 
   if (analysisActive && lockedSide) {
-    sideModeHelp.textContent =
-      `Serie activa · lado ${sideLabel(lockedSide).toLowerCase()} bloqueado hasta finalizar.`;
+    setText(
+      sideModeHelp,
+      `Serie activa · lado ${sideLabel(lockedSide).toLowerCase()} bloqueado hasta finalizar.`
+    );
     return;
   }
 
   if (sideMode === "auto") {
-    sideModeHelp.textContent = side
-      ? `Automático · lado con mejor visibilidad: ${sideLabel(side)}.`
-      : "El modo automático seleccionará el lado con mejor visibilidad antes de iniciar la serie.";
+    setText(
+      sideModeHelp,
+      side
+        ? `Automático · lado con mejor visibilidad: ${sideLabel(side)}.`
+        : "El modo automático seleccionará el lado con mejor visibilidad antes de iniciar la serie."
+    );
   } else {
-    sideModeHelp.textContent =
-      `Modo manual · KINEMYX analizará únicamente el lado ${sideLabel(sideMode).toLowerCase()}.`;
+    setText(
+      sideModeHelp,
+      `Modo manual · KINEMYX analizará únicamente el lado ${sideLabel(sideMode).toLowerCase()}.`
+    );
   }
 }
 
 function selectSideMode(mode) {
   if (analysisActive || seriesArmed) {
-    statusBox.textContent = "Finaliza la serie antes de cambiar el lado de análisis.";
+    setText(statusBox, "Finaliza la serie antes de cambiar el lado de análisis.");
     return;
   }
 
@@ -860,18 +912,22 @@ document.querySelectorAll(".side-choice").forEach((button) => {
    SETUP FLOW
 ========================================================= */
 
+const SETUP_STEP_STATES = ["done", "active", "pending", "warning-step"];
+
+// 0.8.6: solo cambia clases y textos si difieren (se llama en cada cuadro).
 function setStep(element, textElement, statusElement, state, text, status) {
-  element.classList.remove("done", "active", "pending", "warning-step");
-  element.classList.add(state);
-  textElement.textContent = text;
-  statusElement.textContent = status;
+  for (const name of SETUP_STEP_STATES) {
+    setClass(element, name, name === state);
+  }
+  setText(textElement, text);
+  setText(statusElement, status);
 }
 
 function updateSetupFlow() {
   const name = exerciseMeta[activeExercise].name;
 
-  startButton.textContent = seriesArmed ? "Esperando posición…" : "Iniciar serie";
-  stopButton.textContent = seriesArmed ? "Cancelar serie" : "Finalizar serie";
+  setText(startButton, seriesArmed ? "Esperando posición…" : "Iniciar serie");
+  setText(stopButton, seriesArmed ? "Cancelar serie" : "Finalizar serie");
 
   setStep(
     stepAnalysis,
@@ -883,24 +939,24 @@ function updateSetupFlow() {
   );
 
   if (!cameraReady) {
-    trackingLiveDisplay.textContent = "ESPERA";
+    setText(trackingLiveDisplay, "ESPERA");
 
     setStep(stepCamera, stepCameraText, stepCameraStatus, "active", "Activa la cámara", "2");
     setStep(stepPosition, stepPositionText, stepPositionStatus, "pending", "Esperando cámara", "3");
     setStep(stepStart, stepStartText, stepStartStatus, "pending", "Completa los pasos", "4");
 
-    startButton.disabled = true;
+    setDisabled(startButton, true);
     return;
   }
 
   if (detectorLoading || !detector) {
-    trackingLiveDisplay.textContent = "CARGANDO";
+    setText(trackingLiveDisplay, "CARGANDO");
 
     setStep(stepCamera, stepCameraText, stepCameraStatus, "done", "Cámara activa", "✓");
     setStep(stepPosition, stepPositionText, stepPositionStatus, "active", "Cargando seguimiento", "…");
     setStep(stepStart, stepStartText, stepStartStatus, "pending", "Esperando motor", "4");
 
-    startButton.disabled = true;
+    setDisabled(startButton, true);
     return;
   }
 
@@ -914,7 +970,7 @@ function updateSetupFlow() {
   );
 
   if (!trackingReady) {
-    trackingLiveDisplay.textContent = "AJUSTAR";
+    setText(trackingLiveDisplay, "AJUSTAR");
 
     const shortText = lastPositionAssessment?.short || "Ajusta posición";
 
@@ -941,23 +997,23 @@ function updateSetupFlow() {
     );
 
     // 0.8.2: se permite armar la serie antes de estar en posición.
-    startButton.disabled = analysisActive || seriesArmed;
+    setDisabled(startButton, analysisActive || seriesArmed);
     return;
   }
 
-  trackingLiveDisplay.textContent = "CORRECTO";
+  setText(trackingLiveDisplay, "CORRECTO");
 
   setStep(stepPosition, stepPositionText, stepPositionStatus, "done", "Posición correcta", "✓");
 
   if (analysisActive) {
     setStep(stepStart, stepStartText, stepStartStatus, "done", "Serie en curso", "●");
-    startButton.disabled = true;
+    setDisabled(startButton, true);
   } else if (seriesArmed) {
     setStep(stepStart, stepStartText, stepStartStatus, "active", "Iniciando serie…", "●");
-    startButton.disabled = true;
+    setDisabled(startButton, true);
   } else {
     setStep(stepStart, stepStartText, stepStartStatus, "active", "Listo para iniciar", "4");
-    startButton.disabled = false;
+    setDisabled(startButton, false);
   }
 }
 
@@ -993,7 +1049,7 @@ if ("ResizeObserver" in window) {
 
 function selectCategory(category) {
   if (analysisActive || seriesArmed) {
-    statusBox.textContent = "Finaliza la serie antes de cambiar de categoría.";
+    setText(statusBox, "Finaliza la serie antes de cambiar de categoría.");
     return;
   }
 
@@ -1010,14 +1066,14 @@ function selectCategory(category) {
   if (cameraReady) {
     ensureDetectorForActiveMode().catch((error) => {
       console.error(error);
-      statusBox.textContent = "No fue posible cargar el motor de seguimiento.";
+      setText(statusBox, "No fue posible cargar el motor de seguimiento.");
     });
   }
 }
 
 function selectExercise(exercise) {
   if (analysisActive || seriesArmed) {
-    statusBox.textContent = "Finaliza la serie antes de cambiar de análisis.";
+    setText(statusBox, "Finaliza la serie antes de cambiar de análisis.");
     return;
   }
 
@@ -1059,11 +1115,14 @@ function selectExercise(exercise) {
   updateFeedbackContext();
   updateSideHelp();
 
-  statusBox.textContent = cameraReady
-    ? isMovement
-      ? "Ubícate completamente de perfil."
-      : "Ubícate de frente y mantén ambos lados visibles."
-    : "Activa la cámara";
+  setText(
+    statusBox,
+    cameraReady
+      ? isMovement
+        ? "Ubícate completamente de perfil."
+        : "Ubícate de frente y mantén ambos lados visibles."
+      : "Activa la cámara"
+  );
 
   updateSetupFlow();
 }
@@ -1214,10 +1273,12 @@ async function ensureDetectorForActiveMode() {
     }
 
     resetPoseTracker();
-    statusBox.textContent =
+    setText(
+      statusBox,
       profile === "thunder"
         ? "Motor lateral de alta precisión listo."
-        : "Motor frontal de alta velocidad listo.";
+        : "Motor frontal de alta velocidad listo."
+    );
   } finally {
     if (token === detectorLoadToken) {
       detectorLoading = false;
@@ -1228,7 +1289,7 @@ async function ensureDetectorForActiveMode() {
 
 async function initializeCamera() {
   try {
-    statusBox.textContent = "Cargando KINEMYX...";
+    setText(statusBox, "Cargando KINEMYX...");
 
     if (currentStream) {
       currentStream.getTracks().forEach((track) => track.stop());
@@ -1257,15 +1318,21 @@ async function initializeCamera() {
     });
 
     cameraReady = true;
+    // 0.8.6: con la cámara activa, el aviso reserva su espacio (invisible).
+    hideWarning();
     await ensureDetectorForActiveMode();
 
-    switchCameraButton.textContent =
-      currentFacingMode === "user" ? "Usar cámara trasera" : "Usar cámara frontal";
+    setText(
+      switchCameraButton,
+      currentFacingMode === "user" ? "Usar cámara trasera" : "Usar cámara frontal"
+    );
 
-    statusBox.textContent =
+    setText(
+      statusBox,
       activeCategory === "movement"
         ? "Cámara activa · colócate completamente de perfil."
-        : "Cámara activa · colócate de frente y muestra el cuerpo completo.";
+        : "Cámara activa · colócate de frente y muestra el cuerpo completo."
+    );
 
     updateSetupFlow();
 
@@ -1279,8 +1346,8 @@ async function initializeCamera() {
     console.error(error);
     cameraReady = false;
     trackingReady = false;
-    statusBox.textContent = "No fue posible iniciar la cámara.";
-    trackingLiveDisplay.textContent = "ERROR";
+    setText(statusBox, "No fue posible iniciar la cámara.");
+    setText(trackingLiveDisplay, "ERROR");
     updateSetupFlow();
     return false;
   }
@@ -1299,19 +1366,20 @@ function stopCamera() {
   lockedSide = null;
   video.srcObject = null;
   setSeriesBadge(null);
+  hideWarning();
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  trackingLiveDisplay.textContent = "ESPERA";
+  setText(trackingLiveDisplay, "ESPERA");
 }
 
 async function switchCamera() {
   if (analysisActive || seriesArmed) {
-    statusBox.textContent = "Finaliza la serie antes de cambiar de cámara.";
+    setText(statusBox, "Finaliza la serie antes de cambiar de cámara.");
     return;
   }
 
   if (!cameraReady) {
-    statusBox.textContent = "Primero activa la cámara.";
+    setText(statusBox, "Primero activa la cámara.");
     return;
   }
 
@@ -1329,6 +1397,9 @@ async function switchCamera() {
    CANVAS ALIGNMENT
 ========================================================= */
 
+// 0.8.6: en iPhone, la barra de Safari se oculta/aparece al hacer scroll y
+// dispara "resize" muchas veces. Reasignar canvas.width borra y vuelve a crear
+// el lienzo (parpadeo del esqueleto). Ahora solo se toca lo que cambió.
 function syncCanvasToVideoFrame() {
   if (!video.videoWidth || !video.videoHeight) return;
 
@@ -1354,16 +1425,22 @@ function syncCanvasToVideoFrame() {
   const left = (boxWidth - drawWidth) / 2;
   const top = (boxHeight - drawHeight) / 2;
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  if (canvas.width !== video.videoWidth) canvas.width = video.videoWidth;
+  if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
 
   // px de canvas por cada px CSS en pantalla (ver OVERLAY 0.8.1).
   overlayScale = canvas.width / drawWidth;
 
-  canvas.style.left = `${left}px`;
-  canvas.style.top = `${top}px`;
-  canvas.style.width = `${drawWidth}px`;
-  canvas.style.height = `${drawHeight}px`;
+  const styles = {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${drawWidth}px`,
+    height: `${drawHeight}px`
+  };
+
+  for (const [property, value] of Object.entries(styles)) {
+    if (canvas.style[property] !== value) canvas.style[property] = value;
+  }
 }
 
 
@@ -1903,16 +1980,16 @@ function assessJumpPosition(pose) {
 function showPositionGuide(assessment) {
   if (!assessment) return;
 
-  positionGuideTitle.textContent = assessment.title;
-  positionGuideText.textContent = assessment.text;
+  setText(positionGuideTitle, assessment.title);
+  setText(positionGuideText, assessment.text);
 
-  positionGuide.classList.remove("hidden", "ready-guide");
-  if (assessment.ready) positionGuide.classList.add("ready-guide");
+  setClass(positionGuide, "hidden", false);
+  setClass(positionGuide, "ready-guide", Boolean(assessment.ready));
 }
 
 function hidePositionGuide() {
-  positionGuide.classList.add("hidden");
-  positionGuide.classList.remove("ready-guide");
+  setClass(positionGuide, "hidden", true);
+  setClass(positionGuide, "ready-guide", false);
 }
 
 function updateTrackingState(ready) {
@@ -1920,7 +1997,7 @@ function updateTrackingState(ready) {
 
   if (ready) {
     lastGoodTrackingAt = now;
-    trackingLiveDisplay.textContent = "CORRECTO";
+    setText(trackingLiveDisplay, "CORRECTO");
 
     if (!trackingReady) {
       trackingReady = true;
@@ -1931,7 +2008,7 @@ function updateTrackingState(ready) {
   }
 
   if (now - lastGoodTrackingAt > TRACKING_HOLD_MS) {
-    trackingLiveDisplay.textContent = "AJUSTAR";
+    setText(trackingLiveDisplay, "AJUSTAR");
 
     if (trackingReady) {
       trackingReady = false;
@@ -1951,7 +2028,7 @@ function handleMissingPose(timestamp = performance.now()) {
         : "Entra completamente en la imagen y colócate de frente."
   };
 
-  trackingLiveDisplay.textContent = "PERDIDO";
+  setText(trackingLiveDisplay, "PERDIDO");
   showPositionGuide(lastPositionAssessment);
   updateTrackingState(false);
 
@@ -2523,7 +2600,7 @@ function processMovementPose(pose, now) {
   candidateSide = side;
   activeSide = side;
 
-  sideDisplay.textContent = sideLabel(side);
+  setText(sideDisplay, sideLabel(side));
   updateSideHelp(side);
 
   const assessment = assessMovementPosition(pose, side);
@@ -2536,7 +2613,7 @@ function processMovementPose(pose, now) {
   updateSetupFlow();
 
   if (!assessment.ready) {
-    angleDisplay.textContent = "—";
+    setText(angleDisplay, "—");
 
     if (analysisActive) {
       pauseDynamicMovementTiming(now);
@@ -2555,14 +2632,14 @@ function processMovementPose(pose, now) {
   const raw = getDynamicMovementMetrics(points);
   const metrics = smoothDynamicMovementMetrics(raw);
 
-  angleDisplay.textContent = `${metrics.primary.toFixed(0)}°`;
+  setText(angleDisplay, `${metrics.primary.toFixed(0)}°`);
   drawLateralAngle(pose, side, metrics.primary);
 
   if (analysisActive) updateDynamicMovement(metrics, now);
 }
 
 function processJumpPose(pose, now) {
-  sideDisplay.textContent = "FRONTAL";
+  setText(sideDisplay, "FRONTAL");
 
   const assessment = assessJumpPosition(pose);
   lastPositionAssessment = assessment;
@@ -2574,7 +2651,7 @@ function processJumpPose(pose, now) {
   updateSetupFlow();
 
   if (!assessment.ready) {
-    angleDisplay.textContent = "FRONTAL";
+    setText(angleDisplay, "FRONTAL");
 
     if (analysisActive) {
       markJumpTrackingCompromised(assessment.short);
@@ -2590,7 +2667,7 @@ function processJumpPose(pose, now) {
   const data = frontalData(pose);
   const metrics = getFrontalJumpMetrics(data);
 
-  angleDisplay.textContent = "FRONTAL";
+  setText(angleDisplay, "FRONTAL");
 
   if (analysisActive) updateJump(metrics, now);
 }
@@ -2614,6 +2691,35 @@ const DYN_TURNAROUND_TOLERANCE = 1.0;
 const DYN_BASELINE_ADAPTATION = 0.20;
 const SMOOTHING_FRAMES = 5;
 
+/* ---------------------------------------------------------
+   PESO MUERTO DESDE ARRIBA (0.8.6)
+   En la práctica se toma la barra del piso, se sube hasta el
+   bloqueo y recién ahí comienza la serie. Antes KINEMYX calibraba
+   la posición del piso y, si calibraba de pie, no contaba nada.
+   Ahora:
+   1. INICIACIÓN: hay que verse con la barra abajo (flexión de
+      cadera ≥ DEADLIFT_FLOOR_MIN_HIP_FLEXION) y subirla. Esa
+      subida NO se cuenta. Exigir el piso evita que el
+      acercamiento a la barra (agacharse a tomarla) se cuente
+      como repetición.
+   2. CALIBRACIÓN arriba, en bloqueo (flexión de cadera ≤
+      DEADLIFT_TOP_MAX_HIP_FLEXION y quieto 12 cuadros).
+   3. Cada repetición: bajada (excéntrica) → subida (concéntrica)
+      → vuelta al bloqueo (± DEADLIFT_RETURN_TOLERANCE).
+   Valores heurísticos (flexión de cadera en vista lateral), por
+   validar con más deportistas:
+   - 60°: en la prueba real, con la barra en el piso se midió 110–118°;
+     60° deja margen para barra alta (bloques) y peso muerto rumano.
+   - 35°: de pie se midió 1–3°; 35° tolera bloqueo incompleto
+     y ruido del punto de cadera con la barra delante.
+   - 8°: la señal del bloqueo varía más que en sentadilla
+     (cadera tapada por barra y manos); 4° dejaba repeticiones
+     sin cerrar.
+--------------------------------------------------------- */
+const DEADLIFT_FLOOR_MIN_HIP_FLEXION = 60;
+const DEADLIFT_TOP_MAX_HIP_FLEXION = 35;
+const DEADLIFT_RETURN_TOLERANCE = 8.0;
+
 let movementRepCount = 0;
 let movementSuccessfulReps = 0;
 let movementResults = [];
@@ -2634,6 +2740,10 @@ let dynPrimaryMax = 0;
 let dynTrackingPauseStartedAt = null;
 let dynBufferExercise = null;
 let dynBuffers = { primary: [], secondary: [], signal: [] };
+
+// Peso muerto (0.8.6): ¿ya se vio la barra en el piso? y último valor medido.
+let deadliftInitiationSeen = false;
+let deadliftLastPrimary = null;
 
 function dynSmooth(buffer, value) {
   buffer.push(value);
@@ -2686,16 +2796,18 @@ function smoothDynamicMovementMetrics(metrics) {
   return { primary, secondary, signal };
 }
 
+// 0.8.6: los tres ejercicios parten ARRIBA y la fase 1 es la bajada.
+// En peso muerto, "arriba" = bloqueo con la barra (después de la iniciación).
 function getDynamicMovementProfile() {
   if (activeExercise === "deadlift") {
     return {
-      phase1Direction: -1,
-      readyLabel: "PISO / LISTO",
-      phase1Label: "CONCÉNTRICA ↑",
-      turnaroundLabel: "ARRIBA",
-      phase2Label: "EXCÉNTRICA ↓",
-      phase1Name: "concentric",
-      phase2Name: "eccentric"
+      phase1Direction: 1,
+      readyLabel: "ARRIBA / LISTO",
+      phase1Label: "EXCÉNTRICA ↓",
+      turnaroundLabel: "ABAJO",
+      phase2Label: "CONCÉNTRICA ↑",
+      phase1Name: "eccentric",
+      phase2Name: "concentric"
     };
   }
 
@@ -2727,6 +2839,8 @@ function resetDynamicMovementTiming() {
   dynTrackingPauseStartedAt = null;
   dynBufferExercise = activeExercise;
   dynBuffers = { primary: [], secondary: [], signal: [] };
+  deadliftInitiationSeen = false;
+  deadliftLastPrimary = null;
 }
 
 function pauseDynamicMovementTiming(timestamp) {
@@ -2749,6 +2863,29 @@ function resumeDynamicMovementTiming(timestamp) {
   dynPhase2StartTime = shift(dynPhase2StartTime);
 }
 
+// Peso muerto (0.8.6): true cuando ya se puede calibrar arriba.
+// Mientras tanto muestra INICIACIÓN y descarta muestras de calibración.
+function deadliftReadyToCalibrate(metrics) {
+  if (metrics.primary >= DEADLIFT_FLOOR_MIN_HIP_FLEXION) {
+    deadliftInitiationSeen = true;
+  }
+
+  if (deadliftInitiationSeen && metrics.primary <= DEADLIFT_TOP_MAX_HIP_FLEXION) {
+    return true;
+  }
+
+  dynCalibrationSamples = [];
+  setText(stateDisplay, "INICIACIÓN");
+  setText(
+    statusBox,
+    deadliftInitiationSeen
+      ? "Sube la barra hasta quedar de pie. Esta subida no se cuenta."
+      : "Toma la barra desde el piso para comenzar."
+  );
+
+  return false;
+}
+
 function calibrateDynamicMovement(metrics) {
   dynCalibrationSamples.push({
     signal: metrics.signal,
@@ -2759,14 +2896,14 @@ function calibrateDynamicMovement(metrics) {
     dynCalibrationSamples.shift();
   }
 
-  stateDisplay.textContent = "CALIBRANDO";
+  setText(stateDisplay, "CALIBRANDO");
 
   if (activeExercise === "deadlift") {
-    statusBox.textContent = "Mantén estable la posición inicial en el piso.";
+    setText(statusBox, "Mantente arriba, en bloqueo, un instante.");
   } else if (activeExercise === "bench") {
-    statusBox.textContent = "Mantén los brazos extendidos un instante.";
+    setText(statusBox, "Mantén los brazos extendidos un instante.");
   } else {
-    statusBox.textContent = "Mantente de pie un instante.";
+    setText(statusBox, "Mantente de pie un instante.");
   }
 
   if (dynCalibrationSamples.length < DYN_CALIBRATION_FRAMES) return false;
@@ -2781,11 +2918,13 @@ function calibrateDynamicMovement(metrics) {
   dynPrimaryMax = dynBaselinePrimary;
   dynState = "READY";
 
-  stateDisplay.textContent = getDynamicMovementProfile().readyLabel;
-  statusBox.textContent =
+  setText(stateDisplay, getDynamicMovementProfile().readyLabel);
+  setText(
+    statusBox,
     activeExercise === "deadlift"
-      ? "Piso calibrado · comienza la subida."
-      : "Posición inicial calibrada · comienza cuando estés listo.";
+      ? "Bloqueo calibrado · comienza la bajada."
+      : "Posición inicial calibrada · comienza cuando estés listo."
+  );
 
   return true;
 }
@@ -2799,16 +2938,20 @@ function updateDynamicMovement(metrics, timestamp) {
   const profile = getDynamicMovementProfile();
   const signal = metrics.signal;
   const direction = profile.phase1Direction;
+  const returnTolerance =
+    activeExercise === "deadlift" ? DEADLIFT_RETURN_TOLERANCE : DYN_RETURN_TOLERANCE;
 
   dynPrimaryMax = Math.max(dynPrimaryMax || metrics.primary, metrics.primary);
+  deadliftLastPrimary = metrics.primary;
 
   if (dynState === "CALIBRATING") {
+    if (activeExercise === "deadlift" && !deadliftReadyToCalibrate(metrics)) return;
     calibrateDynamicMovement(metrics);
     return;
   }
 
   if (dynState === "READY") {
-    stateDisplay.textContent = profile.readyLabel;
+    setText(stateDisplay, profile.readyLabel);
 
     const departure = direction * (signal - dynBaselineSignal);
 
@@ -2830,7 +2973,7 @@ function updateDynamicMovement(metrics, timestamp) {
       dynEccentricDuration = null;
       dynConcentricDuration = null;
       dynPrimaryMax = Math.max(dynBaselinePrimary ?? metrics.primary, metrics.primary);
-      stateDisplay.textContent = profile.phase1Label;
+      setText(stateDisplay, profile.phase1Label);
     }
   } else if (dynState === "PHASE1") {
     dynPrimaryMax = Math.max(dynPrimaryMax, metrics.primary);
@@ -2847,9 +2990,10 @@ function updateDynamicMovement(metrics, timestamp) {
       timestamp - dynExtremeTime >= DYN_TURNAROUND_STABLE_MS &&
       Math.abs(signal - dynExtremeSignal) <= DYN_TURNAROUND_TOLERANCE;
 
-    stateDisplay.textContent = stableAtTurnaround
-      ? profile.turnaroundLabel
-      : profile.phase1Label;
+    setText(
+      stateDisplay,
+      stableAtTurnaround ? profile.turnaroundLabel : profile.phase1Label
+    );
 
     if (
       reversal >= DYN_REVERSAL_CANDIDATE_DELTA &&
@@ -2876,18 +3020,18 @@ function updateDynamicMovement(metrics, timestamp) {
 
       dynState = "PHASE2";
       dynPhase2StartTime = dynReversalCandidateTime ?? timestamp;
-      stateDisplay.textContent = profile.phase2Label;
+      setText(stateDisplay, profile.phase2Label);
     }
   } else if (dynState === "PHASE2") {
-    stateDisplay.textContent = profile.phase2Label;
+    setText(stateDisplay, profile.phase2Label);
     dynPrimaryMax = Math.max(dynPrimaryMax, metrics.primary);
 
     const phase2ElapsedMs = timestamp - dynPhase2StartTime;
 
     const returnedToBaseline =
       direction > 0
-        ? signal <= dynBaselineSignal + DYN_RETURN_TOLERANCE
-        : signal >= dynBaselineSignal - DYN_RETURN_TOLERANCE;
+        ? signal <= dynBaselineSignal + returnTolerance
+        : signal >= dynBaselineSignal - returnTolerance;
 
     if (returnedToBaseline && phase2ElapsedMs >= DYN_MIN_PHASE_MS) {
       const duration = phase2ElapsedMs / 1000;
@@ -2923,12 +3067,12 @@ function updateDynamicMovement(metrics, timestamp) {
         dynEccentricDuration = null;
         dynConcentricDuration = null;
         dynPrimaryMax = metrics.primary;
-        stateDisplay.textContent = profile.readyLabel;
+        setText(stateDisplay, profile.readyLabel);
       }
     }
   }
 
-  repDisplay.textContent = `${movementRepCount} / ${settings.targetReps}`;
+  setText(repDisplay, `${movementRepCount} / ${settings.targetReps}`);
 }
 
 function completeDynamicMovementRep(eccentric, concentric, angleValue) {
@@ -2982,9 +3126,9 @@ function completeDynamicMovementRep(eccentric, concentric, angleValue) {
   addMovementResultRow(rep);
   updateMovementSummary();
 
-  eccDisplay.textContent = eccAvailable ? `${eccentric.toFixed(2)} s` : "—";
-  conDisplay.textContent = conAvailable ? `${concentric.toFixed(2)} s` : "—";
-  repDisplay.textContent = `${movementRepCount} / ${settings.targetReps}`;
+  setText(eccDisplay, eccAvailable ? `${eccentric.toFixed(2)} s` : "—");
+  setText(conDisplay, conAvailable ? `${concentric.toFixed(2)} s` : "—");
+  setText(repDisplay, `${movementRepCount} / ${settings.targetReps}`);
 
   if (movementRepCount >= settings.targetReps) stopAnalysis(true);
 }
@@ -3180,7 +3324,7 @@ function updateJump(metrics, timestamp) {
 
   if (jumpBaselineAnkleY === null) {
     const calibrated = updateJumpBaseline(metrics);
-    stateDisplay.textContent = "CALIBRANDO";
+    setText(stateDisplay, "CALIBRANDO");
 
     jumpPreviousAnkleY = metrics.ankleY;
     jumpPreviousHipY = metrics.hipY;
@@ -3189,11 +3333,13 @@ function updateJump(metrics, timestamp) {
     if (!calibrated) return;
 
     jumpState = activeExercise === "sj" ? "START" : "READY";
-    stateDisplay.textContent = jumpStateLabel(jumpState);
-    statusBox.textContent =
+    setText(stateDisplay, jumpStateLabel(jumpState));
+    setText(
+      statusBox,
       activeExercise === "sj"
         ? "Posición inicial calibrada · mantén la pausa antes de saltar."
-        : "Posición inicial calibrada · salta cuando estés listo.";
+        : "Posición inicial calibrada · salta cuando estés listo."
+    );
     return;
   }
 
@@ -3207,8 +3353,8 @@ function updateJump(metrics, timestamp) {
   jumpPreviousHipY = metrics.hipY;
   jumpPreviousTime = timestamp;
 
-  stateDisplay.textContent = jumpStateLabel(jumpState);
-  repDisplay.textContent = `${jumpCount} / ${settings.targetJumps}`;
+  setText(stateDisplay, jumpStateLabel(jumpState));
+  setText(repDisplay, `${jumpCount} / ${settings.targetJumps}`);
 }
 
 function updateSquatJumpFrontal(metrics, timestamp, settings) {
@@ -3542,9 +3688,9 @@ function completeJump(settings, sjHold) {
   addJumpResultRow(result);
   updateJumpSummary();
 
-  eccDisplay.textContent = `${flightTime.toFixed(3)} s`;
-  conDisplay.textContent = `${estimatedHeightCm.toFixed(1)} cm`;
-  repDisplay.textContent = `${jumpCount} / ${settings.targetJumps}`;
+  setText(eccDisplay, `${flightTime.toFixed(3)} s`);
+  setText(conDisplay, `${estimatedHeightCm.toFixed(1)} cm`);
+  setText(repDisplay, `${jumpCount} / ${settings.targetJumps}`);
 
   if (jumpCount >= settings.targetJumps) stopAnalysis(true);
 }
@@ -3586,25 +3732,35 @@ function prepareNextJump() {
    FEEDBACK VISUAL / AUDIO
 ========================================================= */
 
+// 0.8.6: con la cámara activa el aviso nunca desaparece del flujo de la
+// página; queda invisible (clase is-idle) conservando su alto. Así, que un
+// aviso aparezca o se apague no desplaza el resto de la pantalla.
 function showWarning(message) {
   const mode = getActiveFeedbackMode();
   if (mode !== "visual" && mode !== "both") return;
 
-  warningBox.textContent = message;
-  warningBox.classList.remove("hidden");
+  setText(warningBox, message);
+  setClass(warningBox, "hidden", false);
+  setClass(warningBox, "is-idle", false);
 
   if (warningHideTimer) clearTimeout(warningHideTimer);
   warningHideTimer = setTimeout(hideWarning, 1800);
 }
 
 function hideWarning() {
-  warningBox.classList.add("hidden");
+  if (cameraReady) {
+    setClass(warningBox, "hidden", false);
+    setClass(warningBox, "is-idle", true);
+  } else {
+    setClass(warningBox, "hidden", true);
+    setClass(warningBox, "is-idle", false);
+  }
 }
 
 function showSuccess() {
   const mode = getActiveFeedbackMode();
   if (mode === "audio" || mode === "off") return;
-  statusBox.textContent = "✓ Objetivo cumplido";
+  setText(statusBox, "✓ Objetivo cumplido");
 }
 
 function trackingWarning(message) {
@@ -3798,6 +3954,8 @@ function updateJumpSummary() {
       parte sola (beginSeries) y el motor calibra (quietud).
    3. Calibrado el motor: recuadro verde "LISTO" + beep.
       - Movimientos: visible hasta que empieza la 1ª repetición.
+        Peso muerto (0.8.6): antes de calibrar pide tomar la
+        barra del piso y subirla (iniciación, no se cuenta).
       - Saltos: reaparece antes de cada salto (cada salto
         recalibra). SJ: "BAJA Y MANTÉN" hasta cumplir la pausa.
    El toque en "Iniciar serie" también desbloquea el audio
@@ -3816,12 +3974,13 @@ function setSeriesBadge(kind, text = "") {
   if (!seriesBadge) return;
 
   if (!kind) {
-    seriesBadge.classList.add("hidden");
+    setClass(seriesBadge, "hidden", true);
     return;
   }
 
-  seriesBadge.textContent = text;
-  seriesBadge.className = `series-badge ${kind}`;
+  setText(seriesBadge, text);
+  const className = `series-badge ${kind}`;
+  if (seriesBadge.className !== className) seriesBadge.className = className;
 }
 
 function currentSeriesCue() {
@@ -3832,13 +3991,24 @@ function currentSeriesCue() {
   if (!analysisActive) return null;
 
   if (activeCategory === "movement") {
-    if (dynState === "CALIBRATING") return ["wait", "CALIBRANDO · NO TE MUEVAS"];
+    if (dynState === "CALIBRATING") {
+      if (activeExercise === "deadlift") {
+        if (!deadliftInitiationSeen) return ["wait", "TOMA LA BARRA DESDE EL PISO"];
+        if (
+          deadliftLastPrimary === null ||
+          deadliftLastPrimary > DEADLIFT_TOP_MAX_HIP_FLEXION
+        ) {
+          return ["wait", "SUBE LA BARRA · NO SE CUENTA"];
+        }
+      }
+      return ["wait", "CALIBRANDO · NO TE MUEVAS"];
+    }
 
     if (dynState === "READY" && movementRepCount === 0) {
       return [
         "ready",
         activeExercise === "deadlift"
-          ? "✓ LISTO · COMIENZA LA SUBIDA"
+          ? "✓ LISTO · COMIENZA LA BAJADA"
           : "✓ LISTO · PUEDES PARTIR"
       ];
     }
@@ -3900,12 +4070,12 @@ function checkArmedStart(ready, now) {
 
 function startAnalysis() {
   if (!cameraReady) {
-    statusBox.textContent = "Activa la cámara primero.";
+    setText(statusBox, "Activa la cámara primero.");
     return;
   }
 
   if (!detector || detectorLoading) {
-    statusBox.textContent = "Espera a que termine de cargar el motor de seguimiento.";
+    setText(statusBox, "Espera a que termine de cargar el motor de seguimiento.");
     return;
   }
 
@@ -3921,10 +4091,12 @@ function startAnalysis() {
   movementConfigDetails.open = false;
   jumpConfigDetails.open = false;
 
-  statusBox.textContent =
+  setText(
+    statusBox,
     activeCategory === "movement"
       ? "Serie armada · ubícate de perfil. KINEMYX partirá al detectarte."
-      : "Serie armada · ubícate de frente. KINEMYX partirá al detectarte.";
+      : "Serie armada · ubícate de frente. KINEMYX partirá al detectarte."
+  );
 
   updateSetupFlow();
   updateSeriesCue();
@@ -3934,11 +4106,11 @@ function beginSeries() {
   if (activeCategory === "movement") {
     lockedSide = sideMode === "auto" ? candidateSide : sideMode;
     activeSide = lockedSide;
-    sideDisplay.textContent = sideLabel(activeSide);
+    setText(sideDisplay, sideLabel(activeSide));
     updateSideHelp(activeSide);
   } else {
     lockedSide = null;
-    sideDisplay.textContent = "FRONTAL";
+    setText(sideDisplay, "FRONTAL");
   }
 
   trackingLostSince = null;
@@ -3957,10 +4129,10 @@ function beginSeries() {
 
     resetDynamicMovementTiming();
 
-    repDisplay.textContent = `0 / ${getMovementSettings().targetReps}`;
-    stateDisplay.textContent = "CALIBRANDO";
-    eccDisplay.textContent = "—";
-    conDisplay.textContent = "—";
+    setText(repDisplay, `0 / ${getMovementSettings().targetReps}`);
+    setText(stateDisplay, activeExercise === "deadlift" ? "INICIACIÓN" : "CALIBRANDO");
+    setText(eccDisplay, "—");
+    setText(conDisplay, "—");
   } else {
     jumpCount = 0;
     jumpValidCount = 0;
@@ -3970,10 +4142,10 @@ function beginSeries() {
 
     resetJumpState();
 
-    repDisplay.textContent = `0 / ${getJumpSettings().targetJumps}`;
-    stateDisplay.textContent = "CALIBRANDO";
-    eccDisplay.textContent = "—";
-    conDisplay.textContent = "—";
+    setText(repDisplay, `0 / ${getJumpSettings().targetJumps}`);
+    setText(stateDisplay, "CALIBRANDO");
+    setText(eccDisplay, "—");
+    setText(conDisplay, "—");
   }
 
   analysisActive = true;
@@ -3981,17 +4153,19 @@ function beginSeries() {
 
   if (activeCategory === "movement") {
     if (activeExercise === "deadlift") {
-      statusBox.textContent = "Mantén la posición inicial en el piso para calibrar.";
+      setText(statusBox, "Toma la barra desde el piso y súbela. La primera subida no se cuenta.");
     } else if (activeExercise === "bench") {
-      statusBox.textContent = "Mantén los brazos extendidos para calibrar.";
+      setText(statusBox, "Mantén los brazos extendidos para calibrar.");
     } else {
-      statusBox.textContent = "Mantente de pie para calibrar.";
+      setText(statusBox, "Mantente de pie para calibrar.");
     }
   } else {
-    statusBox.textContent =
+    setText(
+      statusBox,
       activeExercise === "sj"
         ? "Mantén estable tu posición inicial de Squat Jump."
-        : "Mantente de pie y estable mientras KINEMYX calibra la vista frontal.";
+        : "Mantente de pie y estable mientras KINEMYX calibra la vista frontal."
+    );
   }
 }
 
@@ -3999,31 +4173,37 @@ function stopAnalysis(automatic = false) {
   if (seriesArmed && !analysisActive) {
     seriesArmed = false;
     armReadySince = null;
-    statusBox.textContent = "Serie cancelada antes de comenzar.";
+    setText(statusBox, "Serie cancelada antes de comenzar.");
     updateSeriesCue();
     updateSetupFlow();
     return;
   }
 
   if (!analysisActive) {
-    statusBox.textContent = "No hay una serie activa.";
+    setText(statusBox, "No hay una serie activa.");
     return;
   }
 
   analysisActive = false;
-  stateDisplay.textContent = "COMPLETO";
+  setText(stateDisplay, "COMPLETO");
 
   if (activeCategory === "movement") {
     updateMovementSummary();
-    statusBox.textContent = automatic
-      ? `Serie completada · ${movementRepCount} repeticiones`
-      : `Serie finalizada · ${movementRepCount} repeticiones`;
+    setText(
+      statusBox,
+      automatic
+        ? `Serie completada · ${movementRepCount} repeticiones`
+        : `Serie finalizada · ${movementRepCount} repeticiones`
+    );
   } else {
     jumpState = "COMPLETE";
     updateJumpSummary();
-    statusBox.textContent = automatic
-      ? `Serie completada · ${jumpCount} saltos`
-      : `Serie finalizada · ${jumpCount} saltos`;
+    setText(
+      statusBox,
+      automatic
+        ? `Serie completada · ${jumpCount} saltos`
+        : `Serie finalizada · ${jumpCount} saltos`
+    );
   }
 
   lockedSide = null;
