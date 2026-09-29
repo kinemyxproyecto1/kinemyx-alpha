@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.9
+   KINEMYX Beta 0.8.10
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -89,6 +89,15 @@
      inferencia de prueba (10 s) o se congela/falla durante el uso,
      se cambia solo a MoveNet. La app ya no queda en "CARGANDO".
    - El cambio queda guardado en el dispositivo (Ajustes → MoveNet).
+
+   0.8.10 · Detección lateral de pie:
+   - Rescate geométrico de rodilla y cadera con confianza moderada
+     cuando sus vecinas son confiables y las proporciones calzan.
+   - "Pies fuera de la imagen" solo cuando el tobillo no se ve.
+   - Umbral de confianza promedio en movimientos: 0,58 → 0,50
+     (cada punto sigue exigiendo 0,42 y la geometría se valida).
+   - Recorrido mínimo por repetición (≥ 20° y ≥ 35% del objetivo):
+     balanceos y ruido de pie ya no cuentan como repetición.
 ========================================================= */
 
 
@@ -98,7 +107,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.9";
+const APP_VERSION = "KINEMYX Beta 0.8.10";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -433,6 +442,10 @@ let warningHideTimer = null;
 
 const MIN_POINT_CONFIDENCE = 0.42;
 const MIN_TRACKING_CONFIDENCE = 0.58;
+// 0.8.10: en movimientos laterales cada punto ya exige ≥ 0,42 y la
+// geometría se valida aparte (segmentos + orientación); el promedio 0,58
+// rechazaba cadenas completas y bien ubicadas. Heurístico, por validar.
+const MOVEMENT_MIN_TRACKING_CONFIDENCE = 0.50;
 const RAW_POINT_ACCEPT_SCORE = 0.25;
 
 const TRACKING_HOLD_MS = 450;
@@ -677,6 +690,8 @@ function averagePointConfidence(points) {
   if (!points.length) return 0;
   return mean(points.map((point) => point?.score || 0)) || 0;
 }
+
+const segmentPlausibleBase = (...args) => segmentPlausible(...args);
 
 function segmentPlausible(name, a, b, update = true) {
   if (!isPointDrawable(a) || !isPointDrawable(b)) return false;
@@ -2010,11 +2025,93 @@ function fusedLateralData(pose, preferSide = null) {
   return out;
 }
 
+/* ---------------------------------------------------------
+   0.8.10 · Rescate geométrico de rodilla y cadera
+   De perfil y de pie, la rodilla (y a veces la cadera) queda con
+   confianza baja: las dos piernas se superponen y la ropa holgada
+   esconde la forma de la articulación. El modelo suele ubicarla bien,
+   pero con puntaje < MIN_POINT_CONFIDENCE, y la app decía "Pies fuera
+   de la imagen" o "Mejora la visibilidad" aunque todo estuviera visible.
+   Ahora una articulación intermedia con puntaje moderado se acepta solo
+   si sus dos vecinas son confiables y la geometría es coherente:
+   - rodilla entre cadera y tobillo; cadera entre hombro y rodilla.
+   - largo de cada segmento ≥ JOINT_RESCUE_MIN_SEGMENT_SCALE × escala.
+   - proporción entre los dos segmentos dentro del rango anatómico.
+   - si ya hay largos aprendidos, deben coincidir (segmentPlausible).
+   Si algo no calza, el punto sigue rechazado (se prefiere invalidar).
+--------------------------------------------------------- */
+const JOINT_RESCUE_MIN_SCORE = 0.25;            // = RAW_POINT_ACCEPT_SCORE; heurístico, por validar
+const JOINT_RESCUE_MIN_SEGMENT_SCALE = 0.10;    // fracción de la escala corporal
+// Desvío máximo respecto de la línea entre vecinas (fracción del largo
+// total) cuando aún no hay largos aprendidos. 0,20 ≈ flexión de ~45°.
+const JOINT_RESCUE_MAX_DEVIATION = 0.20;         // heurístico, por validar
+const JOINT_RESCUE_RULES = [
+  // [articulación, vecina proximal, vecina distal, proporción mín, máx]
+  // muslo/pierna ≈ 1,0–1,1 en adultos; tronco/muslo ≈ 1,1–1,5.
+  ["knee", "hip", "ankle", 0.60, 1.70],
+  ["hip", "shoulder", "knee", 0.55, 2.40]
+];
+
+function rescueMiddleJoints(points, prefix) {
+  if (activeExercise === "bench") return points;
+  let out = points;
+
+  for (const [joint, proxKey, distKey, minRatio, maxRatio] of JOINT_RESCUE_RULES) {
+    const mid = out[joint];
+    const prox = out[proxKey];
+    const dist = out[distKey];
+
+    if (!mid || isPointUsable(mid)) continue;
+    if ((mid.score || 0) < JOINT_RESCUE_MIN_SCORE) continue;
+    if ((mid._staleMs || 0) > pointMeasureHoldLimit()) continue;
+    if (!isPointUsable(prox) || !isPointUsable(dist)) continue;
+
+    const a = distance(prox, mid);
+    const b = distance(mid, dist);
+    const minLen = trackerBodyScale * JOINT_RESCUE_MIN_SEGMENT_SCALE;
+    if (!(a >= minLen && b >= minLen)) continue;
+
+    const ratio = a / b;
+    if (ratio < minRatio || ratio > maxRatio) continue;
+
+    // Con largos ya aprendidos, ambos segmentos deben ser coherentes.
+    const rescued = { ...mid, score: MIN_POINT_CONFIDENCE, _rescued: true };
+    const nameA = `${prefix}:${proxKey}-${joint}`;
+    const nameB = `${prefix}:${joint}-${distKey}`;
+    const hasBaselines = segmentBaselines.has(nameA) && segmentBaselines.has(nameB);
+
+    if (hasBaselines) {
+      // Largos aprendidos con puntos confiables: ambos deben coincidir.
+      if (!segmentPlausible(nameA, prox, rescued, false)) continue;
+      if (!segmentPlausible(nameB, rescued, dist, false)) continue;
+    } else {
+      // Sin largos aprendidos solo se rescata con el segmento casi recto
+      // (de pie / brazos extendidos, justo donde se pierde confianza):
+      // desvío de la articulación respecto de la línea proximal–distal.
+      const span = distance(prox, dist);
+      if (!(span > 0)) continue;
+      const cross = Math.abs(
+        (dist.x - prox.x) * (mid.y - prox.y) - (dist.y - prox.y) * (mid.x - prox.x)
+      );
+      if (cross / span > (a + b) * JOINT_RESCUE_MAX_DEVIATION) continue;
+    }
+
+    if (out === points) out = { ...points };
+    out[joint] = rescued;
+  }
+
+  return out;
+}
+
 // Puntos de la cadena lateral usada por movimientos.
 function movementPoints(pose, side) {
   // 0.8.8: todos los modos usan la cadena combinada; en IZQUIERDO/DERECHO
   // el lado elegido solo decide cuando las piernas están separadas.
-  return fusedLateralData(pose, side === "fused" ? null : side);
+  const key = `_movementPoints_${side}`;
+  if (pose[key]) return pose[key];
+  const fused = fusedLateralData(pose, side === "fused" ? null : side);
+  pose[key] = rescueMiddleJoints(fused, `movement:${side}`);
+  return pose[key];
 }
 
 function getMovementTrackingSide(pose) {
@@ -2126,6 +2223,9 @@ function movementOrientationAssessment(pose, selectedPoints) {
 
 function validateMovementGeometry(points, side) {
   const prefix = `movement:${side}`;
+  // 0.8.10: un punto rescatado nunca enseña largos de referencia.
+  const segmentPlausible = (name, a, b) =>
+    segmentPlausibleBase(name, a, b, !(a?._rescued || b?._rescued));
 
   if (
     activeExercise !== "bench" &&
@@ -2177,8 +2277,11 @@ function assessMovementPosition(pose, side) {
         .map((point) => point.y),
       0
     );
+    // 0.8.10: solo si el tobillo no se ve en absoluto (antes también se
+    // disparaba con el tobillo visible y la rodilla dudosa).
     const feetOutOfFrame =
       (main === "tobillo" || main === "rodilla") &&
+      !isPointDrawable(points.ankle) &&
       video.videoHeight &&
       lowestVisibleY > video.videoHeight * FEET_OUT_OF_FRAME_Y;
 
@@ -2191,7 +2294,9 @@ function assessMovementPosition(pose, side) {
       };
     }
 
-    if (main === "tobillo" || main === "rodilla") {
+    if (main === "rodilla" && isPointDrawable(points.ankle)) {
+      correction = "La rodilla se confunde con la otra pierna o la ropa. Gira un poco más de perfil y usa ropa que marque la rodilla (short o calza).";
+    } else if (main === "tobillo" || main === "rodilla") {
       correction = "Aléjate hasta que la pierna y el pie completos queden visibles.";
     } else if (main === "hombro" || main === "codo" || main === "muñeca") {
       correction = "Ajusta el encuadre para que el brazo del lado seleccionado quede completamente visible.";
@@ -2208,7 +2313,7 @@ function assessMovementPosition(pose, side) {
   }
 
   const confidence = averageMovementConfidence(points);
-  if (confidence < MIN_TRACKING_CONFIDENCE) {
+  if (confidence < MOVEMENT_MIN_TRACKING_CONFIDENCE) {
     return {
       ready: false,
       short: "Seguimiento inestable",
@@ -3113,6 +3218,14 @@ const DYN_SIGNAL_EPS = 0.20;
 const DYN_TURNAROUND_STABLE_MS = 160;
 const DYN_TURNAROUND_TOLERANCE = 1.0;
 const DYN_BASELINE_ADAPTATION = 0.20;
+// 0.8.10 · Recorrido mínimo para contar una repetición: el mayor de
+// DYN_MIN_REP_EXCURSION_DEG y DYN_MIN_REP_EXCURSION_FRACTION × ángulo
+// objetivo (sentadilla 90° → 31,5°). Antes bastaban 4° de salida + 3° de
+// vuelta, y un balanceo o un punto ruidoso de pie contaba como repetición
+// (se vio en pruebas: "repeticiones" de 8–17°). Las repeticiones parciales
+// reales (p. ej. 50°) se siguen contando, marcadas como "no cumple".
+const DYN_MIN_REP_EXCURSION_DEG = 20;            // heurístico, por validar
+const DYN_MIN_REP_EXCURSION_FRACTION = 0.35;     // heurístico, por validar
 const SMOOTHING_FRAMES = 5;
 // 0.8.8: valor máximo de la métrica principal para aceptar la calibración
 // (posición inicial). Sentadilla: flexión de rodilla ≤ 30° (de pie).
@@ -3480,7 +3593,27 @@ function updateDynamicMovement(metrics, timestamp) {
         ? signal <= dynBaselineSignal + returnTolerance
         : signal >= dynBaselineSignal - returnTolerance;
 
-    if (returnedToBaseline && phase2ElapsedMs >= DYN_MIN_PHASE_MS) {
+    const minExcursion = Math.max(
+      DYN_MIN_REP_EXCURSION_DEG,
+      DYN_MIN_REP_EXCURSION_FRACTION * (settings.angleTarget || 0)
+    );
+    const excursion = dynPrimaryMax - (dynBaselinePrimary ?? dynPrimaryMax);
+
+    if (returnedToBaseline && phase2ElapsedMs >= DYN_MIN_PHASE_MS && excursion < minExcursion) {
+      // Movimiento demasiado corto: no es una repetición. Se vuelve a
+      // LISTO sin contar y sin mover la referencia.
+      dynState = "READY";
+      dynPotentialStartTime = null;
+      dynPhase1StartTime = null;
+      dynExtremeSignal = null;
+      dynExtremeTime = null;
+      dynReversalCandidateTime = null;
+      dynPhase2StartTime = null;
+      dynEccentricDuration = null;
+      dynConcentricDuration = null;
+      dynPrimaryMax = metrics.primary;
+      setText(stateDisplay, profile.readyLabel);
+    } else if (returnedToBaseline && phase2ElapsedMs >= DYN_MIN_PHASE_MS) {
       const duration = phase2ElapsedMs / 1000;
 
       if (profile.phase2Name === "eccentric") {
