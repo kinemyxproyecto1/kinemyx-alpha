@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.6
+   KINEMYX Beta 0.8.7
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -60,6 +60,18 @@
      página "tiemble" al hacer scroll con la cámara activa (iPhone).
    - El canvas solo se redimensiona si cambia su tamaño real.
    - Sin cambios en umbrales de tracking ni en el motor de saltos.
+
+   0.8.7 · Vista lateral robusta para movimientos:
+   - Cadena lateral COMBINADA (modo automático): de perfil, izquierda
+     y derecha se proyectan casi en el mismo lugar y MoveNet suele
+     intercambiar sus etiquetas. Ahora cada articulación se arma por
+     POSICIÓN (combinando ambos lados) y no por etiqueta; la confianza
+     es la del mejor de los dos. Evita puntos que saltan y los
+     "Falta tobillo / Falta cadera" intermitentes.
+   - Se rechaza la vista frontal en movimientos (antes se aceptaba):
+     el ángulo sagital no se puede medir de frente.
+   - Modos IZQUIERDO / DERECHO manuales: sin cambios.
+   - Sin cambios en saltos ni en los motores de repetición.
 ========================================================= */
 
 
@@ -69,7 +81,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.6";
+const APP_VERSION = "KINEMYX Beta 0.8.7";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -466,6 +478,7 @@ const pointLabels = {
 };
 
 function resetPoseTracker() {
+  if (typeof resetLateralChain === "function") resetLateralChain();
   jointTracks = new Map();
   segmentBaselines = new Map();
   trackerBodyScale = 300;
@@ -816,6 +829,7 @@ function getActiveFeedbackMode() {
 ========================================================= */
 
 function sideLabel(side) {
+  if (side === "fused") return "PERFIL";
   return side === "left" ? "IZQUIERDO" : "DERECHO";
 }
 
@@ -831,7 +845,7 @@ function updateViewModeUI() {
       sideDisplay,
       lockedSide || sideMode !== "auto"
         ? sideLabel(lockedSide || sideMode)
-        : "AUTOMÁTICO"
+        : "PERFIL"
     );
 
     setText(
@@ -840,7 +854,7 @@ function updateViewModeUI() {
         ? "Press banca: cámara de perfil, a la altura del banco. Basta encuadrar de la cadera hacia arriba (o cuerpo completo); KINEMYX usa solo hombro y codo."
         : activeExercise === "deadlift"
         ? "Peso muerto: ubícate de perfil. Toma la barra y súbela: esa primera subida no se cuenta. Las repeticiones se cuentan desde arriba (bajada → subida)."
-        : "Para movimientos, ubícate completamente de perfil. KINEMYX usará hombro, cadera, rodilla y tobillo del lado visible y bloqueará ese lado durante la serie."
+        : "Para movimientos, ubícate completamente de perfil (hombro hacia la cámara). KINEMYX usará hombro, cadera, rodilla y tobillo vistos de lado. De frente no se puede medir el ángulo."
     );
   } else {
     setText(sideLiveLabel, "VISTA");
@@ -865,7 +879,9 @@ function updateSideHelp(side = null) {
   if (analysisActive && lockedSide) {
     setText(
       sideModeHelp,
-      `Serie activa · lado ${sideLabel(lockedSide).toLowerCase()} bloqueado hasta finalizar.`
+      lockedSide === "fused"
+        ? "Serie activa · perfil combinado (ambos lados) hasta finalizar."
+        : `Serie activa · lado ${sideLabel(lockedSide).toLowerCase()} bloqueado hasta finalizar.`
     );
     return;
   }
@@ -873,9 +889,7 @@ function updateSideHelp(side = null) {
   if (sideMode === "auto") {
     setText(
       sideModeHelp,
-      side
-        ? `Automático · lado con mejor visibilidad: ${sideLabel(side)}.`
-        : "El modo automático seleccionará el lado con mejor visibilidad antes de iniciar la serie."
+      "Automático (recomendado) · combina ambos lados vistos de perfil; tolera que la cámara confunda izquierda y derecha."
     );
   } else {
     setText(
@@ -1640,11 +1654,133 @@ function determineBestMovementSide(pose) {
   return leftScore >= rightScore ? "left" : "right";
 }
 
+/* ---------------------------------------------------------
+   CADENA LATERAL COMBINADA (0.8.7)
+   De perfil, hombro/cadera/rodilla/tobillo izquierdos y derechos
+   se proyectan casi en el mismo punto de la imagen. MoveNet los
+   rotula mal con frecuencia (intercambia izquierda y derecha o
+   baja la confianza del lado lejano), y elegir UN lado por
+   etiqueta hacía saltar los puntos y alternar "Falta cadera /
+   Falta tobillo".
+   En modo automático cada grupo se arma por posición:
+   - Si las versiones izquierda y derecha de TODAS las articulaciones
+     del grupo están a menos de LATERAL_FUSE_MAX_DIST_SCALE × escala
+     corporal, se promedian ponderadas por confianza y la confianza
+     resultante es la mayor de las dos.
+   - Si están separadas (p. ej. piernas en tijera), se elige el grupo
+     completo (izquierdo o derecho) más cercano a la cadena del cuadro
+     anterior; sin cuadro anterior, el de mayor confianza. Nunca se
+     mezclan articulaciones de piernas distintas.
+   Grupos: tronco-pierna [cadera, rodilla, tobillo] y brazo
+   [hombro, codo, muñeca].
+--------------------------------------------------------- */
+const LATERAL_FUSE_MAX_DIST_SCALE = 0.10; // 10% de la escala hombro–tobillo (heurístico)
+const LATERAL_GROUPS = [
+  ["hip", "knee", "ankle"],
+  ["shoulder", "elbow", "wrist"]
+];
+
+let lateralPrevChain = null;
+
+function resetLateralChain() {
+  lateralPrevChain = null;
+  orientationRatioSmoothed = null;
+}
+
+function fuseLateralPoint(a, b) {
+  const wa = Math.max(0.01, a.score || 0);
+  const wb = Math.max(0.01, b.score || 0);
+
+  return {
+    ...(wa >= wb ? a : b),
+    x: (a.x * wa + b.x * wb) / (wa + wb),
+    y: (a.y * wa + b.y * wb) / (wa + wb),
+    score: Math.max(a.score || 0, b.score || 0),
+    _fresh: a._fresh !== false || b._fresh !== false,
+    _staleMs: Math.min(a._staleMs ?? Infinity, b._staleMs ?? Infinity)
+  };
+}
+
+function groupContinuityCost(points, group, prev) {
+  let cost = 0;
+  let used = 0;
+
+  for (const joint of group) {
+    const point = points[joint];
+    const previous = prev?.[joint];
+    if (!previous || !isPointDrawable(point)) continue;
+    cost += distance(point, previous);
+    used++;
+  }
+
+  return used ? cost / used : null;
+}
+
+function fusedLateralData(pose) {
+  if (pose._lateralFused) return pose._lateralFused;
+
+  const left = sideData(pose, "left");
+  const right = sideData(pose, "right");
+  const maxDist = trackerBodyScale * LATERAL_FUSE_MAX_DIST_SCALE;
+  const out = {};
+
+  for (const group of LATERAL_GROUPS) {
+    const bothVisible = group.filter(
+      (joint) => isPointDrawable(left[joint]) && isPointDrawable(right[joint])
+    );
+    const overlapping = bothVisible.every(
+      (joint) => distance(left[joint], right[joint]) <= maxDist
+    );
+
+    if (overlapping) {
+      for (const joint of group) {
+        const a = left[joint];
+        const b = right[joint];
+        const da = isPointDrawable(a);
+        const db = isPointDrawable(b);
+        out[joint] = da && db ? fuseLateralPoint(a, b) : da ? a : db ? b : (a?.score || 0) >= (b?.score || 0) ? a : b;
+      }
+      continue;
+    }
+
+    // Grupos separados: elegir un lado completo (continuidad > confianza).
+    const costLeft = groupContinuityCost(left, group, lateralPrevChain);
+    const costRight = groupContinuityCost(right, group, lateralPrevChain);
+    let chosen;
+
+    if (costLeft !== null && costRight !== null) {
+      chosen = costLeft <= costRight ? left : right;
+    } else {
+      const scoreLeft = averagePointConfidence(group.map((joint) => left[joint]));
+      const scoreRight = averagePointConfidence(group.map((joint) => right[joint]));
+      chosen = scoreLeft >= scoreRight ? left : right;
+    }
+
+    for (const joint of group) out[joint] = chosen[joint];
+  }
+
+  // Memoria de continuidad: solo puntos dibujables.
+  const memory = {};
+  for (const joint of Object.keys(out)) {
+    if (isPointDrawable(out[joint])) memory[joint] = { x: out[joint].x, y: out[joint].y };
+  }
+  lateralPrevChain = { ...(lateralPrevChain || {}), ...memory };
+
+  pose._lateralFused = out;
+  return out;
+}
+
+// Puntos de la cadena lateral usada por movimientos.
+function movementPoints(pose, side) {
+  return side === "fused" ? fusedLateralData(pose) : sideData(pose, side);
+}
+
 function getMovementTrackingSide(pose) {
   if (analysisActive && lockedSide) return lockedSide;
   if (sideMode === "left" || sideMode === "right") return sideMode;
 
-  candidateSide = determineBestMovementSide(pose);
+  // 0.8.7: modo automático = cadena lateral combinada.
+  candidateSide = "fused";
   return candidateSide;
 }
 
@@ -1693,34 +1829,51 @@ function checkEdgeAssessment(entries) {
   return null;
 }
 
+/* ---------------------------------------------------------
+   ORIENTACIÓN EN MOVIMIENTOS (0.8.7)
+   Ancho aparente de hombros ÷ largo del tronco (hombro→cadera):
+   - De frente: ≈ 0,75–0,95 (en la captura de prueba ≈ 0,9).
+   - De perfil: ≈ 0,0–0,3 (los hombros se superponen).
+   - Tres cuartos: ≈ 0,5–0,7 (el ángulo de rodilla se deforma).
+   Se exige ≤ LATERAL_MAX_SHOULDER_RATIO. El valor se suaviza entre
+   cuadros para no parpadear. Antes el umbral era 0,80 promediando
+   hombros y caderas, y la vista frontal pasaba como "lateral".
+   En press banca solo se evalúa si la cadera es visible.
+--------------------------------------------------------- */
+const LATERAL_MAX_SHOULDER_RATIO = 0.45; // heurístico, por validar
+const ORIENTATION_SMOOTHING = 0.35;
+
+let orientationRatioSmoothed = null;
+
 function movementOrientationAssessment(pose, selectedPoints) {
   const kp = pose.keypoints;
-
   const ls = kp[KP.leftShoulder];
   const rs = kp[KP.rightShoulder];
-  const lh = kp[KP.leftHip];
-  const rh = kp[KP.rightHip];
 
   if (
-    isPointUsable(ls, 0.35) &&
-    isPointUsable(rs, 0.35) &&
-    isPointUsable(lh, 0.35) &&
-    isPointUsable(rh, 0.35) &&
-    isPointUsable(selectedPoints.shoulder) &&
-    isPointUsable(selectedPoints.hip)
+    !isPointUsable(ls, 0.30) ||
+    !isPointUsable(rs, 0.30) ||
+    !isPointUsable(selectedPoints.shoulder) ||
+    !isPointUsable(selectedPoints.hip)
   ) {
-    const torso = Math.max(30, distance(selectedPoints.shoulder, selectedPoints.hip));
-    const projectedWidth = (distance(ls, rs) + distance(lh, rh)) / 2;
-    const ratio = projectedWidth / torso;
+    return null;
+  }
 
-    if (ratio > 0.80) {
-      return {
-        ready: false,
-        short: "Gira de perfil",
-        title: "Vista demasiado frontal",
-        text: "Gira el cuerpo hasta quedar claramente de perfil respecto de la cámara."
-      };
-    }
+  const torso = Math.max(30, distance(selectedPoints.shoulder, selectedPoints.hip));
+  const ratio = distance(ls, rs) / torso;
+
+  orientationRatioSmoothed =
+    orientationRatioSmoothed === null
+      ? ratio
+      : orientationRatioSmoothed * (1 - ORIENTATION_SMOOTHING) + ratio * ORIENTATION_SMOOTHING;
+
+  if (orientationRatioSmoothed > LATERAL_MAX_SHOULDER_RATIO) {
+    return {
+      ready: false,
+      short: "Gira de perfil",
+      title: "No estás de perfil",
+      text: "Gira hasta que tu hombro apunte a la cámara. De frente o en diagonal el ángulo no se mide bien."
+    };
   }
 
   return null;
@@ -1761,7 +1914,7 @@ function validateMovementGeometry(points, side) {
 }
 
 function assessMovementPosition(pose, side) {
-  const points = sideData(pose, side);
+  const points = movementPoints(pose, side);
   const required = movementRequiredEntries(points);
 
   const missing = required
@@ -1795,7 +1948,10 @@ function assessMovementPosition(pose, side) {
       ready: false,
       short: "Seguimiento inestable",
       title: "Mejora la visibilidad",
-      text: `Mantén visible el lado ${sideLabel(side).toLowerCase()} y mejora la iluminación.`
+      text:
+        side === "fused"
+          ? "Mantente completamente de perfil y mejora la iluminación."
+          : `Mantén visible el lado ${sideLabel(side).toLowerCase()} y mejora la iluminación.`
     };
   }
 
@@ -1820,7 +1976,10 @@ function assessMovementPosition(pose, side) {
     ready: true,
     short: "Posición correcta",
     title: "Posición lateral correcta",
-    text: `${sideLabel(side)} detectado · cadena anatómica estable.`
+    text:
+      side === "fused"
+        ? "Perfil detectado · cadena anatómica estable."
+        : `${sideLabel(side)} detectado · cadena anatómica estable.`
   };
 }
 
@@ -2340,7 +2499,7 @@ function updateLabelSide(points) {
 }
 
 function drawLateralSkeleton(pose, side) {
-  const p = sideData(pose, side);
+  const p = movementPoints(pose, side);
   const prefix = `draw:${side}`;
   const profile = LATERAL_DRAW_PROFILE[activeExercise] || LATERAL_DRAW_PROFILE.squat;
 
@@ -2377,7 +2536,7 @@ function drawLateralAngle(pose, side, value) {
   const profile = LATERAL_DRAW_PROFILE[activeExercise];
   if (!profile) return;
 
-  const p = sideData(pose, side);
+  const p = movementPoints(pose, side);
   let b;
   let angleA;
   let angleC;
@@ -2628,7 +2787,7 @@ function processMovementPose(pose, now) {
 
   if (analysisActive) resumeDynamicMovementTiming(now);
 
-  const points = sideData(pose, side);
+  const points = movementPoints(pose, side);
   const raw = getDynamicMovementMetrics(points);
   const metrics = smoothDynamicMovementMetrics(raw);
 
