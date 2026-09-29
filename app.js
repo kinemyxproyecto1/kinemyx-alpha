@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.8
+   KINEMYX Beta 0.8.9
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -83,6 +83,12 @@
      solo calibra en la posición inicial (de pie / brazos extendidos).
    - Aviso específico cuando los pies quedan fuera de la imagen.
    - Saltos sin cambios (MoveNet Lightning).
+
+   0.8.9 · Respaldo robusto del motor:
+   - Si BlazePose no termina de cargar (25 s), no responde en la
+     inferencia de prueba (10 s) o se congela/falla durante el uso,
+     se cambia solo a MoveNet. La app ya no queda en "CARGANDO".
+   - El cambio queda guardado en el dispositivo (Ajustes → MoveNet).
 ========================================================= */
 
 
@@ -92,7 +98,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.8";
+const APP_VERSION = "KINEMYX Beta 0.8.9";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -1278,6 +1284,40 @@ const BLAZEPOSE_TO_COCO_INDEX = [0, 2, 5, 7, 8, 11, 12, 13, 14, 15, 16, 23, 24, 
 
 let blazeposeFailed = false;
 
+/* 0.8.9 · Respaldo robusto de BlazePose
+   En algunos iPhone la carga de BlazePose queda "colgada" (no falla ni
+   termina) y la app se quedaba en CARGANDO sin puntos. Ahora:
+   - La carga tiene un tiempo máximo; si se supera, se usa MoveNet.
+   - Tras cargar se hace una inferencia de prueba con tiempo máximo.
+   - Durante el uso, si BlazePose falla o se congela varias veces
+     seguidas, se cambia a MoveNet sin detener la cámara.
+   - El fallo queda recordado en el dispositivo (Ajustes pasa a
+     "MoveNet"); para reintentar, elegir BlazePose de nuevo. */
+const BLAZEPOSE_LOAD_TIMEOUT_MS = 25000;   // descarga + compilación del modelo
+const BLAZEPOSE_WARMUP_TIMEOUT_MS = 10000; // primera inferencia (compila shaders)
+const INFERENCE_TIMEOUT_MS = 4000;         // una inferencia normal tarda < 200 ms
+const BLAZEPOSE_MAX_CONSECUTIVE_ERRORS = 5;
+let engineFallbackNotice = false;
+let consecutiveInferenceErrors = 0;
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label}: tiempo agotado (${ms} ms)`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function markBlazePoseFailed(reason) {
+  console.warn("BlazePose no disponible, se usa MoveNet:", reason);
+  blazeposeFailed = true;
+  engineFallbackNotice = true;
+  if (movementEngineSelect) {
+    movementEngineSelect.value = "movenet";
+    try { localStorage.setItem(ENGINE_STORAGE_KEY, "movenet"); } catch (error) {}
+  }
+}
+
 function engineLabel(profile) {
   if (profile === "blazepose-full") return "BlazePose preciso";
   if (profile === "blazepose-heavy") return "BlazePose máxima precisión";
@@ -1370,13 +1410,44 @@ async function ensureDetectorForActiveMode() {
       if (isBlazePoseProfile(profile)) {
         setText(statusBox, `Cargando ${engineLabel(profile)}… (la primera vez puede tardar)`);
       }
-      newDetector = await createDetectorForProfile(profile);
+      if (isBlazePoseProfile(profile)) {
+        const loading = createDetectorForProfile(profile);
+        try {
+          newDetector = await withTimeout(loading, BLAZEPOSE_LOAD_TIMEOUT_MS, "Carga BlazePose");
+        } catch (error) {
+          // Si la carga termina después del tiempo máximo, se libera.
+          loading.then((late) => {
+            if (late && typeof late.dispose === "function") {
+              try { late.dispose(); } catch (disposeError) {}
+            }
+          }).catch(() => {});
+          throw error;
+        }
+
+        // Inferencia de prueba: detecta motores que cargan pero no responden.
+        if (token === detectorLoadToken && video.readyState >= 2) {
+          try {
+            await withTimeout(
+              newDetector.estimatePoses(video, { flipHorizontal: false }, performance.now()),
+              BLAZEPOSE_WARMUP_TIMEOUT_MS,
+              "Prueba BlazePose"
+            );
+          } catch (error) {
+            try { newDetector.dispose(); } catch (disposeError) {}
+            newDetector = null;
+            throw error;
+          }
+        }
+      } else {
+        newDetector = await createDetectorForProfile(profile);
+      }
     } catch (error) {
       if (!isBlazePoseProfile(profile)) throw error;
-      console.warn("BlazePose no disponible, se usa MoveNet:", error);
-      blazeposeFailed = true;
+      if (token !== detectorLoadToken) return;
+      markBlazePoseFailed(error);
       fallbackNotice = true;
       profile = "thunder";
+      setText(statusBox, "BlazePose no respondió · cargando MoveNet…");
       newDetector = await createDetectorForProfile(profile);
     }
 
@@ -1393,6 +1464,7 @@ async function ensureDetectorForActiveMode() {
       oldDetector.dispose();
     }
 
+    consecutiveInferenceErrors = 0;
     resetPoseTracker();
     setText(
       statusBox,
@@ -1418,7 +1490,10 @@ function onMovementEngineChange() {
 
   try { localStorage.setItem(ENGINE_STORAGE_KEY, movementEngineSelect.value); } catch (error) {}
 
-  if (movementEngineSelect.value !== "movenet") blazeposeFailed = false;
+  if (movementEngineSelect.value !== "movenet") {
+    blazeposeFailed = false;
+    engineFallbackNotice = false;
+  }
 
   if (cameraReady && activeCategory === "movement") {
     ensureDetectorForActiveMode().catch((error) => {
@@ -1482,7 +1557,7 @@ async function initializeCamera() {
     setText(
       statusBox,
       activeCategory === "movement"
-        ? blazeposeFailed && movementEngineSelect?.value !== "movenet"
+        ? engineFallbackNotice
           ? "BlazePose no pudo cargarse · se usa MoveNet. Colócate completamente de perfil."
           : `Cámara activa · ${engineLabel(detectorProfile)} · colócate completamente de perfil.`
         : "Cámara activa · colócate de frente y muestra el cuerpo completo."
@@ -1688,7 +1763,12 @@ async function detectLoop() {
   lastFrameTimestamp = timestamp;
 
   try {
-    const poses = await estimatePosesForActiveDetector(timestamp);
+    const usingBlazePose = isBlazePoseProfile(detectorProfile);
+    const inference = estimatePosesForActiveDetector(timestamp);
+    const poses = usingBlazePose
+      ? await withTimeout(inference, INFERENCE_TIMEOUT_MS, "Inferencia BlazePose")
+      : await inference;
+    consecutiveInferenceErrors = 0;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (poses && poses.length > 0) {
@@ -1698,7 +1778,23 @@ async function detectLoop() {
       handleMissingPose(timestamp);
     }
   } catch (error) {
-    console.warn("MoveNet:", error);
+    console.warn("Detector:", error);
+    consecutiveInferenceErrors += 1;
+
+    // 0.8.9: BlazePose que falla o se congela durante el uso → MoveNet.
+    const tooMany = consecutiveInferenceErrors >= BLAZEPOSE_MAX_CONSECUTIVE_ERRORS;
+    const frozen = /tiempo agotado/.test(String(error && error.message));
+    if (isBlazePoseProfile(detectorProfile) && (tooMany || frozen)) {
+      consecutiveInferenceErrors = 0;
+      markBlazePoseFailed(error);
+      try {
+        await ensureDetectorForActiveMode();
+        setText(statusBox, "BlazePose dejó de responder · se usa MoveNet.");
+      } catch (loadError) {
+        console.error(loadError);
+        setText(statusBox, "No fue posible cargar el motor de seguimiento.");
+      }
+    }
   }
 
   requestAnimationFrame(detectLoop);
