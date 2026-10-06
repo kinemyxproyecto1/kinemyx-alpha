@@ -1,5 +1,5 @@
 /* =========================================================
-   KINEMYX Beta 0.8.10
+   KINEMYX Beta 0.8.11
    Dual View Tracking Engine
 
    MOVIMIENTOS  -> vista lateral unilateral
@@ -98,6 +98,17 @@
      (cada punto sigue exigiendo 0,42 y la geometría se valida).
    - Recorrido mínimo por repetición (≥ 20° y ≥ 35% del objetivo):
      balanceos y ruido de pie ya no cuentan como repetición.
+
+   0.8.11 · Puntos definidos por el usuario (vista lateral):
+   - Sentadilla y peso muerto: solo cadera, rodilla y tobillo. Métrica
+     = flexión de rodilla en ambos (sin hombro no hay tronco y no se
+     puede medir la flexión de cadera). Peso muerto: objetivo 45°±10°.
+   - Press banca: hombro, codo y muñeca. Métrica = flexión de codo
+     (0° brazos extendidos, ~90° abajo).
+   - Orientación de perfil en sentadilla/peso muerto por ancho de
+     caderas ÷ muslo (antes hombros ÷ tronco).
+   - Rescate geométrico: rodilla (cadera–tobillo) y codo (hombro–muñeca).
+   - Escala corporal también desde cadera–tobillo si no hay hombros.
 ========================================================= */
 
 
@@ -107,7 +118,7 @@
 
 const $ = (id) => document.getElementById(id);
 
-const APP_VERSION = "KINEMYX Beta 0.8.10";
+const APP_VERSION = "KINEMYX Beta 0.8.11";
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xljdjgbg";
 
 const ACCESS_PASSWORD_HASH =
@@ -542,6 +553,24 @@ function estimateRawBodyScale(pose) {
     }
   }
 
+  // 0.8.11: en movimientos el hombro ya no es obligatorio. Si no hay
+  // pares con hombro, se estima desde cadera–tobillo: de pie
+  // hombro–tobillo ≈ 1,6 × cadera–tobillo (proporciones antropométricas
+  // promedio; heurístico). Solo se usa como respaldo.
+  if (!candidates.length && activeCategory === "movement") {
+    for (const [aIndex, bIndex] of [
+      [KP.leftHip, KP.leftAnkle],
+      [KP.rightHip, KP.rightAnkle]
+    ]) {
+      const a = kp[aIndex];
+      const b = kp[bIndex];
+      if (a && b && a.score >= RAW_POINT_ACCEPT_SCORE && b.score >= RAW_POINT_ACCEPT_SCORE) {
+        const d = distance(a, b) * BODY_SCALE_FROM_HIP_ANKLE;
+        if (d > 20) candidates.push(d);
+      }
+    }
+  }
+
   if (!candidates.length) return trackerBodyScale;
 
   const longCandidates = candidates.filter((value) => value > 80);
@@ -549,6 +578,8 @@ function estimateRawBodyScale(pose) {
 
   return clamp(base, 120, 1600);
 }
+
+const BODY_SCALE_FROM_HIP_ANKLE = 1.6; // heurístico
 
 function getTrackerAlpha() {
   return activeCategory === "jump" ? TRACK_ALPHA_JUMP : TRACK_ALPHA_MOVEMENT;
@@ -769,9 +800,9 @@ const exerciseMeta = {
     category: "movement",
     name: "Peso muerto",
     live: "PESO MUERTO",
-    angleName: "Flexión de cadera",
-    angleShort: "FLEXIÓN CADERA",
-    defaultAngle: 65,
+    angleName: "Flexión de rodilla",
+    angleShort: "FLEXIÓN RODILLA",
+    defaultAngle: 45,
     defaultTolerance: 10,
     defaultReps: 6,
     defaultEcc: 2,
@@ -782,8 +813,8 @@ const exerciseMeta = {
     category: "movement",
     name: "Press banca",
     live: "PRESS BANCA",
-    angleName: "Descenso del brazo",
-    angleShort: "ÁNGULO BRAZO",
+    angleName: "Flexión de codo",
+    angleShort: "FLEXIÓN CODO",
     defaultAngle: 90,
     defaultTolerance: 10,
     defaultReps: 8,
@@ -884,10 +915,10 @@ function updateViewModeUI() {
     setText(
       positionTipText,
       activeExercise === "bench"
-        ? "Press banca: cámara de perfil, a la altura del banco. Basta encuadrar de la cadera hacia arriba (o cuerpo completo); KINEMYX usa solo hombro y codo."
+        ? "Press banca: cámara de perfil, a la altura del banco. Basta encuadrar de la cadera hacia arriba (o cuerpo completo); KINEMYX usa solo hombro, codo y muñeca."
         : activeExercise === "deadlift"
-        ? "Peso muerto: ubícate de perfil. Toma la barra y súbela: esa primera subida no se cuenta. Las repeticiones se cuentan desde arriba (bajada → subida)."
-        : "Para movimientos, ubícate completamente de perfil (hombro hacia la cámara). KINEMYX usará hombro, cadera, rodilla y tobillo vistos de lado. De frente no se puede medir el ángulo."
+        ? "Peso muerto: ubícate de perfil. KINEMYX usa solo cadera, rodilla y tobillo (mide la flexión de rodilla). Toma la barra y súbela: esa primera subida no se cuenta. Las repeticiones se cuentan desde arriba (bajada → subida)."
+        : "Sentadilla: ubícate completamente de perfil (cadera hacia la cámara). KINEMYX usa solo cadera, rodilla y tobillo vistos de lado. De frente no se puede medir el ángulo."
     );
   } else {
     setText(sideLiveLabel, "VISTA");
@@ -1873,16 +1904,17 @@ function frontalData(pose) {
 ========================================================= */
 
 function movementRequiredEntries(points) {
-  // 0.8.3: press banca solo hombro y codo (la muñeca se pierde con barra/discos).
+  // 0.8.11: press banca = hombro, codo y muñeca (flexión de codo).
   if (activeExercise === "bench") {
     return [
       ["shoulder", points.shoulder],
-      ["elbow", points.elbow]
+      ["elbow", points.elbow],
+      ["wrist", points.wrist]
     ];
   }
 
+  // 0.8.11: sentadilla y peso muerto = solo cadera, rodilla y tobillo.
   return [
-    ["shoulder", points.shoulder],
     ["hip", points.hip],
     ["knee", points.knee],
     ["ankle", points.ankle]
@@ -2045,18 +2077,19 @@ const JOINT_RESCUE_MIN_SEGMENT_SCALE = 0.10;    // fracción de la escala corpor
 // Desvío máximo respecto de la línea entre vecinas (fracción del largo
 // total) cuando aún no hay largos aprendidos. 0,20 ≈ flexión de ~45°.
 const JOINT_RESCUE_MAX_DEVIATION = 0.20;         // heurístico, por validar
-const JOINT_RESCUE_RULES = [
+const JOINT_RESCUE_RULES = {
   // [articulación, vecina proximal, vecina distal, proporción mín, máx]
-  // muslo/pierna ≈ 1,0–1,1 en adultos; tronco/muslo ≈ 1,1–1,5.
-  ["knee", "hip", "ankle", 0.60, 1.70],
-  ["hip", "shoulder", "knee", 0.55, 2.40]
-];
+  // muslo/pierna ≈ 1,0–1,1 en adultos; brazo/antebrazo ≈ 1,1–1,3.
+  // 0.8.11: sin hombro en sentadilla/peso muerto ya no se rescata la cadera.
+  legs: [["knee", "hip", "ankle", 0.60, 1.70]],
+  arm: [["elbow", "shoulder", "wrist", 0.70, 1.80]]
+};
 
 function rescueMiddleJoints(points, prefix) {
-  if (activeExercise === "bench") return points;
   let out = points;
+  const rules = activeExercise === "bench" ? JOINT_RESCUE_RULES.arm : JOINT_RESCUE_RULES.legs;
 
-  for (const [joint, proxKey, distKey, minRatio, maxRatio] of JOINT_RESCUE_RULES) {
+  for (const [joint, proxKey, distKey, minRatio, maxRatio] of rules) {
     const mid = out[joint];
     const prox = out[proxKey];
     const dist = out[distKey];
@@ -2187,7 +2220,53 @@ const ORIENTATION_SMOOTHING = 0.35;
 
 let orientationRatioSmoothed = null;
 
+/* 0.8.11 · Sentadilla y peso muerto ya no usan el hombro: la orientación
+   se mide con el ancho aparente de las caderas ÷ largo del muslo.
+   - De frente: ≈ 0,45–0,7 (al flexionar, el muslo se acorta y sube).
+   - De perfil: ≈ 0,0–0,25 (las caderas se superponen).
+   Heurístico, por validar con grabaciones. */
+const LATERAL_MAX_HIP_RATIO = 0.35;
+
 function movementOrientationAssessment(pose, selectedPoints) {
+  if (activeExercise !== "bench") return legOrientationAssessment(pose, selectedPoints);
+  return shoulderOrientationAssessment(pose, selectedPoints);
+}
+
+function legOrientationAssessment(pose, selectedPoints) {
+  const kp = pose.keypoints;
+  const lh = kp[KP.leftHip];
+  const rh = kp[KP.rightHip];
+
+  if (
+    !isPointUsable(lh, 0.30) ||
+    !isPointUsable(rh, 0.30) ||
+    !isPointUsable(selectedPoints.hip) ||
+    !isPointUsable(selectedPoints.knee)
+  ) {
+    return null;
+  }
+
+  const thigh = Math.max(30, distance(selectedPoints.hip, selectedPoints.knee));
+  const ratio = distance(lh, rh) / thigh;
+
+  orientationRatioSmoothed =
+    orientationRatioSmoothed === null
+      ? ratio
+      : orientationRatioSmoothed * (1 - ORIENTATION_SMOOTHING) + ratio * ORIENTATION_SMOOTHING;
+
+  if (orientationRatioSmoothed > LATERAL_MAX_HIP_RATIO) {
+    return {
+      ready: false,
+      short: "Gira de perfil",
+      title: "No estás de perfil",
+      text: "Gira hasta que tu cadera apunte a la cámara. De frente o en diagonal el ángulo no se mide bien."
+    };
+  }
+
+  return null;
+}
+
+function shoulderOrientationAssessment(pose, selectedPoints) {
   const kp = pose.keypoints;
   const ls = kp[KP.leftShoulder];
   const rs = kp[KP.rightShoulder];
@@ -2229,13 +2308,6 @@ function validateMovementGeometry(points, side) {
 
   if (
     activeExercise !== "bench" &&
-    !segmentPlausible(`${prefix}:shoulder-hip`, points.shoulder, points.hip)
-  ) {
-    return false;
-  }
-
-  if (
-    activeExercise !== "bench" &&
     !segmentPlausible(`${prefix}:hip-knee`, points.hip, points.knee)
   ) {
     return false;
@@ -2251,6 +2323,13 @@ function validateMovementGeometry(points, side) {
   if (
     activeExercise === "bench" &&
     !segmentPlausible(`${prefix}:shoulder-elbow`, points.shoulder, points.elbow)
+  ) {
+    return false;
+  }
+
+  if (
+    activeExercise === "bench" &&
+    !segmentPlausible(`${prefix}:elbow-wrist`, points.elbow, points.wrist)
   ) {
     return false;
   }
@@ -2672,27 +2751,29 @@ const jointShortLabels = {
 // focus    = articulación donde se mide (destacada + arco)
 // angle    = [proximal, vértice, distal] para ángulo articular, o
 // angleType "vertical" = húmero vs vertical (press banca, ver armAngleFromVertical).
+// 0.8.11: sentadilla y peso muerto = cadera, rodilla, tobillo (ángulo en
+// la rodilla); press banca = hombro, codo, muñeca (ángulo en el codo).
 const LATERAL_DRAW_PROFILE = {
   squat: {
-    joints: ["shoulder", "hip", "knee", "ankle"],
-    segments: [["shoulder", "hip"], ["hip", "knee"], ["knee", "ankle"]],
+    joints: ["hip", "knee", "ankle"],
+    segments: [["hip", "knee"], ["knee", "ankle"]],
     focus: "knee",
     angle: ["hip", "knee", "ankle"],
     label: "RODILLA"
   },
   deadlift: {
-    joints: ["shoulder", "hip", "knee", "ankle"],
-    segments: [["shoulder", "hip"], ["hip", "knee"], ["knee", "ankle"]],
-    focus: "hip",
-    angle: ["shoulder", "hip", "knee"],
-    label: "CADERA"
+    joints: ["hip", "knee", "ankle"],
+    segments: [["hip", "knee"], ["knee", "ankle"]],
+    focus: "knee",
+    angle: ["hip", "knee", "ankle"],
+    label: "RODILLA"
   },
   bench: {
-    joints: ["shoulder", "elbow"],
-    segments: [["shoulder", "elbow"]],
-    focus: "shoulder",
-    angleType: "vertical",
-    label: "BRAZO"
+    joints: ["shoulder", "elbow", "wrist"],
+    segments: [["shoulder", "elbow"], ["elbow", "wrist"]],
+    focus: "elbow",
+    angle: ["shoulder", "elbow", "wrist"],
+    label: "CODO"
   }
 };
 
@@ -3230,7 +3311,8 @@ const SMOOTHING_FRAMES = 5;
 // 0.8.8: valor máximo de la métrica principal para aceptar la calibración
 // (posición inicial). Sentadilla: flexión de rodilla ≤ 30° (de pie).
 // Press banca: brazo ≤ 40° desde la vertical (extendido). Peso muerto ya
-// exige el bloqueo (DEADLIFT_TOP_MAX_HIP_FLEXION). Heurísticos.
+// exige el bloqueo (DEADLIFT_TOP_MAX_FLEXION). Heurísticos.
+// 0.8.11: press banca mide flexión de codo; ≤ 40° = brazos extendidos.
 const CALIBRATION_START_MAX_PRIMARY = { squat: 30, bench: 40 };
 
 /* ---------------------------------------------------------
@@ -3240,12 +3322,12 @@ const CALIBRATION_START_MAX_PRIMARY = { squat: 30, bench: 40 };
    la posición del piso y, si calibraba de pie, no contaba nada.
    Ahora:
    1. INICIACIÓN: hay que verse con la barra abajo (flexión de
-      cadera ≥ DEADLIFT_FLOOR_MIN_HIP_FLEXION) y subirla. Esa
+      rodilla desde 0.8.11 ≥ DEADLIFT_FLOOR_MIN_FLEXION) y subirla. Esa
       subida NO se cuenta. Exigir el piso evita que el
       acercamiento a la barra (agacharse a tomarla) se cuente
       como repetición.
-   2. CALIBRACIÓN arriba, en bloqueo (flexión de cadera ≤
-      DEADLIFT_TOP_MAX_HIP_FLEXION y quieto 12 cuadros).
+   2. CALIBRACIÓN arriba, en bloqueo (flexión de rodilla ≤
+      DEADLIFT_TOP_MAX_FLEXION y quieto 12 cuadros).
    3. Cada repetición: bajada (excéntrica) → subida (concéntrica)
       → vuelta al bloqueo (± DEADLIFT_RETURN_TOLERANCE).
    Valores heurísticos (flexión de cadera en vista lateral), por
@@ -3258,8 +3340,14 @@ const CALIBRATION_START_MAX_PRIMARY = { squat: 30, bench: 40 };
      (cadera tapada por barra y manos); 4° dejaba repeticiones
      sin cerrar.
 --------------------------------------------------------- */
-const DEADLIFT_FLOOR_MIN_HIP_FLEXION = 60;
-const DEADLIFT_TOP_MAX_HIP_FLEXION = 35;
+// 0.8.11: umbrales en FLEXIÓN DE RODILLA (antes cadera). Peso muerto
+// convencional: con la barra en el piso la rodilla suele flexionar
+// ~50–70°; en bloqueo 0–10°. 35° deja margen para barra alta / bloques;
+// 20° tolera bloqueo incompleto y ruido. Heurísticos, por validar.
+// Limitación: el peso muerto rumano (casi sin flexión de rodilla) no se
+// puede seguir sin el tronco.
+const DEADLIFT_FLOOR_MIN_FLEXION = 35;
+const DEADLIFT_TOP_MAX_FLEXION = 20;
 const DEADLIFT_RETURN_TOLERANCE = 8.0;
 
 let movementRepCount = 0;
@@ -3293,33 +3381,17 @@ function dynSmooth(buffer, value) {
   return mean(buffer);
 }
 
+// 0.8.11: una sola articulación medida por ejercicio, con los puntos que
+// el usuario definió. Sin hombro no se puede medir la flexión de cadera
+// (falta el tronco), así que peso muerto pasa a flexión de rodilla.
 function getDynamicMovementMetrics(points) {
   if (activeExercise === "bench") {
-    const armAngle = armAngleFromVertical(points.shoulder, points.elbow);
-
-    return {
-      primary: armAngle,
-      secondary: null,
-      signal: armAngle
-    };
+    const elbowFlexion = flexionFromAngle(points.shoulder, points.elbow, points.wrist);
+    return { primary: elbowFlexion, secondary: null, signal: elbowFlexion };
   }
 
   const kneeFlexion = flexionFromAngle(points.hip, points.knee, points.ankle);
-  const hipFlexion = flexionFromAngle(points.shoulder, points.hip, points.knee);
-
-  if (activeExercise === "deadlift") {
-    return {
-      primary: hipFlexion,
-      secondary: kneeFlexion,
-      signal: hipFlexion * 0.70 + kneeFlexion * 0.30
-    };
-  }
-
-  return {
-    primary: kneeFlexion,
-    secondary: hipFlexion,
-    signal: kneeFlexion * 0.65 + hipFlexion * 0.35
-  };
+  return { primary: kneeFlexion, secondary: null, signal: kneeFlexion };
 }
 
 function smoothDynamicMovementMetrics(metrics) {
@@ -3408,11 +3480,11 @@ function resumeDynamicMovementTiming(timestamp) {
 // Peso muerto (0.8.6): true cuando ya se puede calibrar arriba.
 // Mientras tanto muestra INICIACIÓN y descarta muestras de calibración.
 function deadliftReadyToCalibrate(metrics) {
-  if (metrics.primary >= DEADLIFT_FLOOR_MIN_HIP_FLEXION) {
+  if (metrics.primary >= DEADLIFT_FLOOR_MIN_FLEXION) {
     deadliftInitiationSeen = true;
   }
 
-  if (deadliftInitiationSeen && metrics.primary <= DEADLIFT_TOP_MAX_HIP_FLEXION) {
+  if (deadliftInitiationSeen && metrics.primary <= DEADLIFT_TOP_MAX_FLEXION) {
     return true;
   }
 
@@ -4576,7 +4648,7 @@ function currentSeriesCue() {
         if (!deadliftInitiationSeen) return ["wait", "TOMA LA BARRA DESDE EL PISO"];
         if (
           deadliftLastPrimary === null ||
-          deadliftLastPrimary > DEADLIFT_TOP_MAX_HIP_FLEXION
+          deadliftLastPrimary > DEADLIFT_TOP_MAX_FLEXION
         ) {
           return ["wait", "SUBE LA BARRA · NO SE CUENTA"];
         }
